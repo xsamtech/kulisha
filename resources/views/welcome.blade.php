@@ -15,7 +15,7 @@
         <!-- Google Fonts css-->
         <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed:300,400,700" rel="stylesheet">
         <!-- Bootstrap css -->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
+        <link href="{{ asset('assets/addons/launch-under-maintenance/css/bootstrap.min.css') }}" rel="stylesheet" media="screen">
         <!-- Font Awesome icon css-->
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" media="screen">
         <!-- Main custom css -->
@@ -92,7 +92,7 @@
         <!-- Coming Soon Wrapper end -->
 
         <!-- Jquery Library File -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <script src="{{ asset('assets/addons/launch-under-maintenance/js/jquery-1.12.4.min.js') }}"></script>
         <!-- Timer counter js file -->
         <script src="{{ asset('assets/addons/launch-under-maintenance/js/countdown-timer.js') }}"></script>
         <!-- Typed js file -->
@@ -100,7 +100,7 @@
         <!-- SmoothScroll -->
         <script src="{{ asset('assets/addons/launch-under-maintenance/js/SmoothScroll.js') }}"></script>
         <!-- Bootstrap js file -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
+        <script src="{{ asset('assets/addons/launch-under-maintenance/js/bootstrap.min.js') }}"></script>
         <!-- Main Custom js file -->
         <script src="{{ asset('assets/addons/launch-under-maintenance/js/function.js') }}"></script>
         <!-- Timer counter start -->
