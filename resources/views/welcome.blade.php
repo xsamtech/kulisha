@@ -17,7 +17,7 @@
         <!-- Bootstrap css -->
         <link href="{{ asset('assets/addons/launch-under-maintenance/css/bootstrap.min.css') }}" rel="stylesheet" media="screen">
         <!-- Font Awesome icon css-->
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" media="screen">
+        <link href="{{ asset('assets/addons/launch-under-maintenance/css/font-awesome.min.css') }}" rel="stylesheet" media="screen">
         <!-- Main custom css -->
         <link href="{{ asset('assets/addons/launch-under-maintenance/css/custom.css') }}" rel="stylesheet" media="screen">
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -107,8 +107,8 @@
         <script>
             $(document).ready(function() {
                 //var myDate = new Date("08/04/2019");
-                var myDate = new Date("15/01/2024");
-                myDate.setDate(myDate.getDate());
+                var myDate = new Date();
+                myDate.setDate(myDate.getDate() + 30);
                 $("#countdown").countdown(myDate, function(event) {
                     $(this).html(
                         event.strftime(
