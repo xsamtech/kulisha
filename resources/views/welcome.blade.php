@@ -107,12 +107,12 @@
         <script>
             $(document).ready(function() {
                 //var myDate = new Date("08/04/2019");
-                var myDate = new Date('15/01/2024');
+                var myDate = new Date("15/01/2024");
                 myDate.setDate(myDate.getDate());
                 $("#countdown").countdown(myDate, function(event) {
                     $(this).html(
                         event.strftime(
-                            '<div class="timer-wrapper"><div class="time">%D</div><span class="text">Days</span></div><div class="timer-wrapper"><div class="time">%H</div><span class="text">Hours</span></div><div class="timer-wrapper"><div class="time">%M</div><span class="text">Minutes</span></div><div class="timer-wrapper"><div class="time">%S</div><span class="text">Seconds</span></div>'
+                            '<div class="timer-wrapper"><div class="time">%D</div><span class="text">Jours</span></div><div class="timer-wrapper"><div class="time">%H</div><span class="text">Heures</span></div><div class="timer-wrapper"><div class="time">%M</div><span class="text">Minutes</span></div><div class="timer-wrapper"><div class="time">%S</div><span class="text">Secondes</span></div>'
                         )
                     );
                 });

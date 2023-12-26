@@ -76,7 +76,7 @@ a:focus{
 }
 
 .logo h1:first-letter{
-	color: #0595be;
+	color: #1dceff;
 }
 
 .logo p{
@@ -95,7 +95,7 @@ a:focus{
 }
 
 .coming-text h2{
-	color: #0595be;
+	color: #1dceff;
 	font-size: 54px;
 	letter-spacing: 0.1em;
 	font-weight: 700;
@@ -129,7 +129,7 @@ a:focus{
 }
 
 .timer .timer-wrapper .text{
-	color: #0595be;
+	color: #1dceff;
 	text-transform: uppercase;
 	font-size: 16px;
 }
@@ -163,7 +163,7 @@ a:focus{
 	font-size: 14px;
 	font-weight: 700;
 	margin-left: -5px;
-	background: #0595be;
+	background: #1dceff;
 	vertical-align: top;
 	transition: all 0.3s;
 	outline: 0;
@@ -188,7 +188,7 @@ a:focus{
 }
 
 .social-link a:hover{
-	color: #0595be;
+	color: #1dceff;
 }
 
 @media only screen and (max-width:768px){
