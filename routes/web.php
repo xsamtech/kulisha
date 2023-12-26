@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+// Generate symbolic link
+Route::get('/symlink', function () {return view('symlink');})->name('generate_symlink');
 
 Route::get('/', function () {
     return view('welcome');
