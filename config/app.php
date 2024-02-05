@@ -1,4 +1,8 @@
 <?php
+/**
+ * @author Xanders
+ * @see https://team.xsamtech.com/xanderssamoth
+ */
 
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
@@ -110,6 +114,31 @@ return [
     */
 
     'faker_locale' => 'en_US',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Available locales
+    |--------------------------------------------------------------------------
+    |
+    | All locales that application works with
+    |
+    */
+    'available_locales' => [
+        'Afrikaans' => 'af',
+        'Allemand' => 'de',
+        'عرب' => 'ar',
+        '中国人' => 'zh',
+        'English' => 'en',
+        'Español' => 'es',
+        'Français' => 'fr',
+        'Italiano' => 'it',
+        '日本語' => 'ja',
+        'Русский' => 'ru',
+        'Swahili' => 'sw',
+        'Türkçe' => 'tr',
+        'čeština' => 'cs',
+        'Esperanto' => 'eo'
+    ],
 
     /*
     |--------------------------------------------------------------------------
