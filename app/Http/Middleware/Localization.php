@@ -7,6 +7,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
 
+/**
+ * @author Xanders
+ * @see https://team.xsamtech.com/xanderssamoth
+ */
 class Localization
 {
     /**
@@ -23,7 +27,7 @@ class Localization
 
         } else {
             // Check header request and determine localization
-            $local = ($request->hasHeader('X-localization')) ? $request->header('X-localization') : 'fr';
+            $local = ($request->hasHeader('X-localization')) ? $request->header('X-localization') : 'en';
 
             App::setLocale($local);
         }
