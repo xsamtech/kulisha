@@ -87,6 +87,17 @@ class Status extends Model
 
     /**
      * MANY-TO-ONE
+     * Several histories for a status
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function histories(): HasMany
+    {
+        return $this->hasMany(History::class);
+    }
+
+    /**
+     * MANY-TO-ONE
      * Several carts for a status
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
