@@ -101,6 +101,17 @@ class Post extends Model
 
     /**
      * ONE-TO-MANY
+     * One event for several posts
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function event(): BelongsTo
+    {
+        return $this->belongsTo(Event::class);
+    }
+
+    /**
+     * ONE-TO-MANY
      * One user for several posts
      * 
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
