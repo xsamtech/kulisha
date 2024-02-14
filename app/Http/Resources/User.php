@@ -41,7 +41,7 @@ class User extends JsonResource
             'prefered_theme' => $this->prefered_theme,
             'prefered_language' => $this->prefered_language,
             'profile_photo_path' => !empty($this->profile_photo_path) ? getWebURL() . '/storage/' . $this->profile_photo_path : getWebURL() . '/img/avatar.png',
-            'cover_photo_path' => !empty($this->cover_photo_path) ? getWebURL() . '/storage/' . $this->cover_photo_path : getWebURL() . '/img/cover.png',
+            'cover_photo_path' => !empty($this->cover_photo_path) ? getWebURL() . '/storage/' . $this->cover_photo_path : null,
             'cover_coordinates' => $this->cover_coordinates,
             'two_factor_secret' => $this->two_factor_secret,
             'two_factor_recovery_codes' => $this->two_factor_recovery_codes,

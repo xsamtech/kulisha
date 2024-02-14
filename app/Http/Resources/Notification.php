@@ -25,7 +25,7 @@ class Notification extends JsonResource
             'notification_content' => $this->notification_content,
             'color' => $this->color,
             'icon' => $this->icon,
-            'image_url' => $this->image_url,
+            'image_url' => !empty($this->image_url) ? getWebURL() . '/storage/' . $this->image_url : null,
             'status' => Status::make($this->status),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),

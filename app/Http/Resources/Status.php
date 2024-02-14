@@ -25,7 +25,7 @@ class Status extends JsonResource
             'status_description' => $this->status_description,
             'color' => $this->color,
             'icon' => $this->icon,
-            'image_url' => $this->image_url,
+            'image_url' => !empty($this->image_url) ? getWebURL() . '/storage/' . $this->image_url : null,
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
             'group_id' => $this->group_id
