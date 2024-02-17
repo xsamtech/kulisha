@@ -133,11 +133,11 @@ return [
         'Français' => 'fr',
         'Italiano' => 'it',
         '日本語' => 'ja',
+        'Nederlands' => 'nl',
         'Русский' => 'ru',
         'Swahili' => 'sw',
         'Türkçe' => 'tr',
-        'čeština' => 'cs',
-        'Esperanto' => 'eo'
+        'čeština' => 'cs'
     ],
 
     /*
