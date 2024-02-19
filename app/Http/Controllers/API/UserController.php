@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Models\History;
 use App\Models\Notification;
 use App\Models\PasswordResetToken;
 use App\Models\Status;
@@ -16,6 +17,9 @@ use Illuminate\Support\Facades\Storage;
 use stdClass;
 use App\Http\Resources\User as ResourcesUser;
 use App\Http\Resources\PasswordResetToken as ResourcesPasswordReset;
+use App\Models\File;
+use App\Models\Subscription;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * @author Xanders
@@ -43,9 +47,10 @@ class UserController extends BaseController
      */
     public function store(Request $request)
     {
-        $status_ongoing = Status::where('status_name->fr', 'En cours')->first();
-        $status_unread = Status::where('status_name->fr', 'Non lue')->first();
-        $type_ordinary = Type::where('type_name->fr', 'Membre ordinaire')->first();
+        $ongoing_status = Status::where('status_name->fr', 'En cours')->first();
+        $unread_status = Status::where('status_name->fr', 'Non lue')->first();
+        $ordinary_type = Type::where('type_name->fr', 'Membre ordinaire')->first();
+        $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
         // Get inputs
         $inputs = [
             'firstname' => $request->firstname,
@@ -63,8 +68,8 @@ class UserController extends BaseController
             'phone' => $request->phone,
             'password' => empty($request->password) ? null : Hash::make($request->password),
             'api_token' => $request->api_token,
-            'status_id' => is_null($status_ongoing) ? null : $status_ongoing->id,
-            'type_id' => is_null($type_ordinary) ? null : $type_ordinary->id,
+            'status_id' => is_null($ongoing_status) ? null : $ongoing_status->id,
+            'type_id' => is_null($ordinary_type) ? null : $ordinary_type->id,
             'visibility_id' => $request->visibility_id
         ];
         $users = User::all();
@@ -260,7 +265,31 @@ class UserController extends BaseController
             'color' => 'text-success',
             'icon' => 'bi bi-exclamation-circle',
             'image_url' => 'assets/img/logo-reverse.png',
-            'status_id' => is_null($status_unread) ? null : $status_unread->id,
+            'status_id' => is_null($unread_status) ? null : $unread_status->id,
+            'user_id' => $user->id
+        ]);
+        History::create([
+            'history_url' => 'account',
+            'history_content' => [
+                'af' => 'Jy het pas jou rekening geskep.',
+                'de' => 'Sie haben gerade Ihr Konto erstellt.',
+                'ar' => 'لقد قمت للتو بإنشاء حسابك.',
+                'zh' => '您刚刚创建了您的帐户。',
+                'en' => 'You have just created your account.',
+                'es' => 'Acabas de crear tu cuenta.',
+                'fr' => 'Vous venez de créer votre compte.',
+                'it' => 'Hai appena creato il tuo account.',
+                'ja' => 'アカウントを作成しました。',
+                'nl' => 'U heeft zojuist uw account aangemaakt.',
+                'ru' => 'Вы только что создали свою учетную запись.',
+                'sw' => 'Umefungua akaunti yako.',
+                'tr' => 'Hesabınızı yeni oluşturdunuz.',
+                'cs' => 'Právě jste vytvořili svůj účet.'
+            ],
+            'color' => 'text-success',
+            'icon' => 'bi bi-person-plus',
+            'image_url' => 'assets/img/user.svg',
+            'type_id' => $activities_history_type->id,
             'user_id' => $user->id
         ]);
 
@@ -753,14 +782,63 @@ class UserController extends BaseController
      * Find by "username"
      *
      * @param  string $username
+     * @param  int $visitor_id
      * @return \Illuminate\Http\Response
      */
-    public function profile($username)
+    public function search($data, $visitor_id = null)
     {
+        $search_history_type = Type::where('type_name->fr', 'Historique de recherche')->first();
+        $user = User::where('firstname', 'LIKE', '%' . $data . '%')->orWhere('lastname', 'LIKE', '%' . $data . '%')->orWhere('surname', 'LIKE', '%' . $data . '%')->orWhere('username', 'LIKE', '%' . $data . '%')->first();
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        if ($visitor_id != null) {
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            if ($visitor_id != $user->id) {
+                History::create([
+                    'history_url' => 'search/?query=' . $data,
+                    'search_content' => $data,
+                    'type_id' => $search_history_type->id,
+                    'user_id' => $visitor_id
+                ]);
+            }
+        }
+
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.find_user_success'));
+    }
+
+    /**
+     * Find by "username"
+     *
+     * @param  string $username
+     * @param  int $visitor_id
+     * @return \Illuminate\Http\Response
+     */
+    public function profile($username, $visitor_id = null)
+    {
+        $consultation_history_type = Type::where('type_name->fr', 'Historique de consultation')->first();
         $user = User::where('username', $username)->first();
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        if ($visitor_id != null) {
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            if ($visitor_id != $user->id) {
+                History::create([
+                    'history_url' => $username,
+                    'profile_content' => $username,
+                    'type_id' => $consultation_history_type->id,
+                    'user_id' => $visitor_id
+                ]);
+            }
         }
 
         return $this->handleResponse(new ResourcesUser($user), __('notifications.find_user_success'));
@@ -889,28 +967,286 @@ class UserController extends BaseController
     }
 
     /**
-     * Switch between user statuses.
+     * Ask subscription to a another member.
      *
-     * @param  $id
-     * @param  $status_id
+     * @param  int $id
+     * @param  int $concerned_id
+     * @param  boolean $notify
      * @return \Illuminate\Http\Response
      */
-    public function switchStatus($id, $status_id)
+    public function subscribeToEvent($id, $event_id, $notify = false)
     {
+        $in_waiting_status = Status::where('status_name->fr', 'En attente')->first();
+        $unread_status = Status::where('status_name->fr', 'Non lue')->first();
+        $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
         $user = User::find($id);
+        $concerned = User::find($concerned_id);
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
         }
 
+        if (is_null($concerned)) {
+            return $this->handleError(__('notifications.find_concerned_404'));
+        }
+
+        Subscription::create([
+            'user_id' => $concerned->id,
+            'subscriber_id' => $user->id,
+            'status_id' => $in_waiting_status->id
+        ]);
+
         /*
             HISTORY AND/OR NOTIFICATION MANAGEMENT
         */
+        if ($notify == true) {
+            Notification::create([
+                'notification_url' => 'about/tricks',
+                'notification_content' => [
+                    'af' => $user->firstname . ' ' . $user->lastname . ' het vir u \'n verbindingsversoek gestuur.',
+                    'de' => $user->firstname . ' ' . $user->lastname . ' hat Ihnen eine Verbindungsanfrage gesendet.',
+                    'ar' => 'أرسل لك ' . $user->firstname . ' ' . $user->lastname . ' طلب اتصال.',
+                    'zh' => $user->firstname . ' ' . $user->lastname . '向您发送了一个连接请求。',
+                    'en' => $user->firstname . ' ' . $user->lastname . ' sent you a connection request.',
+                    'es' => $user->firstname . ' ' . $user->lastname . ' le envió una solicitud de conexión.',
+                    'fr' => $user->firstname . ' ' . $user->lastname . ' vous a envoyé une demande de connexion.',
+                    'it' => $user->firstname . ' ' . $user->lastname . ' ti ha inviato una richiesta di connessione.',
+                    'ja' => $user->firstname . ' ' . $user->lastname . 'は接続リクエストを送信しました。',
+                    'nl' => $user->firstname . ' ' . $user->lastname . ' heeft u een verbindingsverzoek gestuurd.',
+                    'ru' => $user->firstname . ' ' . $user->lastname . ' отправил вам запрос на соединение.',
+                    'sw' => $user->firstname . ' ' . $user->lastname . ' alikutumia ombi la unganisho.',
+                    'tr' => $user->firstname . ' ' . $user->lastname . ' size bir bağlantı isteği gönderdi.',
+                    'cs' => $user->firstname . ' ' . $user->lastname . ' vám poslal žádost o připojení.'
+                ],
+                'color' => 'text-primary',
+                'icon' => 'bi bi-person-plus',
+                'image_url' => $user->profile_photo_path,
+                'status_id' => $unread_status,
+                'user_id' => $concerned->id
+            ]);
+        }
+        History::create([
+            'history_url' => $concerned->username,
+            'history_content' => [
+                'af' => 'U het \'n verbindingsversoek aan ' . $concerned->firstname . ' ' . $concerned->lastname . ' gestuur.',
+                'de' => 'Sie haben eine Verbindungsanfrage an ' . $concerned->firstname . ' ' . $concerned->lastname . ' gesendet.',
+                'ar' => 'لقد أرسلت طلب اتصال إلى ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'zh' => '您已向' . $concerned->firstname . ' ' . $concerned->lastname . '发送了连接请求。',
+                'en' => 'You have sent a connection request to ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'es' => 'Ha enviado una solicitud de conexión a ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'fr' => 'Vous avez envoyé une demande de connexion à ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'it' => 'Hai inviato una richiesta di connessione a ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'ja' => $concerned->firstname . ' ' . $concerned->lastname . 'に接続リクエストを送信しました。',
+                'nl' => 'U hebt een verbindingsverzoek naar ' . $concerned->firstname . ' ' . $concerned->lastname . ' gestuurd.',
+                'ru' => 'Вы отправили запрос на подключение к ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'sw' => 'Umetuma ombi la unganisho kwa ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'tr' => $concerned->firstname . ' ' . $concerned->lastname . '\'a bir bağlantı isteği gönderdiniz.',
+                'cs' => 'Poslali jste žádost o připojení ' . $concerned->firstname . ' ' . $concerned->lastname . '.'
+            ],
+            'color' => 'text-warning',
+            'icon' => 'bi bi-person-plus',
+            'image_url' => $concerned->profile_photo_path,
+            'type_id' => $activities_history_type->id,
+            'user_id' => $user->id
+        ]);
+
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
+    }
+
+    /**
+     * Ask subscription to a another member.
+     *
+     * @param  int $id
+     * @param  int $concerned_id
+     * @param  boolean $notify
+     * @return \Illuminate\Http\Response
+     */
+    public function subscribeToCommunity($id, $community_id, $notify = false)
+    {
+        $in_waiting_status = Status::where('status_name->fr', 'En attente')->first();
+        $unread_status = Status::where('status_name->fr', 'Non lue')->first();
+        $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
+        $user = User::find($id);
+        $concerned = User::find($concerned_id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        if (is_null($concerned)) {
+            return $this->handleError(__('notifications.find_concerned_404'));
+        }
+
+        Subscription::create([
+            'user_id' => $concerned->id,
+            'subscriber_id' => $user->id,
+            'status_id' => $in_waiting_status->id
+        ]);
+
+        /*
+            HISTORY AND/OR NOTIFICATION MANAGEMENT
+        */
+        if ($notify == true) {
+            Notification::create([
+                'notification_url' => 'about/tricks',
+                'notification_content' => [
+                    'af' => $user->firstname . ' ' . $user->lastname . ' het vir u \'n verbindingsversoek gestuur.',
+                    'de' => $user->firstname . ' ' . $user->lastname . ' hat Ihnen eine Verbindungsanfrage gesendet.',
+                    'ar' => 'أرسل لك ' . $user->firstname . ' ' . $user->lastname . ' طلب اتصال.',
+                    'zh' => $user->firstname . ' ' . $user->lastname . '向您发送了一个连接请求。',
+                    'en' => $user->firstname . ' ' . $user->lastname . ' sent you a connection request.',
+                    'es' => $user->firstname . ' ' . $user->lastname . ' le envió una solicitud de conexión.',
+                    'fr' => $user->firstname . ' ' . $user->lastname . ' vous a envoyé une demande de connexion.',
+                    'it' => $user->firstname . ' ' . $user->lastname . ' ti ha inviato una richiesta di connessione.',
+                    'ja' => $user->firstname . ' ' . $user->lastname . 'は接続リクエストを送信しました。',
+                    'nl' => $user->firstname . ' ' . $user->lastname . ' heeft u een verbindingsverzoek gestuurd.',
+                    'ru' => $user->firstname . ' ' . $user->lastname . ' отправил вам запрос на соединение.',
+                    'sw' => $user->firstname . ' ' . $user->lastname . ' alikutumia ombi la unganisho.',
+                    'tr' => $user->firstname . ' ' . $user->lastname . ' size bir bağlantı isteği gönderdi.',
+                    'cs' => $user->firstname . ' ' . $user->lastname . ' vám poslal žádost o připojení.'
+                ],
+                'color' => 'text-primary',
+                'icon' => 'bi bi-person-plus',
+                'image_url' => $user->profile_photo_path,
+                'status_id' => $unread_status,
+                'user_id' => $concerned->id
+            ]);
+        }
+        History::create([
+            'history_url' => $concerned->username,
+            'history_content' => [
+                'af' => 'U het \'n verbindingsversoek aan ' . $concerned->firstname . ' ' . $concerned->lastname . ' gestuur.',
+                'de' => 'Sie haben eine Verbindungsanfrage an ' . $concerned->firstname . ' ' . $concerned->lastname . ' gesendet.',
+                'ar' => 'لقد أرسلت طلب اتصال إلى ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'zh' => '您已向' . $concerned->firstname . ' ' . $concerned->lastname . '发送了连接请求。',
+                'en' => 'You have sent a connection request to ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'es' => 'Ha enviado una solicitud de conexión a ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'fr' => 'Vous avez envoyé une demande de connexion à ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'it' => 'Hai inviato una richiesta di connessione a ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'ja' => $concerned->firstname . ' ' . $concerned->lastname . 'に接続リクエストを送信しました。',
+                'nl' => 'U hebt een verbindingsverzoek naar ' . $concerned->firstname . ' ' . $concerned->lastname . ' gestuurd.',
+                'ru' => 'Вы отправили запрос на подключение к ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'sw' => 'Umetuma ombi la unganisho kwa ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'tr' => $concerned->firstname . ' ' . $concerned->lastname . '\'a bir bağlantı isteği gönderdiniz.',
+                'cs' => 'Poslali jste žádost o připojení ' . $concerned->firstname . ' ' . $concerned->lastname . '.'
+            ],
+            'color' => 'text-warning',
+            'icon' => 'bi bi-person-plus',
+            'image_url' => $concerned->profile_photo_path,
+            'type_id' => $activities_history_type->id,
+            'user_id' => $user->id
+        ]);
+
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
+    }
+
+    /**
+     * Ask subscription to a another member.
+     *
+     * @param  int $id
+     * @param  int $concerned_id
+     * @param  boolean $notify
+     * @return \Illuminate\Http\Response
+     */
+    public function subscribeToMember($id, $concerned_id, $notify = false)
+    {
+        $in_waiting_status = Status::where('status_name->fr', 'En attente')->first();
+        $unread_status = Status::where('status_name->fr', 'Non lue')->first();
+        $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
+        $user = User::find($id);
+        $concerned = User::find($concerned_id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        if (is_null($concerned)) {
+            return $this->handleError(__('notifications.find_concerned_404'));
+        }
+
+        Subscription::create([
+            'user_id' => $concerned->id,
+            'subscriber_id' => $user->id,
+            'status_id' => $in_waiting_status->id
+        ]);
+
+        /*
+            HISTORY AND/OR NOTIFICATION MANAGEMENT
+        */
+        if ($notify == true) {
+            Notification::create([
+                'notification_url' => 'about/tricks',
+                'notification_content' => [
+                    'af' => $user->firstname . ' ' . $user->lastname . ' het vir u \'n verbindingsversoek gestuur.',
+                    'de' => $user->firstname . ' ' . $user->lastname . ' hat Ihnen eine Verbindungsanfrage gesendet.',
+                    'ar' => 'أرسل لك ' . $user->firstname . ' ' . $user->lastname . ' طلب اتصال.',
+                    'zh' => $user->firstname . ' ' . $user->lastname . '向您发送了一个连接请求。',
+                    'en' => $user->firstname . ' ' . $user->lastname . ' sent you a connection request.',
+                    'es' => $user->firstname . ' ' . $user->lastname . ' le envió una solicitud de conexión.',
+                    'fr' => $user->firstname . ' ' . $user->lastname . ' vous a envoyé une demande de connexion.',
+                    'it' => $user->firstname . ' ' . $user->lastname . ' ti ha inviato una richiesta di connessione.',
+                    'ja' => $user->firstname . ' ' . $user->lastname . 'は接続リクエストを送信しました。',
+                    'nl' => $user->firstname . ' ' . $user->lastname . ' heeft u een verbindingsverzoek gestuurd.',
+                    'ru' => $user->firstname . ' ' . $user->lastname . ' отправил вам запрос на соединение.',
+                    'sw' => $user->firstname . ' ' . $user->lastname . ' alikutumia ombi la unganisho.',
+                    'tr' => $user->firstname . ' ' . $user->lastname . ' size bir bağlantı isteği gönderdi.',
+                    'cs' => $user->firstname . ' ' . $user->lastname . ' vám poslal žádost o připojení.'
+                ],
+                'color' => 'text-primary',
+                'icon' => 'bi bi-person-plus',
+                'image_url' => $user->profile_photo_path,
+                'status_id' => $unread_status,
+                'user_id' => $concerned->id
+            ]);
+        }
+        History::create([
+            'history_url' => $concerned->username,
+            'history_content' => [
+                'af' => 'U het \'n verbindingsversoek aan ' . $concerned->firstname . ' ' . $concerned->lastname . ' gestuur.',
+                'de' => 'Sie haben eine Verbindungsanfrage an ' . $concerned->firstname . ' ' . $concerned->lastname . ' gesendet.',
+                'ar' => 'لقد أرسلت طلب اتصال إلى ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'zh' => '您已向' . $concerned->firstname . ' ' . $concerned->lastname . '发送了连接请求。',
+                'en' => 'You have sent a connection request to ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'es' => 'Ha enviado una solicitud de conexión a ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'fr' => 'Vous avez envoyé une demande de connexion à ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'it' => 'Hai inviato una richiesta di connessione a ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'ja' => $concerned->firstname . ' ' . $concerned->lastname . 'に接続リクエストを送信しました。',
+                'nl' => 'U hebt een verbindingsverzoek naar ' . $concerned->firstname . ' ' . $concerned->lastname . ' gestuurd.',
+                'ru' => 'Вы отправили запрос на подключение к ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'sw' => 'Umetuma ombi la unganisho kwa ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
+                'tr' => $concerned->firstname . ' ' . $concerned->lastname . '\'a bir bağlantı isteği gönderdiniz.',
+                'cs' => 'Poslali jste žádost o připojení ' . $concerned->firstname . ' ' . $concerned->lastname . '.'
+            ],
+            'color' => 'text-warning',
+            'icon' => 'bi bi-person-plus',
+            'image_url' => $concerned->profile_photo_path,
+            'type_id' => $activities_history_type->id,
+            'user_id' => $user->id
+        ]);
+
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
+    }
+
+    /**
+     * Switch between user statuses.
+     *
+     * @param  $id
+     * @param  $status_id
+     * @param  boolean $notify
+     * @return \Illuminate\Http\Response
+     */
+    public function switchStatus($id, $status_id, $notify = false)
+    {
         $status_activated = Status::where('status_name->fr', 'Activé')->first();
         $status_disabled = Status::where('status_name->fr', 'Désactivé')->first();
         $status_blocked = Status::where('status_name->fr', 'Bloqué')->first();
         $status_deleted = Status::where('status_name->fr', 'Supprimé')->first();
-        $status_unread = Status::where('status_name->fr', 'Non lue')->first();
+        $unread_status = Status::where('status_name->fr', 'Non lue')->first();
+        $user = User::find($id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
 
         // The user account is activated
         if ($status_id == $status_activated->id) {
@@ -920,30 +1256,35 @@ class UserController extends BaseController
                 'updated_at' => now()
             ]);
 
-            Notification::create([
-                'notification_url' => 'about/terms_of_use',
-                'notification_content' => [
-                    'af' => 'Jou rekening is geaktiveer. Lees asseblief ons bepalings voordat jy begin.',
-                    'de' => 'Dein Konto wurde aktiviert. Bitte lesen Sie unsere Bedingungen, bevor Sie beginnen.',
-                    'ar' => 'تم تنشيط حسابك. يرجى قراءة شروطنا قبل أن تبدأ.',
-                    'zh' => '您的帐号已经激活。 请在开始之前阅读我们的条款。',
-                    'en' => 'Your account has been activated. Please read our terms before you start.',
-                    'es' => 'Tu cuenta ha sido activada. Lea nuestros términos antes de comenzar.',
-                    'fr' => 'Votre compte a été activé. Veuillez lire nos conditions avant de commencer.',
-                    'it' => 'Il tuo account è stato attivato. Si prega di leggere i nostri termini prima di iniziare.',
-                    'ja' => 'あなたのアカウントは有効化されました。 始める前に規約をお読みください。',
-                    'nl' => 'Uw account is geactiveerd. Lees onze voorwaarden voordat u begint.',
-                    'ru' => 'Ваша учетная запись активирована. Пожалуйста, прочтите наши условия, прежде чем начать.',
-                    'sw' => 'Akaunti yako imewezeshwa. Tafadhali soma masharti yetu kabla ya kuanza.',
-                    'tr' => 'Hesabınız aktive edildi. Lütfen başlamadan önce şartlarımızı okuyun.',
-                    'cs' => 'Váš účet byl aktivován. Než začnete, přečtěte si prosím naše podmínky.'
-                ],
-                'color' => 'text-success',
-                'icon' => 'bi bi-shield-lock',
-                'image_url' => 'assets/img/logo-reverse.png',
-                'status_id' => $status_unread->id,
-                'user_id' => $user->id,
-            ]);
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            if ($notify == true) {
+                Notification::create([
+                    'notification_url' => 'about/terms_of_use',
+                    'notification_content' => [
+                        'af' => 'Jou rekening is geaktiveer. Lees asseblief ons bepalings voordat jy begin.',
+                        'de' => 'Dein Konto wurde aktiviert. Bitte lesen Sie unsere Bedingungen, bevor Sie beginnen.',
+                        'ar' => 'تم تنشيط حسابك. يرجى قراءة شروطنا قبل أن تبدأ.',
+                        'zh' => '您的帐号已经激活。 请在开始之前阅读我们的条款。',
+                        'en' => 'Your account has been activated. Please read our terms before you start.',
+                        'es' => 'Tu cuenta ha sido activada. Lea nuestros términos antes de comenzar.',
+                        'fr' => 'Votre compte a été activé. Veuillez lire nos conditions avant de commencer.',
+                        'it' => 'Il tuo account è stato attivato. Si prega di leggere i nostri termini prima di iniziare.',
+                        'ja' => 'あなたのアカウントは有効化されました。 始める前に規約をお読みください。',
+                        'nl' => 'Uw account is geactiveerd. Lees onze voorwaarden voordat u begint.',
+                        'ru' => 'Ваша учетная запись активирована. Пожалуйста, прочтите наши условия, прежде чем начать.',
+                        'sw' => 'Akaunti yako imewezeshwa. Tafadhali soma masharti yetu kabla ya kuanza.',
+                        'tr' => 'Hesabınız aktive edildi. Lütfen başlamadan önce şartlarımızı okuyun.',
+                        'cs' => 'Váš účet byl aktivován. Než začnete, přečtěte si prosím naše podmínky.'
+                    ],
+                    'color' => 'text-success',
+                    'icon' => 'bi bi-shield-lock',
+                    'image_url' => 'assets/img/logo-reverse.png',
+                    'status_id' => $unread_status->id,
+                    'user_id' => $user->id,
+                ]);
+            }
         }
 
         // The user account is blocked
@@ -954,30 +1295,35 @@ class UserController extends BaseController
                 'updated_at' => now()
             ]);
 
-            Notification::create([
-                'notification_url' => 'about/terms_of_use',
-                'notification_content' => [
-                    'af' => 'Jou rekening is geblokkeer. Dit kan gebeur wanneer jy ons bepalings oortree of jou rekening gekap is.',
-                    'de' => 'Ihr Konto wurde gesperrt. Dies kann passieren, wenn Sie gegen unsere Bedingungen verstoßen oder Ihr Konto gehackt wurde.',
-                    'ar' => 'تم حظر حسابك. يمكن أن يحدث هذا عندما تنتهك شروطنا أو يتم اختراق حسابك.',
-                    'zh' => '您的帐户已被冻结。 当您违反我们的条款或您的帐户被黑客入侵时，可能会发生这种情况。',
-                    'en' => 'Your account has been blocked. This can happen when you violate our terms or your account has been hacked.',
-                    'es' => 'Tu cuenta ha sido bloqueada. Esto puede suceder cuando viola nuestros términos o su cuenta ha sido pirateada.',
-                    'fr' => 'Votre compte a été bloqué. Ceci peut arriver lorsque vous ne respectez pas nos conditions ou votre compte a été piraté.',
-                    'it' => 'Il tuo account è stato bloccato. Ciò può accadere quando violi i nostri termini o il tuo account è stato violato.',
-                    'ja' => 'あなたのアカウントはブロックされました。 これは、利用規約に違反した場合、またはアカウントがハッキングされた場合に発生する可能性があります。',
-                    'nl' => 'Uw account is geblokkeerd. Dit kan gebeuren wanneer u onze voorwaarden schendt of uw account is gehackt.',
-                    'ru' => 'Ваш аккаунт заблокирован. Это может произойти, если вы нарушите наши условия или ваша учетная запись была взломана.',
-                    'sw' => 'Akaunti yako imezuiwa. Hili linaweza kutokea unapokiuka masharti yetu au akaunti yako imedukuliwa.',
-                    'tr' => 'Hesabınız engellendi. Bu, şartlarımızı ihlal ettiğinizde veya hesabınız saldırıya uğradığında meydana gelebilir.',
-                    'cs' => 'Váš účet byl zablokován. To se může stát, když porušíte naše podmínky nebo byl váš účet napaden hackery.'
-                ],
-                'color' => 'text-danger',
-                'icon' => 'bi bi-lock-fill',
-                'image_url' => 'assets/img/logo-reverse.png',
-                'status_id' => $status_unread->id,
-                'user_id' => $user->id,
-            ]);
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            if ($notify == true) {
+                Notification::create([
+                    'notification_url' => 'about/terms_of_use',
+                    'notification_content' => [
+                        'af' => 'Jou rekening is geblokkeer. Dit kan gebeur wanneer jy ons bepalings oortree of jou rekening gekap is.',
+                        'de' => 'Ihr Konto wurde gesperrt. Dies kann passieren, wenn Sie gegen unsere Bedingungen verstoßen oder Ihr Konto gehackt wurde.',
+                        'ar' => 'تم حظر حسابك. يمكن أن يحدث هذا عندما تنتهك شروطنا أو يتم اختراق حسابك.',
+                        'zh' => '您的帐户已被冻结。 当您违反我们的条款或您的帐户被黑客入侵时，可能会发生这种情况。',
+                        'en' => 'Your account has been blocked. This can happen when you violate our terms or your account has been hacked.',
+                        'es' => 'Tu cuenta ha sido bloqueada. Esto puede suceder cuando viola nuestros términos o su cuenta ha sido pirateada.',
+                        'fr' => 'Votre compte a été bloqué. Ceci peut arriver lorsque vous ne respectez pas nos conditions ou votre compte a été piraté.',
+                        'it' => 'Il tuo account è stato bloccato. Ciò può accadere quando violi i nostri termini o il tuo account è stato violato.',
+                        'ja' => 'あなたのアカウントはブロックされました。 これは、利用規約に違反した場合、またはアカウントがハッキングされた場合に発生する可能性があります。',
+                        'nl' => 'Uw account is geblokkeerd. Dit kan gebeuren wanneer u onze voorwaarden schendt of uw account is gehackt.',
+                        'ru' => 'Ваш аккаунт заблокирован. Это может произойти, если вы нарушите наши условия или ваша учетная запись была взломана.',
+                        'sw' => 'Akaunti yako imezuiwa. Hili linaweza kutokea unapokiuka masharti yetu au akaunti yako imedukuliwa.',
+                        'tr' => 'Hesabınız engellendi. Bu, şartlarımızı ihlal ettiğinizde veya hesabınız saldırıya uğradığında meydana gelebilir.',
+                        'cs' => 'Váš účet byl zablokován. To se může stát, když porušíte naše podmínky nebo byl váš účet napaden hackery.'
+                    ],
+                    'color' => 'text-danger',
+                    'icon' => 'bi bi-lock-fill',
+                    'image_url' => 'assets/img/logo-reverse.png',
+                    'status_id' => $unread_status->id,
+                    'user_id' => $user->id,
+                ]);
+            }
         }
 
         // The user account is disabled
@@ -988,30 +1334,35 @@ class UserController extends BaseController
                 'updated_at' => now()
             ]);
 
-            Notification::create([
-                'notification_url' => 'settings/account',
-                'notification_content' => [
-                    'af' => 'Jy het ons verlaat deur jou rekening te deaktiveer. Ons sien uit daarna om jou weer te sien. Om jou rekening te heraktiveer, klik hier.',
-                    'de' => 'Sie haben uns verlassen, indem Sie Ihr Konto deaktiviert haben. Wir freuen uns auf ein Wiedersehen. Um Ihr Konto erneut zu aktivieren, klicken Sie hier.',
-                    'ar' => 'لقد تركتنا عن طريق إلغاء تنشيط حسابك. اتمنى ان اراك مرة اخرى. لإعادة تنشيط حسابك، انقر هنا.',
-                    'zh' => '您通过停用帐户离开了我们。 我们期待再次见到您。 要重新激活您的帐户，请单击此处。',
-                    'en' => 'You left us by deactivating your account. We look forward to seeing you again. To reactivate your account, click here.',
-                    'es' => 'Nos dejaste desactivando tu cuenta. Esperamos volver a verle de nuevo. Para reactivar su cuenta, haga clic aquí.',
-                    'fr' => 'Vous nous avez quitté en désactivant votre compte. Nous avons hâte de vous revoir. Pour réactiver votre compte, cliquez ici.',
-                    'it' => 'Ci hai lasciato disattivando il tuo account. Non vediamo l\'ora di rivederti. Per riattivare il tuo account, clicca qui.',
-                    'ja' => 'アカウントを無効にして当社から離れました。 またお会いできるのを楽しみにしています。 アカウントを再アクティブ化するには、ここをクリックしてください。',
-                    'nl' => 'U heeft ons verlaten door uw account te deactiveren. Wij kijken ernaar uit u weer te zien. Om uw account opnieuw te activeren, klikt u hier.',
-                    'ru' => 'Вы покинули нас, деактивировав свою учетную запись. Мы с нетерпением ждем встречи с вами снова. Чтобы повторно активировать свою учетную запись, нажмите здесь.',
-                    'sw' => 'Ulituacha kwa kuzima akaunti yako. Tunatazamia kukuona tena. Ili kuwezesha akaunti yako, bofya hapa.',
-                    'tr' => 'Hesabınızı devre dışı bırakarak aramızdan ayrıldınız. Sizi tekrar görmeyi sabırsızlıkla bekliyoruz. Hesabınızı yeniden etkinleştirmek için burayı tıklayın.',
-                    'cs' => 'Odešli jste od nás deaktivací svého účtu. Těšíme se na další shledání. Chcete-li znovu aktivovat svůj účet, klikněte sem.'
-                ],
-                'color' => 'text-danger',
-                'icon' => 'bi bi-lock-fill',
-                'image_url' => 'assets/img/logo-reverse.png',
-                'status_id' => $status_unread->id,
-                'user_id' => $user->id,
-            ]);
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            if ($notify == true) {
+                Notification::create([
+                    'notification_url' => 'settings/account',
+                    'notification_content' => [
+                        'af' => 'Jy het ons verlaat deur jou rekening te deaktiveer. Ons sien uit daarna om jou weer te sien. Om jou rekening te heraktiveer, klik hier.',
+                        'de' => 'Sie haben uns verlassen, indem Sie Ihr Konto deaktiviert haben. Wir freuen uns auf ein Wiedersehen. Um Ihr Konto erneut zu aktivieren, klicken Sie hier.',
+                        'ar' => 'لقد تركتنا عن طريق إلغاء تنشيط حسابك. اتمنى ان اراك مرة اخرى. لإعادة تنشيط حسابك، انقر هنا.',
+                        'zh' => '您通过停用帐户离开了我们。 我们期待再次见到您。 要重新激活您的帐户，请单击此处。',
+                        'en' => 'You left us by deactivating your account. We look forward to seeing you again. To reactivate your account, click here.',
+                        'es' => 'Nos dejaste desactivando tu cuenta. Esperamos volver a verle de nuevo. Para reactivar su cuenta, haga clic aquí.',
+                        'fr' => 'Vous nous avez quitté en désactivant votre compte. Nous avons hâte de vous revoir. Pour réactiver votre compte, cliquez ici.',
+                        'it' => 'Ci hai lasciato disattivando il tuo account. Non vediamo l\'ora di rivederti. Per riattivare il tuo account, clicca qui.',
+                        'ja' => 'アカウントを無効にして当社から離れました。 またお会いできるのを楽しみにしています。 アカウントを再アクティブ化するには、ここをクリックしてください。',
+                        'nl' => 'U heeft ons verlaten door uw account te deactiveren. Wij kijken ernaar uit u weer te zien. Om uw account opnieuw te activeren, klikt u hier.',
+                        'ru' => 'Вы покинули нас, деактивировав свою учетную запись. Мы с нетерпением ждем встречи с вами снова. Чтобы повторно активировать свою учетную запись, нажмите здесь.',
+                        'sw' => 'Ulituacha kwa kuzima akaunti yako. Tunatazamia kukuona tena. Ili kuwezesha akaunti yako, bofya hapa.',
+                        'tr' => 'Hesabınızı devre dışı bırakarak aramızdan ayrıldınız. Sizi tekrar görmeyi sabırsızlıkla bekliyoruz. Hesabınızı yeniden etkinleştirmek için burayı tıklayın.',
+                        'cs' => 'Odešli jste od nás deaktivací svého účtu. Těšíme se na další shledání. Chcete-li znovu aktivovat svůj účet, klikněte sem.'
+                    ],
+                    'color' => 'text-danger',
+                    'icon' => 'bi bi-lock-fill',
+                    'image_url' => 'assets/img/logo-reverse.png',
+                    'status_id' => $unread_status->id,
+                    'user_id' => $user->id,
+                ]);
+            }
         }
 
         // The user account is deleted
@@ -1031,27 +1382,24 @@ class UserController extends BaseController
      *
      * @param  $id
      * @param  $type_id
+     * @param  boolean $notify
      * @return \Illuminate\Http\Response
      */
-    public function switchType($id, $type_id)
+    public function switchType($id, $type_id, $notify = false)
     {
+        $ordinary_type = Type::where('type_name->fr', 'Membre ordinaire')->first();
+        $type_premium = Type::where('type_name->fr', 'Membre premium')->first();
+        $unread_status = Status::where('status_name->fr', 'Non lue')->first();
         $user = User::find($id);
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
         }
 
-        /*
-            HISTORY AND/OR NOTIFICATION MANAGEMENT
-        */
-        $type_ordinary = Type::where('type_name->fr', 'Membre ordinaire')->first();
-        $type_premium = Type::where('type_name->fr', 'Membre premium')->first();
-        $status_unread = Status::where('status_name->fr', 'Non lue')->first();
-
-        if ($type_id == $type_ordinary->id) {
+        if ($type_id == $ordinary_type->id) {
             // update "type_id" column
             $user->update([
-                'type_id' => $type_ordinary->id,
+                'type_id' => $ordinary_type->id,
                 'updated_at' => now()
             ]);
         }
@@ -1063,30 +1411,100 @@ class UserController extends BaseController
                 'updated_at' => now()
             ]);
 
-            Notification::create([
-                'notification_url' => 'about/terms_of_use',
-                'notification_content' => [
-                    'af' => 'Welkom by Kulisha Premium Service. Klik asseblief hier om besonderhede oor hierdie diens te sien.',
-                    'de' => 'Willkommen beim Kulisha Premium Service. Bitte klicken Sie hier, um Details zu diesem Service anzuzeigen.',
-                    'ar' => 'مرحبًا بك في خدمة كوليشا المميزة. الرجاء الضغط هنا لعرض تفاصيل حول هذه الخدمة.',
-                    'zh' => '欢迎使用 Kulisha 优质服务。 请点击此处查看有关此服务的详细信息。',
-                    'en' => 'Welcome to Kulisha Premium Service. Please click here to view details about this service.',
-                    'es' => 'Bienvenido al servicio premium de Kulisha. Haga clic aquí para ver detalles sobre este servicio.',
-                    'fr' => 'Bienvenue au service Premium de Kulisha. Veuillez cliquer ici pour voir les détails sur ce service.',
-                    'it' => 'Benvenuto nel servizio premium Kulisha. Fare clic qui per visualizzare i dettagli su questo servizio.',
-                    'ja' => 'Kulisha プレミアム サービスへようこそ。 このサービスの詳細については、ここをクリックしてください。',
-                    'nl' => 'Welkom bij Kulisha Premiumservice. Klik hier om details over deze service te bekijken.',
-                    'ru' => 'Добро пожаловать в Кулиша Премиум Сервис. Пожалуйста, нажмите здесь, чтобы просмотреть подробную информацию об этой услуге.',
-                    'sw' => 'Karibu Kulisha Premium Service. Tafadhali bofya hapa ili kuona maelezo kuhusu huduma hii.',
-                    'tr' => 'Kulisha Premium Hizmetine hoş geldiniz. Bu hizmete ilişkin ayrıntıları görüntülemek için lütfen buraya tıklayın.',
-                    'cs' => 'Vítejte v prémiové službě Kuliša. Kliknutím sem zobrazíte podrobnosti o této službě.' ],
-                'color' => 'text-success',
-                'icon' => 'bi bi-shield-lock',
-                'image_url' => 'assets/img/logo-reverse.png',
-                'status_id' => $status_unread->id,
-                'user_id' => $user->id,
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            if ($notify == true) {
+                Notification::create([
+                    'notification_url' => 'about/terms_of_use',
+                    'notification_content' => [
+                        'af' => 'Welkom by Kulisha Premium Service. Klik asseblief hier om besonderhede oor hierdie diens te sien.',
+                        'de' => 'Willkommen beim Kulisha Premium Service. Bitte klicken Sie hier, um Details zu diesem Service anzuzeigen.',
+                        'ar' => 'مرحبًا بك في خدمة كوليشا المميزة. الرجاء الضغط هنا لعرض تفاصيل حول هذه الخدمة.',
+                        'zh' => '欢迎使用 Kulisha 优质服务。 请点击此处查看有关此服务的详细信息。',
+                        'en' => 'Welcome to Kulisha Premium Service. Please click here to view details about this service.',
+                        'es' => 'Bienvenido al servicio premium de Kulisha. Haga clic aquí para ver detalles sobre este servicio.',
+                        'fr' => 'Bienvenue au service Premium de Kulisha. Veuillez cliquer ici pour voir les détails sur ce service.',
+                        'it' => 'Benvenuto nel servizio premium Kulisha. Fare clic qui per visualizzare i dettagli su questo servizio.',
+                        'ja' => 'Kulisha プレミアム サービスへようこそ。 このサービスの詳細については、ここをクリックしてください。',
+                        'nl' => 'Welkom bij Kulisha Premiumservice. Klik hier om details over deze service te bekijken.',
+                        'ru' => 'Добро пожаловать в Кулиша Премиум Сервис. Пожалуйста, нажмите здесь, чтобы просмотреть подробную информацию об этой услуге.',
+                        'sw' => 'Karibu Kulisha Premium Service. Tafadhali bofya hapa ili kuona maelezo kuhusu huduma hii.',
+                        'tr' => 'Kulisha Premium Hizmetine hoş geldiniz. Bu hizmete ilişkin ayrıntıları görüntülemek için lütfen buraya tıklayın.',
+                        'cs' => 'Vítejte v prémiové službě Kuliša. Kliknutím sem zobrazíte podrobnosti o této službě.' ],
+                    'color' => 'text-success',
+                    'icon' => 'bi bi-shield-lock',
+                    'image_url' => 'assets/img/logo-reverse.png',
+                    'status_id' => $unread_status->id,
+                    'user_id' => $user->id,
+                ]);
+            }
+        }
+
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
+    }
+
+    /**
+     * Switch between user visibilities.
+     *
+     * @param  $id
+     * @param  $type_id
+     * @return \Illuminate\Http\Response
+     */
+    public function switchVisibility($id, $type_id)
+    {
+        $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
+        $ordinary_type = Type::where('type_name->fr', 'Membre ordinaire')->first();
+        $type_premium = Type::where('type_name->fr', 'Membre premium')->first();
+        $user = User::find($id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        if ($type_id == $ordinary_type->id) {
+            // update "type_id" column
+            $user->update([
+                'type_id' => $ordinary_type->id,
+                'updated_at' => now()
             ]);
         }
+
+        if ($type_id == $type_premium->id) {
+            // update "type_id" column
+            $user->update([
+                'type_id' => $type_premium->id,
+                'updated_at' => now()
+            ]);
+        }
+
+        /*
+            HISTORY AND/OR NOTIFICATION MANAGEMENT
+        */
+        History::create([
+            'history_url' => 'account',
+            'history_content' => [
+                'af' => 'Jy het jou sigbaarheid verander.',
+                'de' => 'Sie haben Ihre Sichtbarkeit geändert.',
+                'ar' => 'لقد غيرت رؤيتك.',
+                'zh' => '你已经改变了你的可见度。',
+                'en' => 'You have changed your visibility.',
+                'es' => 'Has cambiado tu visibilidad.',
+                'fr' => 'Vous avez changé votre visibilité.',
+                'it' => 'Hai cambiato la tua visibilità.',
+                'ja' => '可視性が変わりました。',
+                'nl' => 'Je hebt je zichtbaarheid veranderd.',
+                'ru' => 'Вы изменили свою видимость.',
+                'sw' => 'Umebadilisha mwonekano wako.',
+                'tr' => 'Görünürlüğünüzü değiştirdiniz.',
+                'cs' => 'Změnili jste viditelnost.'
+            ],
+            'color' => 'text-warning',
+            'icon' => 'bi bi-shield-lock',
+            'image_url' => $user->profile_photo_path,
+            'type_id' => $activities_history_type->id,
+            'user_id' => $user->id
+        ]);
 
         return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
     }
@@ -1116,6 +1534,7 @@ class UserController extends BaseController
      */
     public function updatePassword(Request $request, $id)
     {
+        $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
         // Get inputs
         $inputs = [
             'former_password' => $request->former_password,
@@ -1144,9 +1563,9 @@ class UserController extends BaseController
             return $this->handleError($inputs['confirm_new_password'], __('notifications.confirm_new_password'), 400);
         }
 
-        // if (preg_match('#^\S*(?=\S{8,})(?=\S*[a-z])(?=\S*[A-Z])(?=\S*[\d])\S*$#', $inputs['new_password']) == 0) {
-        //     return $this->handleError($inputs['new_password'], __('validation.custom.new_password.incorrect'), 400);
-        // }
+        if (preg_match('#^\S*(?=\S{8,})(?=\S*[a-z])(?=\S*[A-Z])(?=\S*[\d])\S*$#', $inputs['new_password']) == 0) {
+            return $this->handleError($inputs['new_password'], __('miscellaneous.password.error'), 400);
+        }
 
         // Update password reset
         $password_reset_by_email = PasswordResetToken::where('email', $user->email)->first();
@@ -1176,6 +1595,34 @@ class UserController extends BaseController
             'updated_at' => now()
         ]);
 
+        /*
+            HISTORY AND/OR NOTIFICATION MANAGEMENT
+        */
+        History::create([
+            'history_url' => 'account',
+            'history_content' => [
+                'af' => 'Jy het jou wagwoord verander.',
+                'de' => 'Sie haben Ihr Passwort geändert.',
+                'ar' => 'لقد قمت بتغيير كلمة المرور الخاصة بك.',
+                'zh' => '您已更改密码。',
+                'en' => 'You have changed your password.',
+                'es' => 'Has cambiado tu contraseña.',
+                'fr' => 'Vous avez modifié votre mot de passe.',
+                'it' => 'Hai cambiato la tua password.',
+                'ja' => 'パスワードを変更しました。',
+                'nl' => 'U heeft uw wachtwoord gewijzigd.',
+                'ru' => 'Вы изменили свой пароль.',
+                'sw' => 'Umebadilisha nenosiri lako.',
+                'tr' => 'Şifrenizi değiştirdiniz.',
+                'cs' => 'Změnili jste heslo.'
+            ],
+            'color' => 'text-primary',
+            'icon' => 'bi bi-shield-lock',
+            'image_url' => $user->profile_photo_path,
+            'type_id' => $activities_history_type->id,
+            'user_id' => $user->id
+        ]);
+
         return $this->handleResponse(new ResourcesUser($user), __('notifications.update_password_success'));
     }
 
@@ -1188,6 +1635,7 @@ class UserController extends BaseController
      */
     public function updateAvatarPicture(Request $request, $id)
     {
+        $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
         $inputs = [
             'user_id' => $request->user_id,
             'image_64' => $request->image_64
@@ -1202,7 +1650,7 @@ class UserController extends BaseController
         $file = new Filesystem;
         $file->cleanDirectory($_SERVER['DOCUMENT_ROOT'] . '/public/storage/images/users/' . $inputs['user_id'] . '/avatar');
         // Create image URL
-		$image_url = 'images/users/' . $id . '/avatar/' . Str::random(50) . '.png';
+		$image_url = 'images/users/' . $inputs['user_id'] . '/avatar/' . Str::random(50) . '.png';
 
 		// Upload image
 		Storage::url(Storage::disk('public')->put($image_url, base64_decode($image)));
@@ -1210,115 +1658,304 @@ class UserController extends BaseController
 		$user = User::find($id);
 
         $user->update([
-            'avatar_url' => $image_url,
+            'profile_photo_path' => $image_url,
             'updated_at' => now()
+        ]);
+
+        /*
+            HISTORY AND/OR NOTIFICATION MANAGEMENT
+        */
+        History::create([
+            'history_url' => 'account',
+            'history_content' => [
+                'af' => 'Jy het jou avatar gewysig.',
+                'de' => 'Sie haben Ihren Avatar geändert.',
+                'ar' => 'لقد قمت بتعديل الصورة الرمزية الخاصة بك.',
+                'zh' => '您已经修改了头像。',
+                'en' => 'You have changed your avatar.',
+                'es' => 'Has modificado tu avatar.',
+                'fr' => 'Vous avez modifié votre avatar.',
+                'it' => 'Hai modificato il tuo avatar.',
+                'ja' => 'アバターを変更しました。',
+                'nl' => 'Je hebt je avatar aangepast.',
+                'ru' => 'Вы изменили свой аватар.',
+                'sw' => 'Umebadilisha avatar yako.',
+                'tr' => 'Avatarınızı değiştirdiniz.',
+                'cs' => 'Upravili jste svůj avatar.'
+            ],
+            'color' => 'text-info',
+            'icon' => 'bi bi-file-earmark-person',
+            'image_url' => $user->profile_photo_path,
+            'type_id' => $activities_history_type->id,
+            'user_id' => $user->id
         ]);
 
         return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
     }
 
     /**
-     * Add user image in storage.
+     * Update user avatar picture in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  $id
      * @return \Illuminate\Http\Response
      */
-    public function addImage(Request $request, $id)
+    public function updateCover(Request $request, $id)
     {
+        $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
         $inputs = [
             'user_id' => $request->user_id,
-            'image_name' => $request->image_name,
-            'image_64_recto' => $request->image_64_recto,
-            'image_64_verso' => $request->image_64_verso
+            'image_64' => $request->image_64,
+            'x' => $request->x,
+            'y' => $request->y,
+            'width' => $request->width,
+            'height' => $request->height
         ];
+        // $extension = explode('/', explode(':', substr($inputs['image_64'], 0, strpos($inputs['image_64'], ';')))[1])[1];
+        $replace = substr($inputs['image_64'], 0, strpos($inputs['image_64'], ',') + 1);
+        // Find substring from replace here eg: data:image/png;base64,
+        $image = str_replace($replace, '', $inputs['image_64']);
+        $image = str_replace(' ', '+', $image);
 
-        if ($inputs['image_64_recto'] != null AND $inputs['image_64_verso'] != null) {
-            // $extension = explode('/', explode(':', substr($inputs['image_64_recto'], 0, strpos($inputs['image_64_recto'], ';')))[1])[1];
-            $replace_recto = substr($inputs['image_64_recto'], 0, strpos($inputs['image_64_recto'], ',') + 1);
-            $replace_verso = substr($inputs['image_64_verso'], 0, strpos($inputs['image_64_verso'], ',') + 1);
-            // Find substring from replace here eg: data:image/png;base64,
-            $image_recto = str_replace($replace_recto, '', $inputs['image_64_recto']);
-            $image_recto = str_replace(' ', '+', $image_recto);
-            $image_verso = str_replace($replace_verso, '', $inputs['image_64_verso']);
-            $image_verso = str_replace(' ', '+', $image_verso);
+        // Clean "covers" directory
+        $file = new Filesystem;
+        $file->cleanDirectory($_SERVER['DOCUMENT_ROOT'] . '/public/storage/images/users/' . $inputs['user_id'] . '/cover');
+        // Create image URL
+		$image_url = 'images/users/' . $inputs['user_id'] . '/cover/' . Str::random(50) . '.png';
 
-            // Clean "identity_data" directory
-            $file = new Filesystem;
-            $file->cleanDirectory($_SERVER['DOCUMENT_ROOT'] . '/public/storage/images/users/' . $inputs['user_id'] . '/identity_data');
-            // Create image URL
-            $image_url_recto = 'images/users/' . $inputs['user_id'] . '/identity_data/' . Str::random(50) . '.png';
-            $image_url_verso = 'images/users/' . $inputs['user_id'] . '/identity_data/' . Str::random(50) . '.png';
+		// Upload image
+		Storage::url(Storage::disk('public')->put($image_url, base64_decode($image)));
 
-            // Upload image
-            Storage::url(Storage::disk('public')->put($image_url_recto, base64_decode($image_recto)));
-            Storage::url(Storage::disk('public')->put($image_url_verso, base64_decode($image_verso)));
+		$user = User::find($id);
 
-            $user = User::find($id);
+        $user->update([
+            'cover_photo_path' => $image_url,
+            'cover_coordinates' => $inputs['x'] . '-' . $inputs['y'] . '-' . $inputs['width'] . '-' . $inputs['height'],
+            'updated_at' => now()
+        ]);
 
-            $user->update([
-                'id_card_type' => $inputs['image_name'],
-                'id_card_recto' => $image_url_recto,
-                'id_card_verso' => $image_url_verso,
-                'updated_at' => now(),
-            ]);
+        /*
+            HISTORY AND/OR NOTIFICATION MANAGEMENT
+        */
+        History::create([
+            'history_url' => 'account',
+            'history_content' => [
+                'af' => 'Jy het jou dekking verander.',
+                'de' => 'Sie haben Ihr Titelbild bearbeitet.',
+                'ar' => 'لقد قمت بتحرير صورة الغلاف الخاصة بك.',
+                'zh' => '您已编辑了封面照片。',
+                'en' => 'You have changed your cover photo.',
+                'es' => 'Has editado tu foto de portada.',
+                'fr' => 'Vous avez modifié votre photo de couverture.',
+                'it' => 'Hai modificato la tua foto di copertina.',
+                'ja' => 'カバー写真を編集しました。',
+                'nl' => 'Je hebt je omslagfoto bewerkt.',
+                'ru' => 'Вы отредактировали обложку.',
+                'sw' => 'Umehariri picha ya jalada lako.',
+                'tr' => 'Kapak fotoğrafınızı düzenlediniz.',
+                'cs' => 'Upravili jste svou titulní fotku.'
+            ],
+            'color' => 'text-danger',
+            'icon' => 'bi bi-image',
+            'image_url' => $user->cover_coordinates,
+            'type_id' => $activities_history_type->id,
+            'user_id' => $user->id
+        ]);
 
-            return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
-
-        } else {
-            if ($inputs['image_64_recto'] != null AND $inputs['image_64_verso'] == null) {
-                // $extension = explode('/', explode(':', substr($inputs['image_64_recto'], 0, strpos($inputs['image_64_recto'], ';')))[1])[1];
-                $replace_recto = substr($inputs['image_64_recto'], 0, strpos($inputs['image_64_recto'], ',') + 1);
-                // Find substring from replace here eg: data:image/png;base64,
-                $image_recto = str_replace($replace_recto, '', $inputs['image_64_recto']);
-                $image_recto = str_replace(' ', '+', $image_recto);
-
-                // Clean "identity_data" directory
-                $file = new Filesystem;
-                $file->cleanDirectory($_SERVER['DOCUMENT_ROOT'] . '/public/storage/images/users/' . $inputs['user_id'] . '/identity_data');
-                // Create image URL
-                $image_url_recto = 'images/users/' . $inputs['user_id'] . '/identity_data/' . Str::random(50) . '.png';
-
-                // Upload image
-                Storage::url(Storage::disk('public')->put($image_url_recto, base64_decode($image_recto)));
-
-                $user = User::find($id);
-
-                $user->update([
-                    'id_card_type' => $inputs['image_name'],
-                    'id_card_recto' => $image_url_recto,
-                    'updated_at' => now(),
-                ]);
-
-                return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
-            }
-
-            if ($inputs['image_64_recto'] == null AND $inputs['image_64_verso'] != null) {
-                // $extension = explode('/', explode(':', substr($inputs['image_64_verso'], 0, strpos($inputs['image_64_verso'], ';')))[1])[1];
-                $replace_verso = substr($inputs['image_64_verso'], 0, strpos($inputs['image_64_verso'], ',') + 1);
-                // Find substring from replace here eg: data:image/png;base64,
-                $image_verso = str_replace($replace_verso, '', $inputs['image_64_verso']);
-                $image_verso = str_replace(' ', '+', $image_verso);
-
-                // Clean "identity_data" directory
-                $file = new Filesystem;
-                $file->cleanDirectory($_SERVER['DOCUMENT_ROOT'] . '/public/storage/images/users/' . $inputs['user_id'] . '/identity_data');
-                // Create image URL
-                $image_url_verso = 'images/users/' . $inputs['user_id'] . '/identity_data/' . Str::random(50) . '.png';
-
-                // Upload image
-                Storage::url(Storage::disk('public')->put($image_url_verso, base64_decode($image_verso)));
-
-                $user = User::find($id);
-
-                $user->update([
-                    'id_card_type' => $inputs['image_name'],
-                    'id_card_verso' => $image_url_verso,
-                    'updated_at' => now(),
-                ]);
-
-                return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
-            }
-        }
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
     }
+
+    /**
+     * Upload user documents in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function uploadDoc(Request $request, $id)
+    {
+        $inputs = [
+            'file_name' => $request->file_name,
+            'user_id' => $request->user_id,
+            'document' => $request->file('document'),
+            'extension' => $request->file('document')->extension()
+        ];
+        // Validate file mime type
+        $validator = Validator::make($inputs, [
+            'document' => 'required|mimes:txt,pdf,doc,docx,xls,xlsx,ppt,pptx,pps,ppsx'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->handleError($validator->errors());       
+        }
+
+        // Current user
+		$user = User::find($id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        // Create file name
+		$file_name = 'documents/users/' . $inputs['user_id'] . '/' . Str::random(50) . '.' . $inputs['extension'];
+
+		// Upload file
+		Storage::url(Storage::disk('public')->put($file_name, $inputs['audio']));
+
+		// Find type by name to get its ID
+		$document_type = Type::where('type_name', 'Document')->first();
+
+        File::create([
+            'file_name' => $inputs['file_name'],
+            'file_url' => '/' . $file_name,
+            'type_id' => $document_type->id,
+            'user_id' => $user->id
+        ]);
+
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
+    }
+
+    /**
+     * Upload user audio in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function uploadAudio(Request $request, $id)
+    {
+        $inputs = [
+            'file_name' => $request->file_name,
+            'user_id' => $request->user_id,
+            'audio' => $request->file('audio'),
+            'extension' => $request->file('audio')->extension()
+        ];
+        // Validate file mime type
+        $validator = Validator::make($inputs, [
+            'audio' => 'required|mimes:mp3,wav,m4a,mid,midi,oga,opus,weba,aac'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->handleError($validator->errors());       
+        }
+
+        // Current user
+		$user = User::find($id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        // Create file name
+		$file_name = 'audios/users/' . $inputs['user_id'] . '/' . Str::random(50) . '.' . $inputs['extension'];
+
+		// Upload file
+		Storage::url(Storage::disk('public')->put($file_name, $inputs['audio']));
+
+		// Find type by name to get its ID
+		$audio_type = Type::where('type_name', 'Audio')->first();
+
+        File::create([
+            'file_name' => $inputs['file_name'],
+            'file_url' => '/' . $file_name,
+            'type_id' => $audio_type->id,
+            'user_id' => $user->id
+        ]);
+
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
+    }
+
+    /**
+     * Upload user video in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function uploadVideo(Request $request, $id)
+    {
+        $inputs = [
+            'file_name' => $request->file_name,
+            'user_id' => $request->user_id,
+            'video' => $request->file('video'),
+            'extension' => $request->file('video')->extension()
+        ];
+        // Validate file mime type
+        $validator = Validator::make($inputs, [
+            'video' => 'required|mimes:avi,mp4,mpeg,ogg,ts,webm,3gp,3g2'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->handleError($validator->errors());       
+        }
+
+        // Current user
+		$user = User::find($id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        // Create file name
+		$file_name = 'images/users/' . $inputs['user_id'] . '/' . Str::random(50) . '.' . $inputs['extension'];
+
+		// Upload file
+		Storage::url(Storage::disk('public')->put($file_name, $inputs['video']));
+
+		// Find type by name to get its ID
+		$video_type = Type::where('type_name', 'Vidéo')->first();
+
+        File::create([
+            'file_name' => $inputs['file_name'],
+            'file_url' => '/' . $file_name,
+            'type_id' => $video_type->id,
+            'user_id' => $user->id
+        ]);
+
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
+    }
+
+    /**
+     * Update user picture in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function uploadImage(Request $request, $id)
+    {
+        $inputs = [
+            'file_name' => $request->file_name,
+            'user_id' => $request->entity_id,
+            'image_64' => $request->base64image
+        ];
+        $replace = substr($inputs['image_64'], 0, strpos($inputs['image_64'], ',') + 1);
+        // Find substring from replace here eg: data:image/png;base64,
+        $image = str_replace($replace, '', $inputs['image_64']);
+        $image = str_replace(' ', '+', $image);
+        // Current user
+		$user = User::find($id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+		// Create file URL
+		$file_name = 'images/users/' . $inputs['user_id'] . '/' . Str::random(50) . '.png';
+
+		// Upload file
+		Storage::url(Storage::disk('public')->put($file_name, base64_decode($image)));
+
+		// Find type by name to get its ID
+		$photo_type = Type::where('type_name', 'Photo')->first();
+
+        File::create([
+            'file_name' => $inputs['file_name'],
+            'file_url' => '/' . $file_name,
+            'type_id' => $photo_type->id,
+            'user_id' => $user->id
+        ]);
+
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
+	}
 }

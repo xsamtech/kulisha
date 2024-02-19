@@ -67,8 +67,6 @@ class User extends JsonResource
             'fields' => Field::collection($this->fields),
             'websites' => Website::collection($this->websites),
             'files' => File::collection($this->files),
-            'owned_events' => Event::collection($this->owned_events)->sortByDesc('created_at')->toArray(),
-            'owned_communities' => Community::collection($this->owned_communities)->sortByDesc('created_at')->toArray(),
             'carts' => Cart::collection($this->carts)->sortByDesc('created_at')->toArray(),
             'payments' => Payment::collection($this->payments)->sortByDesc('created_at')->toArray(),
             'histories' => History::collection($this->histories)->sortByDesc('created_at')->toArray(),

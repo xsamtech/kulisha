@@ -24,6 +24,7 @@ class History extends JsonResource
             'history_url' => $this->history_url,
             'history_content' => $this->history_content,
             'search_content' => $this->search_content,
+            'profile_content' => $this->profile_content,
             'color' => $this->color,
             'icon' => $this->icon,
             'image_url' => !empty($this->image_url) ? getWebURL() . '/storage/' . $this->image_url : null,

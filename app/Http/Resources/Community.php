@@ -25,12 +25,14 @@ class Community extends JsonResource
             'community_description' => $this->community_description,
             'cover_photo_path' => !empty($this->cover_photo_path) ? getWebURL() . '/storage/' . $this->cover_photo_path : null,
             'cover_coordinates' => $this->cover_coordinates,
-            'users' => User::collection($this->users),
+            'type' => Type::make($this->type),
+            'status' => Status::make($this->status),
+            'owner' => User::make($this->user),
+            'members' => User::collection($this->users),
             'posts' => Post::collection($this->posts),
             'messages' => Message::collection($this->messages),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
-            'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
-            'user_id' => $this->user_id
+            'updated_at' => $this->updated_at->format('Y-m-d H:i:s')
         ];
     }
 }

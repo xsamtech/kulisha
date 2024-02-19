@@ -29,18 +29,18 @@ class Subscription extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
      * ONE-TO-MANY
-     * One follower for several subscriptions
+     * One subscriber for several subscriptions
      * 
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function follower(): BelongsTo
+    public function subscriber(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'subscriber_id');
     }
 
     /**

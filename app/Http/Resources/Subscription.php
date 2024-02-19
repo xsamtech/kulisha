@@ -21,8 +21,9 @@ class Subscription extends JsonResource
     {
         return [
             'id' => $this->id,
+            'is_following' => $this->is_following,
             'user' => User::make($this->user),
-            'follower' => User::make($this->follower),
+            'subscriber' => User::make($this->subscriber),
             'status' => Status::make($this->status),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s')

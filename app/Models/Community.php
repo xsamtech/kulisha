@@ -36,6 +36,28 @@ class Community extends Model
 
     /**
      * ONE-TO-MANY
+     * One type for several communities
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(Type::class);
+    }
+
+    /**
+     * ONE-TO-MANY
+     * One status for several communities
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class);
+    }
+
+    /**
+     * ONE-TO-MANY
      * One user for several communities
      * 
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
