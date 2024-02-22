@@ -22,11 +22,42 @@ if (!function_exists('getApiURL')) {
     }
 }
 
-// Get API toke
-if (!function_exists('getApiToken')) {
-    function getApiToken()
+// Friendly username from names
+if (!function_exists("slug")) {
+    function slug($str)
     {
-        return '';
+        // convert to entities
+        $string = htmlentities($str, ENT_QUOTES, 'UTF-8');
+        // regex to convert accented chars into their closest a-z ASCII equivelent
+        $string = preg_replace('~&([a-z]{1,2})(?:acute|cedil|circ|grave|lig|orn|ring|slash|th|tilde|uml);~i', '$1', $string);
+        // convert back from entities
+        $string = html_entity_decode($string, ENT_QUOTES, 'UTF-8');
+        // any straggling characters that are not strict alphanumeric are replaced with an underscore
+        $string = preg_replace('~[^0-9a-z]+~i', '_', $string);
+        // trim / cleanup / all lowercase
+        $string = trim($string, '-');
+        $string = strtolower($string);
+
+        return $string;
+    }
+}
+
+// Transform mentions and hashtag to URL
+if (!function_exists('transformMentionHashtag')) {
+    function transformMentionHashtag($web_url, $subject)
+    {
+        $pat = array('/#(\w+)/', '/@(\w+)/');
+        $rep = array('<strong><a href="' . $web_url . '/hashtag/$1">#$1</a></strong>', '<strong><a href="' . $web_url . '/$1">@$1</a></strong>');
+
+        return preg_replace($pat, $rep, $subject);
+    }
+}
+
+// Transform surrounded text to URL
+if (!function_exists('transformSurrounded')) {
+    function transformSurrounded($web_url, $subject)
+    {
+        return preg_replace('/(?<=^|\s)\[([a-z0-9_ a-z0-9_]+)\]\(([a-z0-9\-_\/]+)\)/i', '<strong><a href="' . $web_url . '/$2">$1</a></strong>', $subject);
     }
 }
 

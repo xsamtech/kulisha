@@ -14,7 +14,7 @@ class BaseController extends Controller
      * Handle response
      *
      * @param  $result
-     * @param  $msg
+     * @param  string $msg
      * @return \Illuminate\Http\Response
      */
     public function handleResponse($result, $msg)
@@ -31,9 +31,9 @@ class BaseController extends Controller
     /**
      * Handle response error
      *
-     * @param  $error
-     * @param array  $errorMsg
-     * @param  $code
+     * @param  string $error
+     * @param  array $errorMsg
+     * @param  int $code
      * @return \Illuminate\Http\Response
      */
     public function handleError($error, $errorMsg = [], $code = 404)

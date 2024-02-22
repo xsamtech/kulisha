@@ -24,6 +24,8 @@ class Notification extends JsonResource
             'notification_url' => $this->notification_url,
             'notification_content' => $this->notification_content,
             'color' => $this->color,
+            'subject' => $this->subject,
+            'subject_id' => $this->subject_id,
             'icon' => $this->icon,
             'image_url' => !empty($this->image_url) ? getWebURL() . '/storage/' . $this->image_url : null,
             'status' => Status::make($this->status),

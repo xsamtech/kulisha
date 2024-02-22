@@ -17,7 +17,9 @@ use Illuminate\Support\Facades\Storage;
 use stdClass;
 use App\Http\Resources\User as ResourcesUser;
 use App\Http\Resources\PasswordResetToken as ResourcesPasswordReset;
+use App\Models\Event;
 use App\Models\File;
+use App\Models\Reaction;
 use App\Models\Subscription;
 use Illuminate\Support\Facades\Validator;
 
@@ -967,181 +969,280 @@ class UserController extends BaseController
     }
 
     /**
-     * Ask subscription to a another member.
+     * Ask subscription to an event.
      *
      * @param  int $id
-     * @param  int $concerned_id
+     * @param  int $visitor_id
+     * @param  int $event_id
      * @param  boolean $notify
      * @return \Illuminate\Http\Response
      */
-    public function subscribeToEvent($id, $event_id, $notify = false)
+    public function subscribeToEvent($id, $visitor_id, $event_id, $notify = false)
     {
-        $in_waiting_status = Status::where('status_name->fr', 'En attente')->first();
+        $on_hold_status = Status::where('status_name->fr', 'En attente')->first();
+        $accepted_status = Status::where('status_name->fr', 'Admis')->first();
         $unread_status = Status::where('status_name->fr', 'Non lue')->first();
+        $public_type = Type::where('type_name->fr', 'Public')->first();
+        $private_type = Type::where('type_name->fr', 'Privé')->first();
         $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
+        $i_participate_reaction = Reaction::where('reaction_name->fr', 'Je participe')->first();
         $user = User::find($id);
-        $concerned = User::find($concerned_id);
+        $visitor = User::find($visitor_id);
+        $event = Event::find($event_id);
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
         }
 
-        if (is_null($concerned)) {
-            return $this->handleError(__('notifications.find_concerned_404'));
+        if (is_null($visitor)) {
+            return $this->handleError(__('notifications.find_visitor_404'));
         }
 
-        Subscription::create([
-            'user_id' => $concerned->id,
-            'subscriber_id' => $user->id,
-            'status_id' => $in_waiting_status->id
-        ]);
+        if (is_null($event)) {
+            return $this->handleError(__('notifications.find_event_404'));
+        }
 
-        /*
-            HISTORY AND/OR NOTIFICATION MANAGEMENT
-        */
-        if ($notify == true) {
-            Notification::create([
-                'notification_url' => 'about/tricks',
-                'notification_content' => [
-                    'af' => $user->firstname . ' ' . $user->lastname . ' het vir u \'n verbindingsversoek gestuur.',
-                    'de' => $user->firstname . ' ' . $user->lastname . ' hat Ihnen eine Verbindungsanfrage gesendet.',
-                    'ar' => 'أرسل لك ' . $user->firstname . ' ' . $user->lastname . ' طلب اتصال.',
-                    'zh' => $user->firstname . ' ' . $user->lastname . '向您发送了一个连接请求。',
-                    'en' => $user->firstname . ' ' . $user->lastname . ' sent you a connection request.',
-                    'es' => $user->firstname . ' ' . $user->lastname . ' le envió una solicitud de conexión.',
-                    'fr' => $user->firstname . ' ' . $user->lastname . ' vous a envoyé une demande de connexion.',
-                    'it' => $user->firstname . ' ' . $user->lastname . ' ti ha inviato una richiesta di connessione.',
-                    'ja' => $user->firstname . ' ' . $user->lastname . 'は接続リクエストを送信しました。',
-                    'nl' => $user->firstname . ' ' . $user->lastname . ' heeft u een verbindingsverzoek gestuurd.',
-                    'ru' => $user->firstname . ' ' . $user->lastname . ' отправил вам запрос на соединение.',
-                    'sw' => $user->firstname . ' ' . $user->lastname . ' alikutumia ombi la unganisho.',
-                    'tr' => $user->firstname . ' ' . $user->lastname . ' size bir bağlantı isteği gönderdi.',
-                    'cs' => $user->firstname . ' ' . $user->lastname . ' vám poslal žádost o připojení.'
+        // If it was an average user who asked
+        if ($user->id == $visitor->id) {
+            // If the event is public, accept the user
+            if ($event->type_id == $public_type->id) {
+                $event->users()->attach($user->id, [
+                    'status_id' => $accepted_status->id,
+                    'reaction_id' => $i_participate_reaction->id,
+                ]);
+            }
+
+            // If the event is private, put the user on hold
+            if ($event->type_id == $private_type->id) {
+                $event->users()->attach($user->id, [
+                    'status_id' => $on_hold_status->id,
+                    'reaction_id' => $i_participate_reaction->id,
+                ]);
+            }
+
+            History::create([
+                'history_url' => 'events/' . $event->id,
+                'history_content' => [
+                    'af' => 'Jy het ingeteken op die « ' . $event->event_title . ' »-geleentheid.',
+                    'de' => 'Sie haben die « ' . $event->event_title . ' »-Veranstaltung abonniert.',
+                    'ar' => 'لقد اشتركت في حدث « ' . $event->event_title . ' »',
+                    'zh' => '您已订阅 « ' . $event->event_title . ' » 活动。',
+                    'en' => 'You have subscribed to the « ' . $event->event_title . ' » event.',
+                    'es' => 'Te has suscrito al evento « ' . $event->event_title . ' ».',
+                    'fr' => 'Vous avez souscrit à l\'événement « ' . $event->event_title . ' ».',
+                    'it' => 'Ti sei iscritto all\'evento « ' . $event->event_title . ' ».',
+                    'ja' => '« ' . $event->event_title . ' » イベントに登録しました。',
+                    'nl' => 'Je hebt je ingeschreven voor het « ' . $event->event_title . ' »-evenement.',
+                    'ru' => 'Вы подписались на событие « ' . $event->event_title . ' ».',
+                    'sw' => 'Umejiandikisha kwa tukio la « ' . $event->event_title . ' ».',
+                    'tr' => '« ' . $event->event_title . ' » etkinliğine abone oldunuz.',
+                    'cs' => 'Přihlásili jste se k odběru události « ' . $event->event_title . ' ».'
                 ],
-                'color' => 'text-primary',
-                'icon' => 'bi bi-person-plus',
-                'image_url' => $user->profile_photo_path,
-                'status_id' => $unread_status,
-                'user_id' => $concerned->id
+                'color' => 'text-warning',
+                'icon' => 'bi bi-calendar2-event',
+                'image_url' => $event->cover_photo_path,
+                'type_id' => $activities_history_type->id,
+                'user_id' => $user->id
             ]);
         }
-        History::create([
-            'history_url' => $concerned->username,
-            'history_content' => [
-                'af' => 'U het \'n verbindingsversoek aan ' . $concerned->firstname . ' ' . $concerned->lastname . ' gestuur.',
-                'de' => 'Sie haben eine Verbindungsanfrage an ' . $concerned->firstname . ' ' . $concerned->lastname . ' gesendet.',
-                'ar' => 'لقد أرسلت طلب اتصال إلى ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'zh' => '您已向' . $concerned->firstname . ' ' . $concerned->lastname . '发送了连接请求。',
-                'en' => 'You have sent a connection request to ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'es' => 'Ha enviado una solicitud de conexión a ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'fr' => 'Vous avez envoyé une demande de connexion à ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'it' => 'Hai inviato una richiesta di connessione a ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'ja' => $concerned->firstname . ' ' . $concerned->lastname . 'に接続リクエストを送信しました。',
-                'nl' => 'U hebt een verbindingsverzoek naar ' . $concerned->firstname . ' ' . $concerned->lastname . ' gestuurd.',
-                'ru' => 'Вы отправили запрос на подключение к ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'sw' => 'Umetuma ombi la unganisho kwa ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'tr' => $concerned->firstname . ' ' . $concerned->lastname . '\'a bir bağlantı isteği gönderdiniz.',
-                'cs' => 'Poslali jste žádost o připojení ' . $concerned->firstname . ' ' . $concerned->lastname . '.'
-            ],
-            'color' => 'text-warning',
-            'icon' => 'bi bi-person-plus',
-            'image_url' => $concerned->profile_photo_path,
-            'type_id' => $activities_history_type->id,
-            'user_id' => $user->id
-        ]);
+
+        // If it was an event member who asked an average user
+        if ($user->id != $visitor->id) {
+            $event->users()->attach($user->id, ['status_id' => $accepted_status->id]);
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            if ($notify == true) {
+                Notification::create([
+                    'notification_url' => 'events/' . $event->id,
+                    'notification_content' => [
+                        'af' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') het vir jou \'n uitnodiging gestuur na die « ' . $event->event_title . ' »-geleentheid.',
+                        'de' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') hat dir eine Einladung zum « ' . $event->event_title . ' »-Event geschickt.',
+                        'ar' => 'لقد أرسل لك [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') دعوة لحضور حدث « ' . $event->event_title . ' ».',
+                        'zh' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') 已向您发送了参加 « ' . $event->event_title . ' » 活动的邀请。',
+                        'en' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') has sent you an invitation to the « ' . $event->event_title . ' » event.',
+                        'es' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') te ha enviado una invitación al evento « ' . $event->event_title . ' ».',
+                        'fr' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') vous a envoyé une invitation à l\'événement « ' . $event->event_title . ' ».',
+                        'it' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') ti ha inviato un invito all\'evento « ' . $event->event_title . ' ».',
+                        'ja' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') から « ' . $event->event_title . ' » イベントへの招待状が届きました。',
+                        'nl' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') heeft je een uitnodiging gestuurd voor het « ' . $event->event_title . ' »-evenement.',
+                        'ru' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') отправил вам приглашение на мероприятие « ' . $event->event_title . ' ».',
+                        'sw' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') amekutumia mwaliko kwa tukio la « ' . $event->event_title . ' ».',
+                        'tr' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') size « ' . $event->event_title . ' » etkinliği için bir davetiye gönderdi.',
+                        'cs' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') vám poslal pozvánku na akci « ' . $event->event_title . ' ».'
+                    ],
+                    'color' => 'text-info',
+                    'icon' => 'bi bi-calendar2-event',
+                    'image_url' => $event->cover_photo_path,
+                    'status_id' => $unread_status,
+                    'user_id' => $user->id
+                ]);
+            }
+            History::create([
+                'history_url' => 'events/' . $event->id,
+                'history_content' => [
+                    'af' => 'Jy het vir [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') \'n versoek gestuur om by die « ' . $event->event_title . ' »-geleentheid aan te sluit.',
+                    'de' => 'Sie haben [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') eine Anfrage zur Teilnahme am « ' . $event->event_title . ' »-Event gesendet.',
+                    'ar' => 'لقد أرسلت طلبًا إلى [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') للانضمام إلى حدث « ' . $event->event_title . ' ».',
+                    'zh' => '您已向 [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') 发送加入 « ' . $event->event_title . ' » 活动的请求。',
+                    'en' => 'You have sent [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') a request to join the « ' . $event->event_title . ' » event.',
+                    'es' => 'Le has enviado a [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') una solicitud para unirse al evento « ' . $event->event_title . ' ».',
+                    'fr' => 'Vous avez envoyez à [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') une demande d\'adhésion à l\'événement « ' . $event->event_title . ' ».',
+                    'it' => 'Hai inviato a ' . $user->firstname . ' ' . $user->lastname . ' una richiesta per partecipare all\'evento « ' . $event->event_title . ' ».',
+                    'ja' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') に « ' . $event->event_title . ' » イベントへの参加リクエストを送信しました。',
+                    'nl' => 'Je hebt [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') een verzoek gestuurd om deel te nemen aan het « ' . $event->event_title . ' »-evenement.',
+                    'ru' => 'Вы отправили [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') запрос на участие в мероприятии « ' . $event->event_title . ' ».',
+                    'sw' => 'Umetuma ' . $user->firstname . ' ' . $user->lastname . ' ombi la kujiunga na tukio la « ' . $event->event_title . ' ».',
+                    'tr' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ')\'a « ' . $event->event_title . ' » etkinliğine katılma isteği gönderdiniz.',
+                    'cs' => 'Odeslali jste [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') žádost o připojení k události « ' . $event->event_title . ' ».'
+                ],
+                'color' => 'text-primary',
+                'icon' => 'bi bi-calendar2-event',
+                'image_url' => $user->profile_photo_path,
+                'type_id' => $activities_history_type->id,
+                'user_id' => $visitor->id
+            ]);
+        }
 
         return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
     }
 
     /**
-     * Ask subscription to a another member.
+     * Ask subscription to a community.
      *
      * @param  int $id
-     * @param  int $concerned_id
+     * @param  int $visitor_id
+     * @param  int $community_id
      * @param  boolean $notify
      * @return \Illuminate\Http\Response
      */
-    public function subscribeToCommunity($id, $community_id, $notify = false)
+    public function subscribeToCommunity($id, $visitor_id, $community_id, $notify = false)
     {
-        $in_waiting_status = Status::where('status_name->fr', 'En attente')->first();
+        $on_hold_status = Status::where('status_name->fr', 'En attente')->first();
+        $accepted_status = Status::where('status_name->fr', 'Admis')->first();
         $unread_status = Status::where('status_name->fr', 'Non lue')->first();
+        $public_type = Type::where('type_name->fr', 'Public')->first();
+        $private_type = Type::where('type_name->fr', 'Privé')->first();
         $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
         $user = User::find($id);
-        $concerned = User::find($concerned_id);
+        $visitor = User::find($visitor_id);
+        $community = Event::find($community_id);
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
         }
 
-        if (is_null($concerned)) {
-            return $this->handleError(__('notifications.find_concerned_404'));
+        if (is_null($visitor)) {
+            return $this->handleError(__('notifications.find_visitor_404'));
         }
 
-        Subscription::create([
-            'user_id' => $concerned->id,
-            'subscriber_id' => $user->id,
-            'status_id' => $in_waiting_status->id
-        ]);
+        if (is_null($community)) {
+            return $this->handleError(__('notifications.find_community_404'));
+        }
 
-        /*
-            HISTORY AND/OR NOTIFICATION MANAGEMENT
-        */
-        if ($notify == true) {
-            Notification::create([
-                'notification_url' => 'about/tricks',
-                'notification_content' => [
-                    'af' => $user->firstname . ' ' . $user->lastname . ' het vir u \'n verbindingsversoek gestuur.',
-                    'de' => $user->firstname . ' ' . $user->lastname . ' hat Ihnen eine Verbindungsanfrage gesendet.',
-                    'ar' => 'أرسل لك ' . $user->firstname . ' ' . $user->lastname . ' طلب اتصال.',
-                    'zh' => $user->firstname . ' ' . $user->lastname . '向您发送了一个连接请求。',
-                    'en' => $user->firstname . ' ' . $user->lastname . ' sent you a connection request.',
-                    'es' => $user->firstname . ' ' . $user->lastname . ' le envió una solicitud de conexión.',
-                    'fr' => $user->firstname . ' ' . $user->lastname . ' vous a envoyé une demande de connexion.',
-                    'it' => $user->firstname . ' ' . $user->lastname . ' ti ha inviato una richiesta di connessione.',
-                    'ja' => $user->firstname . ' ' . $user->lastname . 'は接続リクエストを送信しました。',
-                    'nl' => $user->firstname . ' ' . $user->lastname . ' heeft u een verbindingsverzoek gestuurd.',
-                    'ru' => $user->firstname . ' ' . $user->lastname . ' отправил вам запрос на соединение.',
-                    'sw' => $user->firstname . ' ' . $user->lastname . ' alikutumia ombi la unganisho.',
-                    'tr' => $user->firstname . ' ' . $user->lastname . ' size bir bağlantı isteği gönderdi.',
-                    'cs' => $user->firstname . ' ' . $user->lastname . ' vám poslal žádost o připojení.'
+        // If it was an average user who asked
+        if ($user->id == $visitor->id) {
+            // If the community is public, accept the user
+            if ($community->type_id == $public_type->id) {
+                $community->users()->attach($user->id, ['status_id' => $accepted_status->id]);
+            }
+
+            // If the community is private, put the user on hold
+            if ($community->type_id == $private_type->id) {
+                $community->users()->attach($user->id, ['status_id' => $on_hold_status->id]);
+            }
+
+            History::create([
+                'history_url' => 'communities/' . $community->id,
+                'history_content' => [
+                    'af' => 'Jy het ingeteken op die « ' . $community->community_name . ' »-gemeenskap.',
+                    'de' => 'Sie haben sich bei der « ' . $community->community_name . ' »-Community angemeldet.',
+                    'ar' => 'لقد اشتركت في مجتمع « ' . $community->community_name . ' ».',
+                    'zh' => '您已订阅 « ' . $community->community_name . ' » 社区。',
+                    'en' => 'You have subscribed to the « ' . $community->community_name . ' » community.',
+                    'es' => 'Te has suscrito a la comunidad « ' . $community->community_name . ' ».',
+                    'fr' => 'Vous avez souscrit à la communauté « ' . $community->community_name . ' ».',
+                    'it' => 'Ti sei iscritto alla comunità « ' . $community->community_name . ' ».',
+                    'ja' => '« ' . $community->community_name . ' » コミュニティに登録しました。',
+                    'nl' => 'U bent geabonneerd op de « ' . $community->community_name . ' »-gemeenschap.',
+                    'ru' => 'Вы подписались на сообщество « ' . $community->community_name . ' ».',
+                    'sw' => 'Umejiandikisha kwa jumuiya ya « ' . $community->community_name . ' ».',
+                    'tr' => '« ' . $community->community_name . ' » topluluğuna abone oldunuz.',
+                    'cs' => 'Přihlásili jste se do komunity « ' . $community->community_name . ' ».'
                 ],
-                'color' => 'text-primary',
-                'icon' => 'bi bi-person-plus',
-                'image_url' => $user->profile_photo_path,
-                'status_id' => $unread_status,
-                'user_id' => $concerned->id
+                'color' => 'text-warning',
+                'icon' => 'bi bi-people',
+                'image_url' => $community->cover_photo_path,
+                'type_id' => $activities_history_type->id,
+                'user_id' => $user->id
             ]);
         }
-        History::create([
-            'history_url' => $concerned->username,
-            'history_content' => [
-                'af' => 'U het \'n verbindingsversoek aan ' . $concerned->firstname . ' ' . $concerned->lastname . ' gestuur.',
-                'de' => 'Sie haben eine Verbindungsanfrage an ' . $concerned->firstname . ' ' . $concerned->lastname . ' gesendet.',
-                'ar' => 'لقد أرسلت طلب اتصال إلى ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'zh' => '您已向' . $concerned->firstname . ' ' . $concerned->lastname . '发送了连接请求。',
-                'en' => 'You have sent a connection request to ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'es' => 'Ha enviado una solicitud de conexión a ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'fr' => 'Vous avez envoyé une demande de connexion à ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'it' => 'Hai inviato una richiesta di connessione a ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'ja' => $concerned->firstname . ' ' . $concerned->lastname . 'に接続リクエストを送信しました。',
-                'nl' => 'U hebt een verbindingsverzoek naar ' . $concerned->firstname . ' ' . $concerned->lastname . ' gestuurd.',
-                'ru' => 'Вы отправили запрос на подключение к ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'sw' => 'Umetuma ombi la unganisho kwa ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'tr' => $concerned->firstname . ' ' . $concerned->lastname . '\'a bir bağlantı isteği gönderdiniz.',
-                'cs' => 'Poslali jste žádost o připojení ' . $concerned->firstname . ' ' . $concerned->lastname . '.'
-            ],
-            'color' => 'text-warning',
-            'icon' => 'bi bi-person-plus',
-            'image_url' => $concerned->profile_photo_path,
-            'type_id' => $activities_history_type->id,
-            'user_id' => $user->id
-        ]);
+
+        // If it was an event member who asked an average user
+        if ($user->id != $visitor->id) {
+            $community->users()->attach($user->id, ['status_id' => $accepted_status->id]);
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            if ($notify == true) {
+                Notification::create([
+                    'notification_url' => 'communities/' . $community->id,
+                    'notification_content' => [
+                        'af' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') het jou na die « ' . $community->community_name . ' »-gemeenskap genooi.',
+                        'de' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') hat Sie in die « ' . $community->community_name . ' »-Community eingeladen.',
+                        'ar' => 'قام [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') بدعوتك إلى مجتمع « ' . $community->community_name . ' ».',
+                        'zh' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') 邀请您加入 « ' . $community->community_name . ' » 社区。',
+                        'en' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') has invited you to the « ' . $community->community_name . ' » community.',
+                        'es' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') te ha invitado a la comunidad « ' . $community->community_name . ' ».',
+                        'fr' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') vous a invité.e à la communauté « ' . $community->community_name . ' ».',
+                        'it' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') ti ha invitato nella comunità « ' . $community->community_name . ' ».',
+                        'ja' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') があなたを « ' . $community->community_name . ' » コミュニティに招待しました。',
+                        'nl' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') heeft je uitgenodigd voor de « ' . $community->community_name . ' »-gemeenschap.',
+                        'ru' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') пригласил вас в сообщество « ' . $community->community_name . ' ».',
+                        'sw' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') amekualika kwenye jumuiya ya « ' . $community->community_name . ' ».',
+                        'tr' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') sizi « ' . $community->community_name . ' » topluluğuna davet etti.',
+                        'cs' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') vás pozval do komunity « ' . $community->community_name . ' ».'
+                    ],
+                    'color' => 'text-info',
+                    'icon' => 'bi bi-people',
+                    'image_url' => $community->cover_photo_path,
+                    'status_id' => $unread_status,
+                    'user_id' => $user->id
+                ]);
+            }
+            History::create([
+                'history_url' => 'communities/' . $community->id,
+                'history_content' => [
+                    'af' => 'Jy het [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') na die « ' . $community->community_name . ' »-gemeenskap genooi.',
+                    'de' => 'Sie haben [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') in die « ' . $community->community_name . ' »-Community eingeladen.',
+                    'ar' => 'لقد قمت بدعوة [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') إلى مجتمع « ' . $community->community_name . ' ».',
+                    'zh' => '您邀请 [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') 加入 « ' . $community->community_name . ' » 社区。',
+                    'en' => 'You invited [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') to the « ' . $community->community_name . ' » community.',
+                    'es' => 'Invitaste a [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') a la comunidad « ' . $community->community_name . ' ».',
+                    'fr' => 'Vous avez invité [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') à la communauté « ' . $community->community_name . ' ».',
+                    'it' => 'Hai invitato [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') nella comunità « ' . $community->community_name . ' ».',
+                    'ja' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') を « ' . $community->community_name . ' » コミュニティに招待しました。',
+                    'nl' => 'Je hebt [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') uitgenodigd voor de « ' . $community->community_name . ' »-gemeenschap.',
+                    'ru' => 'Вы пригласили [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') в сообщество « ' . $community->community_name . ' ».',
+                    'sw' => 'Ulimwalika [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') kwenye jumuiya ya « ' . $community->community_name . ' ».',
+                    'tr' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ')\'ı « ' . $community->community_name . ' » topluluğuna davet ettiniz.',
+                    'cs' => 'Pozvali jste [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') do komunity « ' . $community->community_name . ' ».'
+                ],
+                'color' => 'text-primary',
+                'icon' => 'bi bi-people',
+                'image_url' => $user->profile_photo_path,
+                'type_id' => $activities_history_type->id,
+                'user_id' => $visitor->id
+            ]);
+        }
 
         return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
     }
 
     /**
-     * Ask subscription to a another member.
+     * Ask subscription to another member.
      *
      * @param  int $id
      * @param  int $concerned_id
@@ -1150,7 +1251,7 @@ class UserController extends BaseController
      */
     public function subscribeToMember($id, $concerned_id, $notify = false)
     {
-        $in_waiting_status = Status::where('status_name->fr', 'En attente')->first();
+        $on_hold_status = Status::where('status_name->fr', 'En attente')->first();
         $unread_status = Status::where('status_name->fr', 'Non lue')->first();
         $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
         $user = User::find($id);
@@ -1167,7 +1268,7 @@ class UserController extends BaseController
         Subscription::create([
             'user_id' => $concerned->id,
             'subscriber_id' => $user->id,
-            'status_id' => $in_waiting_status->id
+            'status_id' => $on_hold_status->id
         ]);
 
         /*
@@ -1175,22 +1276,22 @@ class UserController extends BaseController
         */
         if ($notify == true) {
             Notification::create([
-                'notification_url' => 'about/tricks',
+                'notification_url' => 'requests/' . $user->username,
                 'notification_content' => [
-                    'af' => $user->firstname . ' ' . $user->lastname . ' het vir u \'n verbindingsversoek gestuur.',
-                    'de' => $user->firstname . ' ' . $user->lastname . ' hat Ihnen eine Verbindungsanfrage gesendet.',
-                    'ar' => 'أرسل لك ' . $user->firstname . ' ' . $user->lastname . ' طلب اتصال.',
-                    'zh' => $user->firstname . ' ' . $user->lastname . '向您发送了一个连接请求。',
-                    'en' => $user->firstname . ' ' . $user->lastname . ' sent you a connection request.',
-                    'es' => $user->firstname . ' ' . $user->lastname . ' le envió una solicitud de conexión.',
-                    'fr' => $user->firstname . ' ' . $user->lastname . ' vous a envoyé une demande de connexion.',
-                    'it' => $user->firstname . ' ' . $user->lastname . ' ti ha inviato una richiesta di connessione.',
-                    'ja' => $user->firstname . ' ' . $user->lastname . 'は接続リクエストを送信しました。',
-                    'nl' => $user->firstname . ' ' . $user->lastname . ' heeft u een verbindingsverzoek gestuurd.',
-                    'ru' => $user->firstname . ' ' . $user->lastname . ' отправил вам запрос на соединение.',
-                    'sw' => $user->firstname . ' ' . $user->lastname . ' alikutumia ombi la unganisho.',
-                    'tr' => $user->firstname . ' ' . $user->lastname . ' size bir bağlantı isteği gönderdi.',
-                    'cs' => $user->firstname . ' ' . $user->lastname . ' vám poslal žádost o připojení.'
+                    'af' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') het vir u \'n verbindingsversoek gestuur.',
+                    'de' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') hat Ihnen eine Verbindungsanfrage gesendet.',
+                    'ar' => 'أرسل لك [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') طلب اتصال.',
+                    'zh' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ')向您发送了一个连接请求。',
+                    'en' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') sent you a connection request.',
+                    'es' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') le envió una solicitud de conexión.',
+                    'fr' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') vous a envoyé une demande de connexion.',
+                    'it' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') ti ha inviato una richiesta di connessione.',
+                    'ja' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ')は接続リクエストを送信しました。',
+                    'nl' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') heeft u een verbindingsverzoek gestuurd.',
+                    'ru' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') отправил вам запрос на соединение.',
+                    'sw' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') alikutumia ombi la unganisho.',
+                    'tr' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') size bir bağlantı isteği gönderdi.',
+                    'cs' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') vám poslal žádost o připojení.'
                 ],
                 'color' => 'text-primary',
                 'icon' => 'bi bi-person-plus',
@@ -1223,6 +1324,104 @@ class UserController extends BaseController
             'type_id' => $activities_history_type->id,
             'user_id' => $user->id
         ]);
+
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
+    }
+
+    /**
+     * Ask subscription to an event.
+     *
+     * @param  int $id
+     * @param  int $visitor_id
+     * @param  int $status_id
+     * @param  string $entity
+     * @param  int $entity_id
+     * @param  boolean $notify
+     * @return \Illuminate\Http\Response
+     */
+    public function updateSubscriptionStatus($id, $visitor_id, $status_id, $entity, $entity_id, $notify = false)
+    {
+        $declined_status = Status::where('status_name->fr', 'Refusé')->first();
+        $accepted_status = Status::where('status_name->fr', 'Admis')->first();
+        $unread_status = Status::where('status_name->fr', 'Non lue')->first();
+        $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
+        $user = User::find($id);
+        $visitor = User::find($visitor_id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        if (is_null($visitor)) {
+            return $this->handleError(__('notifications.find_visitor_404'));
+        }
+
+        if ($entity == 'event') {
+            $event = Event::find($entity_id);
+
+            if (is_null($event)) {
+                return $this->handleError(__('notifications.find_event_404'));
+            }
+
+            if ($status_id == $accepted_status->id) {
+                $event->users()->updateExistingPivot($user->id, ['status_id' => $accepted_status->id]);
+
+                /*
+                    HISTORY AND/OR NOTIFICATION MANAGEMENT
+                */
+                History::create([
+                    'history_url' => 'events/' . $event->id . '/members',
+                    'history_content' => [
+                        'af' => '',
+                        'de' => '',
+                        'ar' => '',
+                        'zh' => '',
+                        'en' => '',
+                        'es' => '',
+                        'fr' => '',
+                        'it' => '',
+                        'ja' => '',
+                        'nl' => '',
+                        'ru' => '',
+                        'sw' => '',
+                        'tr' => '',
+                        'cs' => ''
+                    ],
+                    'color' => 'text-danger',
+                    'icon' => 'bi bi-person-dash',
+                    'image_url' => $event->cover_photo_path,
+                    'type_id' => $activities_history_type->id,
+                    'user_id' => $visitor->id
+                ]);
+
+                if ($notify == true) {
+                    Notification::create([
+                        'notification_url' => 'events/' . $event->id,
+                        'notification_content' => [
+                            'af' => '',
+                            'de' => '',
+                            'ar' => '',
+                            'zh' => '',
+                            'en' => '',
+                            'es' => '',
+                            'fr' => '',
+                            'it' => '',
+                            'ja' => '',
+                            'nl' => '',
+                            'ru' => '',
+                            'sw' => '',
+                            'tr' => '',
+                            'cs' => ''
+                        ],
+                        'color' => 'text-info',
+                        'icon' => 'bi bi-calendar2-event',
+                        'image_url' => $event->cover_photo_path,
+                        'status_id' => $unread_status,
+                        'user_id' => $user->id
+                    ]);
+                }
+            }
+        }
 
         return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
     }
@@ -1339,7 +1538,7 @@ class UserController extends BaseController
             */
             if ($notify == true) {
                 Notification::create([
-                    'notification_url' => 'settings/account',
+                    'notification_url' => 'settings',
                     'notification_content' => [
                         'af' => 'Jy het ons verlaat deur jou rekening te deaktiveer. Ons sien uit daarna om jou weer te sien. Om jou rekening te heraktiveer, klik hier.',
                         'de' => 'Sie haben uns verlassen, indem Sie Ihr Konto deaktiviert haben. Wir freuen uns auf ein Wiedersehen. Um Ihr Konto erneut zu aktivieren, klicken Sie hier.',

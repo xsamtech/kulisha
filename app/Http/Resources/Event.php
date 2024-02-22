@@ -23,6 +23,8 @@ class Event extends JsonResource
             'id' => $this->id,
             'event_title' => $this->event_title,
             'event_description' => $this->event_description,
+            'start_at' => $this->start_at,
+            'end_at' => $this->end_at,
             'cover_photo_path' => !empty($this->cover_photo_path) ? getWebURL() . '/storage/' . $this->cover_photo_path : null,
             'cover_coordinates' => $this->cover_coordinates,
             'type' => Type::make($this->type),
@@ -31,6 +33,7 @@ class Event extends JsonResource
             'participants' => User::collection($this->users),
             'files' => File::collection($this->files),
             'posts' => Post::collection($this->posts),
+            'fields' => Field::collection($this->fields),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s')
         ];

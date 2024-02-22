@@ -25,6 +25,17 @@ class Event extends Model
 
     /**
      * MANY-TO-MANY
+     * Several fields for several events
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function fields(): BelongsToMany
+    {
+        return $this->belongsToMany(Field::class);
+    }
+
+    /**
+     * MANY-TO-MANY
      * Several users for several events
      * 
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
