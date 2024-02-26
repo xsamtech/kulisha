@@ -68,7 +68,8 @@ class StatusController extends BaseController
                 'eo' => $request->status_description_eo
             ],
             'color' => $request->color,
-            'icon' => $request->icon,
+            'icon_font' => $request->icon_font,
+            'icon_svg' => $request->icon_svg,
             'image_url' => $request->image_url,
             'group_id' => $request->group_id
         ];
@@ -158,7 +159,8 @@ class StatusController extends BaseController
                 'eo' => $request->status_description_eo
             ],
             'color' => $request->color,
-            'icon' => $request->icon,
+            'icon_font' => $request->icon_font,
+            'icon_svg' => $request->icon_svg,
             'image_url' => $request->image_url,
             'group_id' => $request->group_id
         ];
