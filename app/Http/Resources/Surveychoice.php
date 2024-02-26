@@ -22,6 +22,9 @@ class Surveychoice extends JsonResource
         return [
             'id' => $this->id,
             'choice_content' => $this->choice_content,
+            'color' => $this->color,
+            'icon_font' => $this->icon_font,
+            'icon_svg' => $this->icon_svg,
             'image_url' => !empty($this->image_url) ? getWebURL() . '/storage/' . $this->image_url : null,
             'users' => User::collection($this->users),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),

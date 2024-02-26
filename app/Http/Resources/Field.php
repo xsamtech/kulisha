@@ -24,7 +24,8 @@ class Field extends JsonResource
             'field_name' => $this->field_name,
             'field_description' => $this->field_description,
             'color' => $this->color,
-            'icon' => $this->icon,
+            'icon_font' => $this->icon_font,
+            'icon_svg' => $this->icon_svg,
             'image_url' => !empty($this->image_url) ? getWebURL() . '/storage/' . $this->image_url : null,
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s')
