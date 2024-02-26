@@ -21,19 +21,24 @@ class Notification extends JsonResource
     {
         return [
             'id' => $this->id,
-            'notification_url' => $this->notification_url,
-            'notification_content' => $this->notification_content,
             'color' => $this->color,
-            'subject' => $this->subject,
-            'subject_id' => $this->subject_id,
-            'icon' => $this->icon,
+            'icon_font' => $this->icon_font,
+            'icon_svg' => $this->icon_svg,
             'image_url' => !empty($this->image_url) ? getWebURL() . '/storage/' . $this->image_url : null,
+            'type' => Type::make($this->type),
             'status' => Status::make($this->status),
+            'from' => User::make($this->from_user),
+            'to' => User::make($this->to_user),
+            'post' => Post::make($this->post),
+            'event' => Event::make($this->event),
+            'community' => Community::make($this->community),
+            'message' => Message::make($this->message),
+            'team' => Team::make($this->team),
+            'reaction' => Reaction::make($this->reaction),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
             'created_at_ago' => timeAgo($this->created_at->format('Y-m-d H:i:s')),
-            'updated_at_ago' => timeAgo($this->updated_at->format('Y-m-d H:i:s')),
-            'user_id' => $this->user_id
+            'updated_at_ago' => timeAgo($this->updated_at->format('Y-m-d H:i:s'))
         ];
     }
 }

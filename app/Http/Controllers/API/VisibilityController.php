@@ -67,7 +67,8 @@ class VisibilityController extends BaseController
                 'eo' => $request->visibility_description_eo
             ],
             'color' => $request->color,
-            'icon' => $request->icon,
+            'icon_font' => $request->icon_font,
+            'icon_svg' => $request->icon_svg,
             'image_url' => $request->image_url
         ];
         // Select all visibilities to check unique constraint
@@ -152,7 +153,8 @@ class VisibilityController extends BaseController
                 'eo' => $request->visibility_description_eo
             ],
             'color' => $request->color,
-            'icon' => $request->icon,
+            'icon_font' => $request->icon_font,
+            'icon_svg' => $request->icon_svg,
             'image_url' => $request->image_url
         ];
         // Select all visibilities and specific visibility to check unique constraint
@@ -188,9 +190,16 @@ class VisibilityController extends BaseController
             ]);
         }
 
-        if ($inputs['icon'] != null) {
+        if ($inputs['icon_font'] != null) {
             $visibility->update([
-                'icon' => $inputs['icon'],
+                'icon_font' => $inputs['icon_font'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['icon_svg'] != null) {
+            $visibility->update([
+                'icon_svg' => $inputs['icon_svg'],
                 'updated_at' => now(),
             ]);
         }

@@ -197,9 +197,16 @@ class StatusController extends BaseController
             ]);
         }
 
-        if ($inputs['icon'] != null) {
+        if ($inputs['icon_font'] != null) {
             $status->update([
-                'icon' => $inputs['icon'],
+                'icon_font' => $inputs['icon_font'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['icon_svg'] != null) {
+            $status->update([
+                'icon_svg' => $inputs['icon_svg'],
                 'updated_at' => now(),
             ]);
         }

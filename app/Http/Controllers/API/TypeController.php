@@ -68,7 +68,8 @@ class TypeController extends BaseController
                 'eo' => $request->type_description_eo
             ],
             'color' => $request->color,
-            'icon' => $request->icon,
+            'icon_font' => $request->icon_font,
+            'icon_svg' => $request->icon_svg,
             'image_url' => $request->image_url,
             'group_id' => $request->group_id
         ];
@@ -158,7 +159,8 @@ class TypeController extends BaseController
                 'eo' => $request->type_description_eo
             ],
             'color' => $request->color,
-            'icon' => $request->icon,
+            'icon_font' => $request->icon_font,
+            'icon_svg' => $request->icon_svg,
             'image_url' => $request->image_url,
             'group_id' => $request->group_id
         ];
@@ -195,9 +197,16 @@ class TypeController extends BaseController
             ]);
         }
 
-        if ($inputs['icon'] != null) {
+        if ($inputs['icon_font'] != null) {
             $type->update([
-                'icon' => $inputs['icon'],
+                'icon_font' => $inputs['icon_font'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['icon_svg'] != null) {
+            $type->update([
+                'icon_svg' => $inputs['icon_svg'],
                 'updated_at' => now(),
             ]);
         }
