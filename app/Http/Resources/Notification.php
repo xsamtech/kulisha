@@ -28,7 +28,6 @@ class Notification extends JsonResource
             'type' => Type::make($this->type),
             'status' => Status::make($this->status),
             'from' => User::make($this->from_user),
-            'to' => User::make($this->to_user),
             'post' => Post::make($this->post),
             'event' => Event::make($this->event),
             'community' => Community::make($this->community),
@@ -38,7 +37,8 @@ class Notification extends JsonResource
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
             'created_at_ago' => timeAgo($this->created_at->format('Y-m-d H:i:s')),
-            'updated_at_ago' => timeAgo($this->updated_at->format('Y-m-d H:i:s'))
+            'updated_at_ago' => timeAgo($this->updated_at->format('Y-m-d H:i:s')),
+            'to_user_id' => $this->to_user_id
         ];
     }
 }

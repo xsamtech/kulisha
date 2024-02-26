@@ -51,4 +51,26 @@ class Reaction extends Model
     {
         return $this->hasMany(SentReaction::class);
     }
+
+    /**
+     * MANY-TO-ONE
+     * Several histories for a reaction
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function histories(): HasMany
+    {
+        return $this->hasMany(History::class);
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several notifications for a reaction
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
 }

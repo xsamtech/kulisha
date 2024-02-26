@@ -50,12 +50,34 @@ class Team extends JetstreamTeam
 
     /**
      * MANY-TO-ONE
-     * Several messages for a status
+     * Several messages for a team
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several histories for a team
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function histories(): HasMany
+    {
+        return $this->hasMany(History::class);
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several notifications for a team
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
     }
 }

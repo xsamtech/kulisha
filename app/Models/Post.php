@@ -134,17 +134,6 @@ class Post extends Model
 
     /**
      * MANY-TO-ONE
-     * Several files for a post
-     * 
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function files(): HasMany
-    {
-        return $this->hasMany(File::class);
-    }
-
-    /**
-     * MANY-TO-ONE
      * Several keywords for a post
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
@@ -163,5 +152,38 @@ class Post extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several files for a post
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function files(): HasMany
+    {
+        return $this->hasMany(File::class);
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several histories for a post
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function histories(): HasMany
+    {
+        return $this->hasMany(History::class);
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several notifications for a post
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
     }
 }

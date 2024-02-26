@@ -98,4 +98,26 @@ class Message extends Model
     {
         return $this->hasMany(File::class);
     }
+
+    /**
+     * MANY-TO-ONE
+     * Several histories for a message
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function histories(): HasMany
+    {
+        return $this->hasMany(History::class);
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several notifications for a message
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
 }

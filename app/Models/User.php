@@ -173,50 +173,6 @@ class User extends Authenticatable
 
     /**
      * MANY-TO-ONE
-     * Several files for a user
-     * 
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function files(): HasMany
-    {
-        return $this->hasMany(File::class);
-    }
-
-    /**
-     * MANY-TO-ONE
-     * Several messages for a user
-     * 
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function messages(): HasMany
-    {
-        return $this->hasMany(Message::class);
-    }
-
-    /**
-     * MANY-TO-ONE
-     * Several posts for a user
-     * 
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function posts(): HasMany
-    {
-        return $this->hasMany(Post::class);
-    }
-
-    /**
-     * MANY-TO-ONE
-     * Several sent_reactions for a user
-     * 
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function sent_reactions(): HasMany
-    {
-        return $this->hasMany(SentReaction::class);
-    }
-
-    /**
-     * MANY-TO-ONE
      * Several restrictions for a user
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
@@ -272,23 +228,89 @@ class User extends Authenticatable
 
     /**
      * MANY-TO-ONE
-     * Several histories for a user
+     * Several files for a user
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function histories(): HasMany
+    public function files(): HasMany
     {
-        return $this->hasMany(History::class);
+        return $this->hasMany(File::class);
     }
 
     /**
      * MANY-TO-ONE
-     * Several notifications for a user
+     * Several messages for a user
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function notifications(): HasMany
+    public function messages(): HasMany
     {
-        return $this->hasMany(Notification::class);
+        return $this->hasMany(Message::class);
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several posts for a user
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several sent_reactions for a user
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function sent_reactions(): HasMany
+    {
+        return $this->hasMany(SentReaction::class);
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several histories_from for a user
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function histories_from(): HasMany
+    {
+        return $this->hasMany(History::class, 'from_user_id');
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several histories_to for a user
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function histories_to(): HasMany
+    {
+        return $this->hasMany(History::class, 'to_user_id');
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several notifications_from for a user
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function notifications_from(): HasMany
+    {
+        return $this->hasMany(Notification::class, 'from_user_id');
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several notifications_to for a user
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function notifications_to(): HasMany
+    {
+        return $this->hasMany(Notification::class, 'to_user_id');
     }
 }

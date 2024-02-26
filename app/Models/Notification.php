@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Spatie\Translatable\HasTranslations;
 
 /**
  * @author Xanders
@@ -13,7 +12,7 @@ use Spatie\Translatable\HasTranslations;
  */
 class Notification extends Model
 {
-    use HasFactory, HasTranslations;
+    use HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -23,11 +22,15 @@ class Notification extends Model
     protected $guarded = [];
 
     /**
-     * Translatable properties.
-     *
-     * @var array<int, string>
+     * ONE-TO-MANY
+     * One type for several notifications
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    protected $translatable = ['notification_content'];
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(Type::class);
+    }
 
     /**
      * ONE-TO-MANY
@@ -42,12 +45,89 @@ class Notification extends Model
 
     /**
      * ONE-TO-MANY
-     * One user for several notifications
+     * One from_user for several notifications
      * 
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user(): BelongsTo
+    public function from_user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'from_user_id');
+    }
+
+    /**
+     * ONE-TO-MANY
+     * One to_user for several notifications
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function to_user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'to_user_id');
+    }
+
+    /**
+     * ONE-TO-MANY
+     * One post for several notifications
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function post(): BelongsTo
+    {
+        return $this->belongsTo(Post::class);
+    }
+
+    /**
+     * ONE-TO-MANY
+     * One event for several notifications
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function event(): BelongsTo
+    {
+        return $this->belongsTo(Event::class);
+    }
+
+    /**
+     * ONE-TO-MANY
+     * One community for several notifications
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function community(): BelongsTo
+    {
+        return $this->belongsTo(Community::class);
+    }
+
+    /**
+     * ONE-TO-MANY
+     * One message for several notifications
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function message(): BelongsTo
+    {
+        return $this->belongsTo(Message::class);
+    }
+
+    /**
+     * ONE-TO-MANY
+     * One team for several notifications
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(Team::class);
+    }
+
+    /**
+     * ONE-TO-MANY
+     * One reaction for several notifications
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function reaction(): BelongsTo
+    {
+        return $this->belongsTo(Reaction::class);
     }
 }

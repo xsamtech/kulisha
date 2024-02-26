@@ -69,7 +69,8 @@ class User extends JsonResource
             'files' => File::collection($this->files),
             'carts' => Cart::collection($this->carts)->sortByDesc('created_at')->toArray(),
             'payments' => Payment::collection($this->payments)->sortByDesc('created_at')->toArray(),
-            'histories' => History::collection($this->histories)->sortByDesc('created_at')->toArray(),
+            'histories' => History::collection($this->histories_from)->sortByDesc('created_at')->toArray(),
+            'notifications' => Notification::collection($this->notifications_to)->sortByDesc('created_at')->toArray(),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s')
         ];

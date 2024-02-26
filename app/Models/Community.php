@@ -88,4 +88,26 @@ class Community extends Model
     {
         return $this->hasMany(Message::class);
     }
+
+    /**
+     * MANY-TO-ONE
+     * Several histories for a community
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function histories(): HasMany
+    {
+        return $this->hasMany(History::class);
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several notifications for a community
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
 }

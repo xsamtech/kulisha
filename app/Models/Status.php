@@ -65,39 +65,6 @@ class Status extends Model
 
     /**
      * MANY-TO-ONE
-     * Several messages for a status
-     * 
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function messages(): HasMany
-    {
-        return $this->hasMany(Message::class);
-    }
-
-    /**
-     * MANY-TO-ONE
-     * Several notifications for a status
-     * 
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function notifications(): HasMany
-    {
-        return $this->hasMany(Notification::class);
-    }
-
-    /**
-     * MANY-TO-ONE
-     * Several histories for a status
-     * 
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function histories(): HasMany
-    {
-        return $this->hasMany(History::class);
-    }
-
-    /**
-     * MANY-TO-ONE
      * Several carts for a status
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
@@ -116,5 +83,38 @@ class Status extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several messages for a status
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class);
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several histories for a status
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function histories(): HasMany
+    {
+        return $this->hasMany(History::class);
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several notifications for a status
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
     }
 }
