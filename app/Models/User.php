@@ -184,6 +184,17 @@ class User extends Authenticatable
 
     /**
      * MANY-TO-ONE
+     * Several blocked_users for a user
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function blocked_users(): HasMany
+    {
+        return $this->hasMany(BlockedUser::class);
+    }
+
+    /**
+     * MANY-TO-ONE
      * Several owned_events for a user
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasMany

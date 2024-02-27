@@ -39,4 +39,15 @@ class ReactionReason extends Model
     {
         return $this->hasMany(SentReaction::class);
     }
+
+    /**
+     * MANY-TO-ONE
+     * Several blocked_users for a reaction_reason
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function blocked_users(): HasMany
+    {
+        return $this->hasMany(BlockedUser::class);
+    }
 }
