@@ -200,4 +200,24 @@ return [
     'create_donation_success' => 'Donation created',
     'update_donation_success' => 'Donation updated',
     'delete_donation_success' => 'Donation deleted',
+
+    // ===== USER HISTORIES
+    // Subscriptions
+    '' => '',
+    // Invitations
+    '' => '',
+    // Reactions
+    '' => '',
+    // Posts & Comments
+    '' => '',
+
+    // ===== NOTIFICATIONS PUSH
+    // Subscriptions
+    '' => '',
+    // Invitations
+    '' => '',
+    // Reactions
+    '' => '',
+    // Posts & Comments
+    '' => '',
 ];

@@ -200,4 +200,34 @@ return [
     'create_donation_success' => 'Donation créée',
     'update_donation_success' => 'Donation modifiée',
     'delete_donation_success' => 'Donation supprimée',
+
+    // ===== USER HISTORIES
+    // Subscriptions
+    'connection_request' => 'Vous avez envoyé une demande de connexion à <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
+    // Invitations
+    'community_invitation' => 'Vous avez envoyé à <strong><a href="/users/:to_user_id">:to_user_names</a></strong> une invitation à la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'event_invitation' => 'Vous avez envoyé à <strong><a href="/users/:to_user_id">:to_user_names</a></strong> une invitation à l\'événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    // Reactions
+    'post_reaction' => 'Vous avez réagi au post de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
+    'comment_reaction' => 'Vous avez réagi au commentaire de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
+    'message_reaction' => 'Vous avez réagi au message de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
+    // Posts & Comments
+    '' => '',
+
+    // ===== PUBLIC NOTIFICATIONS
+    // Subscriptions
+    'one_connection_request' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> vous a envoyé une demande de connexion.',
+    'two_connection_requests' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne vous ont envoyé une demande de connexion.',
+    'many_connection_requests' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :requests_count personne vous ont envoyé une demande de connexion.',
+    // Invitations
+    'one_community_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> vous a invité à la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'two_communities_invitations' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne vous ont invité à des communautés.',
+    'many_communities_invitations' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :invitations_count personne vous ont invité à des communautés.',
+    'one_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> vous a invité à l\'événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'two_events_invitations' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne vous ont invité à des événements.',
+    'many_events_invitations' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :invitations_count personne vous ont invité à des événements.',
+    // Reactions
+    '' => '',
+    // Posts & Comments
+    '' => '',
 ];

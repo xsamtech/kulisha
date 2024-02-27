@@ -24,6 +24,7 @@ class SentReaction extends JsonResource
             'reaction_description' => $this->reaction_description,
             'to_user_id' => $this->to_user_id,
             'to_post_id' => $this->to_post_id,
+            'to_message_id' => $this->to_message_id,
             'reaction' => Reaction::make($this->reaction),
             'reaction_reason' => ReactionReason::make($this->reaction_reason),
             'user' => User::make($this->user),
