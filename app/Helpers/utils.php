@@ -54,6 +54,23 @@ if (!function_exists('transformMentionHashtag')) {
 }
 
 // Transform surrounded text to URL
+if (!function_exists('getHashtags')) {
+    function getHashtags($subject)
+    { 
+        $hashtags= false; 
+
+        preg_match_all("/\#(\w+)/u", $subject, $matches); 
+
+        if ($matches) {
+            $matches[0] = str_replace('#', '', $matches[0]); //replace #
+            $hashtags = implode(' ,', $matches[0]);
+        }
+
+        return explode(" ,", $hashtags);
+    }
+}
+
+// Transform surrounded text to URL
 if (!function_exists('transformSurrounded')) {
     function transformSurrounded($web_url, $subject)
     {
