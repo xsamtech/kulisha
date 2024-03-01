@@ -21,6 +21,8 @@ class Subscription extends JsonResource
     {
         return [
             'id' => $this->id,
+            'notify_post' => $this->notify_post,
+            'notify_message' => $this->notify_message,
             'is_following' => $this->is_following,
             'user' => User::make($this->user),
             'subscriber' => User::make($this->subscriber),
