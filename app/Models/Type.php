@@ -43,6 +43,17 @@ class Type extends Model
 
     /**
      * MANY-TO-ONE
+     * Several categories for a type
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function categories(): HasMany
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    /**
+     * MANY-TO-ONE
      * Several users for a type
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasMany

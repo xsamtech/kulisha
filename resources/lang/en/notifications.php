@@ -303,6 +303,9 @@ return [
     'many_mentions_comment_self_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> :mentioned you and :mentions_count others in his comment on :one_s :post_type.',
     'followers_mention_comment_self_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> :mentioned you and all his connections in his comment on :one_s :post_type.',
     // Others
+    'one_celebration' => 'It\'s <strong><a href="/users/:from_user_id">:from_user_names</a></strong>\'s birthday.',
+    'two_celebrations' => 'It\'s <strong><a href="/users/:from_user_id">:from_user_names</a></strong> and another person\'s birthday.',
+    'many_celebrations' => 'It\'s <strong><a href="/users/:from_user_id">:from_user_names</a></strong> and :celebrations_count other people\'s birthday.',
     'profil_view_analytics' => 'Your profile has been viewed :views_count times :period. Click to see the statistics.',
     'post_view_analytics' => 'Your :post_type has been viewed :views_count times :period. Click to see the statistics.',
 ];
