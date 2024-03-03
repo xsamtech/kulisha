@@ -21,7 +21,6 @@ class BlockedUser extends JsonResource
     {
         return [
             'id' => $this->id,
-            'number_of_days' => $this->number_of_days,
             'user' => User::make($this->user),
             'reaction_reason' => ReactionReason::make($this->reaction_reason),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
