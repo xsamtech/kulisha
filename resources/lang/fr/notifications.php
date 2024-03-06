@@ -218,6 +218,7 @@ return [
     'message_reaction' => 'Vous avez réagi au message de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
     // Posts & Comments
     'post_published' => 'Vous avez publié :new :post_type.',
+    'post_published_in_community' => 'Vous avez publié :new :post_type dans la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
     'post_published_one_mention' => 'Vous avez mentionné <strong><a href="/users/:to_user_id">:to_user_names</a></strong> dans :new :post_type.',
     'post_published_two_mentions' => 'Vous avez mentionné <strong><a href="/users/:to_user_id">:to_user_names</a></strong> et une autre personne dans :new :post_type.',
     'post_published_many_mentions' => 'Vous avez mentionné <strong><a href="/users/:to_user_id">:to_user_names</a></strong> et :mentions_count autres personnes dans :new :post_type.',
@@ -225,6 +226,7 @@ return [
     'post_shared' => 'Vous avez partagé :the :post_type de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
     'anonymous_question_sent' => 'Vous avez envoyé une question anonyme à <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
     'comment_sent' => 'Vous avez commenté :the :post_type de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
+    'comment_sent_to_event' => 'Vous avez commenté à l\'événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
     'comment_sent_one_mention' => 'Vous avez mentionné <strong><a href="/users/:to_user_id">:to_user_names</a></strong> dans votre commentaire sur :the :post_type de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
     'comment_sent_two_mentions' => 'Vous avez mentionné <strong><a href="/users/:to_user_id">:to_user_names</a></strong> et une autre personne dans votre commentaire sur :the :post_type de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
     'comment_sent_many_mentions' => 'Vous avez mentionné <strong><a href="/users/:to_user_id">:to_user_names</a></strong> et :mentions_count autres personnes dans votre commentaire sur :the :post_type de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
@@ -285,6 +287,9 @@ return [
     'one_post_published_after_some_times' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a publié :new :post_type après quelques temps d\'absence.',
     'two_posts_published_after_some_times' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont publié :new :posts_type après quelques temps d\'absence.',
     'many_posts_published_after_some_times' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :posts_count autres personnes ont publié :new :posts_type après quelques temps d\'absence.',
+    'one_post_published_in_community' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a publié :new :post_type dans la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'two_posts_published_in_community' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont publié :new :posts_type dans la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'many_posts_published_in_community' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :posts_count autres personnes ont publié :new :posts_type dans la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
     'one_mention_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> vous a :mentioned dans :new :post_type.',
     'two_mentions_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> vous a :mentioned et une autre personne dans :new :post_type.',
     'many_mentions_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> vous a :mentioned et :mentions_count autres personnes dans :new :post_type.',
@@ -313,4 +318,5 @@ return [
     'many_celebrations' => 'C\'est l\'anniversaire de <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :celebrations_count autres personnes.',
     'profil_view_analytics' => 'Votre profil a été consulté :views_count fois :period. Cliquez pour voir les statistiques.',
     'post_view_analytics' => 'Votre :post_type a été consulté :views_count fois :period. Cliquez pour voir les statistiques.',
+    'will_be_blocked_soon' => 'Nous sommes déjà à la <strong>:nth_personne</strong> qui signale votre <strong>:subject</strong> comme « <strong>:reason</strong> ». Encore <strong>:persons_count</strong> et vous serez bientôt bloqué.',
 ];

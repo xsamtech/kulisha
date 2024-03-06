@@ -218,6 +218,7 @@ return [
     'message_reaction' => 'You reacted to <strong><a href="/users/:to_user_id">:to_user_names</a></strong>\' message.',
     // Posts & Comments
     'post_published' => 'You have published :new :post_type.',
+    'post_published_in_community' => 'You have published :new :post_type in the <strong><a href="/communities/:community_id">:community_name</a></strong> community.',
     'post_published_one_mention' => 'You have mentioned <strong><a href="/users/:to_user_id">:to_user_names</a></strong> in :new :post_type.',
     'post_published_two_mentions' => 'You have mentioned <strong><a href="/users/:to_user_id">:to_user_names</a></strong> and another person in :new :post_type.',
     'post_published_many_mentions' => 'You have mentioned <strong><a href="/users/:to_user_id">:to_user_names</a></strong> and :mentions_count others in :new :post_type.',
@@ -225,6 +226,7 @@ return [
     'post_shared' => 'You have shared :the <strong><a href="/users/:to_user_id">:to_user_names</a></strong>\' :post_type.',
     'anonymous_question_sent' => 'You sent an anonymous question to <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
     'comment_sent' => 'You commented on <strong><a href="/users/:to_user_id">:to_user_names</a></strong>\' :the :post_type.',
+    'comment_sent_to_event' => 'You commented on the <strong><a href="/events/:event_id">:event_title</a></strong> event.',
     'comment_sent_one_mention' => 'You have mentioned <strong><a href="/users/:to_user_id">:to_user_names</a></strong> in your comment on <strong><a href="/users/:to_user_id">:to_user_names</a></strong>\' :the :post_type.',
     'comment_sent_two_mentions' => 'You have mentioned <strong><a href="/users/:to_user_id">:to_user_names</a></strong> and another person in your comment on <strong><a href="/users/:to_user_id">:to_user_names</a></strong>\' :the :post_type.',
     'comment_sent_many_mentions' => 'You have mentioned <strong><a href="/users/:to_user_id">:to_user_names</a></strong> and :mentions_count others in your comment on <strong><a href="/users/:to_user_id">:to_user_names</a></strong>\' :the :post_type.',
@@ -285,6 +287,9 @@ return [
     'one_post_published_after_some_times' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> published :new :post_type after some time of absence.',
     'two_posts_published_after_some_times' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> and another person published :new :posts_type after some time of absence.',
     'many_posts_published_after_some_times' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> and :posts_count others published :new :posts_type after some time of absence.',
+    'one_post_published_in_community' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> has published :new :post_type in the <strong><a href="/communities/:community_id">:community_name</a></strong> community.',
+    'two_posts_published_in_community' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> and another person have published :new :posts_type in the <strong><a href="/communities/:community_id">:community_name</a></strong> community.',
+    'many_posts_published_in_community' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> and :posts_count others have published :new :posts_type in the <strong><a href="/communities/:community_id">:community_name</a></strong> community.',
     'one_mention_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> :mentioned you in :new :post_type.',
     'two_mentions_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> :mentioned you and another person in :new :post_type.',
     'many_mentions_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> :mentioned you and :mentions_count others in :new :post_type.',
@@ -313,4 +318,5 @@ return [
     'many_celebrations' => 'It\'s <strong><a href="/users/:from_user_id">:from_user_names</a></strong> and :celebrations_count other people\'s birthday.',
     'profil_view_analytics' => 'Your profile has been viewed :views_count times :period. Click to see the statistics.',
     'post_view_analytics' => 'Your :post_type has been viewed :views_count times :period. Click to see the statistics.',
+    'will_be_blocked_soon' => 'We are already on the <strong>:nth_personne</strong> person who has reported your <strong>:subject</strong> as « <strong>:reason</strong> ». <strong>:persons_count</strong> more and you\'ll soon be bloqued.',
 ];
