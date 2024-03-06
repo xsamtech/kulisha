@@ -22,10 +22,6 @@ class History extends JsonResource
         return [
             'id' => $this->id,
             'search_content' => $this->search_content,
-            'color' => $this->color,
-            'icon_font' => $this->icon_font,
-            'icon_svg' => $this->icon_svg,
-            'image_url' => !empty($this->image_url) ? getWebURL() . '/storage/' . $this->image_url : null,
             'type' => Type::make($this->type),
             'status' => Status::make($this->status),
             'to' => User::make($this->to_user),
@@ -35,8 +31,11 @@ class History extends JsonResource
             'message' => Message::make($this->message),
             'team' => Team::make($this->team),
             'reaction' => Reaction::make($this->reaction),
+            'cart' => Cart::make($this->cart),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
+            'created_at_explicit' => $this->created_at->format('Y') == date('Y') ? explicitDayMonth($this->created_at->format('Y-m-d H:i:s')) : explicitDate($this->created_at->format('Y-m-d H:i:s')),
+            'updated_at_explicit' => $this->updated_at->format('Y') == date('Y') ? explicitDayMonth($this->updated_at->format('Y-m-d H:i:s')) : explicitDate($this->updated_at->format('Y-m-d H:i:s')),
             'created_at_ago' => timeAgo($this->created_at->format('Y-m-d H:i:s')),
             'updated_at_ago' => timeAgo($this->updated_at->format('Y-m-d H:i:s')),
             'from_user_id' => $this->from_user_id

@@ -21,10 +21,6 @@ class Notification extends JsonResource
     {
         return [
             'id' => $this->id,
-            'color' => $this->color,
-            'icon_font' => $this->icon_font,
-            'icon_svg' => $this->icon_svg,
-            'image_url' => !empty($this->image_url) ? getWebURL() . '/storage/' . $this->image_url : null,
             'type' => Type::make($this->type),
             'status' => Status::make($this->status),
             'from' => User::make($this->from_user),
@@ -34,8 +30,11 @@ class Notification extends JsonResource
             'message' => Message::make($this->message),
             'team' => Team::make($this->team),
             'reaction' => Reaction::make($this->reaction),
+            'cart' => Cart::make($this->cart),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
+            'created_at_explicit' => $this->created_at->format('Y') == date('Y') ? explicitDayMonth($this->created_at->format('Y-m-d H:i:s')) : explicitDate($this->created_at->format('Y-m-d H:i:s')),
+            'updated_at_explicit' => $this->updated_at->format('Y') == date('Y') ? explicitDayMonth($this->updated_at->format('Y-m-d H:i:s')) : explicitDate($this->updated_at->format('Y-m-d H:i:s')),
             'created_at_ago' => timeAgo($this->created_at->format('Y-m-d H:i:s')),
             'updated_at_ago' => timeAgo($this->updated_at->format('Y-m-d H:i:s')),
             'to_user_id' => $this->to_user_id

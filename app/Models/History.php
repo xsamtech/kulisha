@@ -130,4 +130,15 @@ class History extends Model
     {
         return $this->belongsTo(Reaction::class);
     }
+
+    /**
+     * ONE-TO-MANY
+     * One cart for several histories
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function cart(): BelongsTo
+    {
+        return $this->belongsTo(Cart::class);
+    }
 }

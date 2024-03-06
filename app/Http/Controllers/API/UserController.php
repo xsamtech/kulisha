@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers\API;
 
+use stdClass;
+use App\Models\Event;
+use App\Models\File;
 use App\Models\History;
 use App\Models\Notification;
 use App\Models\PasswordResetToken;
 use App\Models\Status;
+use App\Models\Reaction;
+use App\Models\Subscription;
 use App\Models\Type;
 use App\Models\User;
 use Nette\Utils\Random;
@@ -14,14 +19,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;
-use stdClass;
+use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\User as ResourcesUser;
 use App\Http\Resources\PasswordResetToken as ResourcesPasswordReset;
-use App\Models\Event;
-use App\Models\File;
-use App\Models\Reaction;
-use App\Models\Subscription;
-use Illuminate\Support\Facades\Validator;
+use App\Models\Group;
 
 /**
  * @author Xanders
@@ -49,15 +50,23 @@ class UserController extends BaseController
      */
     public function store(Request $request)
     {
-        $ongoing_status = Status::where('status_name->fr', 'En cours')->first();
-        $unread_status = Status::where('status_name->fr', 'Non lue')->first();
-        $ordinary_type = Type::where('type_name->fr', 'Membre ordinaire')->first();
-        $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
+        // Visibility
+        $everybody_visibility = Group::where('visibility_name->fr', 'Tout le monde')->first();
+        // Groups
+        $member_status_group = Group::where('group_name->fr', 'Etat du membre')->first();
+        $member_type_group = Group::where('group_name->fr', 'Type de membre')->first();
+        $history_type_group = Group::where('group_name->fr', 'Type d\'historique')->first();
+        // Statuses and types
+        $activated_status = !empty($member_status_group) ? Status::where([['status_name->fr', 'Activé'], ['group_id', $member_status_group->id]])->first() : Status::where('status_name->fr', 'Activé')->first();
+        $unread_status = !empty($member_status_group) ? Status::where([['status_name->fr', 'Activé'], ['group_id', $member_status_group->id]])->first() : Status::where('status_name->fr', 'Non lue')->first();
+        $ordinary_member_type = !empty($member_type_group) ? Type::where([['type_name->fr', 'Membre ordinaire'], ['group_id', $member_type_group->id]])->first() : Type::where('type_name->fr', 'Membre ordinaire')->first();
+        $activities_history_type = !empty($history_type_group) ? Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first() : Type::where('type_name->fr', 'Historique des activités')->first();
         // Get inputs
         $inputs = [
             'firstname' => $request->firstname,
             'lastname' => $request->lastname,
             'surname' => $request->surname,
+            'username' => $request->username,
             'about_me' => $request->about_me,
             'gender' => $request->gender,
             'birth_date' => $request->birth_date,
@@ -69,10 +78,11 @@ class UserController extends BaseController
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => empty($request->password) ? null : Hash::make($request->password),
-            'api_token' => $request->api_token,
-            'status_id' => is_null($ongoing_status) ? null : $ongoing_status->id,
-            'type_id' => is_null($ordinary_type) ? null : $ordinary_type->id,
-            'visibility_id' => $request->visibility_id
+            'prefered_theme' => $request->prefered_theme,
+            'prefered_language' => $request->prefered_language,
+            'status_id' => is_null($activated_status) ? null : $activated_status->id,
+            'type_id' => is_null($ordinary_member_type) ? null : $ordinary_member_type->id,
+            'visibility_id' => !empty($request->visibility_id) ? $request->visibility_id : (is_null($everybody_visibility) ? null : $everybody_visibility->id)
         ];
         $users = User::all();
         $password_resets = PasswordResetToken::all();
@@ -264,6 +274,8 @@ class UserController extends BaseController
                 'tr' => 'Kulisha\'ya hoş geldiniz. Ağınızla ilgili her şeyi öğrenmek için lütfen buraya tıklayın.',
                 'cs' => 'Vítejte v destinaci Kuliša. Kliknutím sem se dozvíte vše o vaší síti.'
             ],
+            'subject' => 'text-success',
+            'subject_id' => 'text-success',
             'color' => 'text-success',
             'icon' => 'bi bi-exclamation-circle',
             'image_url' => 'assets/img/logo-reverse.png',

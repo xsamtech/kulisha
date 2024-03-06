@@ -26,6 +26,10 @@ class TeamInvitation extends JsonResource
             'role' => $this->role,
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
+            'created_at_explicit' => $this->created_at->format('Y') == date('Y') ? explicitDayMonth($this->created_at->format('Y-m-d H:i:s')) : explicitDate($this->created_at->format('Y-m-d H:i:s')),
+            'updated_at_explicit' => $this->updated_at->format('Y') == date('Y') ? explicitDayMonth($this->updated_at->format('Y-m-d H:i:s')) : explicitDate($this->updated_at->format('Y-m-d H:i:s')),
+            'created_at_ago' => timeAgo($this->created_at->format('Y-m-d H:i:s')),
+            'updated_at_ago' => timeAgo($this->updated_at->format('Y-m-d H:i:s')),
             'team_id' => $this->team_id
         ];
     }

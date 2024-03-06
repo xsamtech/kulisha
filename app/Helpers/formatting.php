@@ -1,7 +1,7 @@
 <?php
 /**
  * @author Xanders
- * @see https://www.xsam-tech.com
+ * @see https://team.xsamtech.com/xanderssamoth
  */
 
 use Illuminate\Support\Facades\Session;

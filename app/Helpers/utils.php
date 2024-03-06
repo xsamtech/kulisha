@@ -1,7 +1,7 @@
 <?php
 /**
  * @author Xanders
- * @see https://www.xsam-tech.com
+ * @see https://team.xsamtech.com/xanderssamoth
  */
 
 use Carbon\Carbon;
@@ -93,6 +93,16 @@ if (!function_exists('explicitMonth')) {
         setlocale(LC_ALL, app()->getLocale());
 
         return utf8_encode(strftime("%B", strtotime(date('F', mktime(0, 0, 0, $month, 10)))));
+    }
+}
+
+// Day and month fully readable
+if (!function_exists('explicitDayMonth')) {
+    function explicitDayMonth($date)
+    {
+        setlocale(LC_ALL, app()->getLocale());
+
+        return utf8_encode(Carbon::parse($date)->formatLocalized('%d %B'));
     }
 }
 
