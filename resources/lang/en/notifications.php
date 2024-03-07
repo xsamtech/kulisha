@@ -239,6 +239,10 @@ return [
     // Payment
     'payment_failed' => 'You made a payment that was unsuccessful.',
     'payment_done' => 'You have successfully made your payment.',
+    // Miscellaneous
+    'account_created' => 'You have created your account.',
+    'account_deactivated' => 'You have deactivated your account.',
+    'account_reactivated' => 'You have reactivated your account.',
 
     // ===== PUBLIC NOTIFICATIONS
     // Subscriptions
@@ -315,7 +319,7 @@ return [
     'followers_mention_comment_self_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> :mentioned you and all his connections in his comment on :one_s :post_type.',
     // Payment
     'one_payment_done' => 'You have made a payment with code <strong>:code</strong>. Please click here for payment details.',
-    // Others
+    // Miscellaneous
     'welcome' => 'Welcome <strong><a href="/users/:to_user_id">:to_user_names</a></strong>. Click here to get a complete overview of your network.',
     'welcome_back' => 'Welcome back <strong><a href="/users/:to_user_id">:to_user_names</a></strong>. Click here to see what\'s new in your network.',
     'will_be_blocked_soon' => 'We are already on the <strong>:nth_personne</strong> person who has reported your <strong>:subject</strong> as « <strong>:reason</strong> ». <strong>:persons_count</strong> more and you\'ll soon be bloqued.',
