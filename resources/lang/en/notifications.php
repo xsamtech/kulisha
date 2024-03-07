@@ -236,6 +236,9 @@ return [
     'comment_sent_many_mentions' => 'You have mentioned <strong><a href="/users/:to_user_id">:to_user_names</a></strong> and :mentions_count others in your comment on your :post_type.',
     'comment_sent_followers_mention' => 'You have mentioned all your connections in your comment on your :post_type.',
     'survey_answered' => 'You responded to the <strong><a href="/users/:to_user_id">:to_user_names</a></strong> survey.',
+    // Payment
+    'payment_failed' => 'You made a payment that was unsuccessful.',
+    'payment_done' => 'You have successfully made your payment.',
 
     // ===== PUBLIC NOTIFICATIONS
     // Subscriptions
@@ -310,13 +313,15 @@ return [
     'two_mentions_comment_self_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> :mentioned you and another person in his comment on :one_s :post_type.',
     'many_mentions_comment_self_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> :mentioned you and :mentions_count others in his comment on :one_s :post_type.',
     'followers_mention_comment_self_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> :mentioned you and all his connections in his comment on :one_s :post_type.',
+    // Payment
+    'one_payment_done' => 'You have made a payment with code <strong>:code</strong>. Please click here for payment details.',
     // Others
     'welcome' => 'Welcome <strong><a href="/users/:to_user_id">:to_user_names</a></strong>. Click here to get a complete overview of your network.',
     'welcome_back' => 'Welcome back <strong><a href="/users/:to_user_id">:to_user_names</a></strong>. Click here to see what\'s new in your network.',
+    'will_be_blocked_soon' => 'We are already on the <strong>:nth_personne</strong> person who has reported your <strong>:subject</strong> as « <strong>:reason</strong> ». <strong>:persons_count</strong> more and you\'ll soon be bloqued.',
     'one_celebration' => 'It\'s <strong><a href="/users/:from_user_id">:from_user_names</a></strong>\'s birthday.',
     'two_celebrations' => 'It\'s <strong><a href="/users/:from_user_id">:from_user_names</a></strong> and another person\'s birthday.',
     'many_celebrations' => 'It\'s <strong><a href="/users/:from_user_id">:from_user_names</a></strong> and :celebrations_count other people\'s birthday.',
     'profil_view_analytics' => 'Your profile has been viewed :views_count times :period. Click to see the statistics.',
     'post_view_analytics' => 'Your :post_type has been viewed :views_count times :period. Click to see the statistics.',
-    'will_be_blocked_soon' => 'We are already on the <strong>:nth_personne</strong> person who has reported your <strong>:subject</strong> as « <strong>:reason</strong> ». <strong>:persons_count</strong> more and you\'ll soon be bloqued.',
 ];
