@@ -141,4 +141,15 @@ class History extends Model
     {
         return $this->belongsTo(Cart::class);
     }
+
+    /**
+     * ONE-TO-MANY
+     * One for_notification for several histories
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function for_notification(): BelongsTo
+    {
+        return $this->belongsTo(Notification::class);
+    }
 }
