@@ -24,6 +24,8 @@ class Subscription extends JsonResource
             'notify_post' => $this->notify_post,
             'notify_message' => $this->notify_message,
             'is_following' => $this->is_following,
+            'email' => $this->email,
+            'phone' => $this->phone,
             'user' => User::make($this->user),
             'subscriber' => User::make($this->subscriber),
             'status' => Status::make($this->status),

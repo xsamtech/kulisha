@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\User as ResourcesUser;
 use App\Http\Resources\PasswordResetToken as ResourcesPasswordReset;
 use App\Models\Group;
+use App\Models\PersonalAccessToken;
 
 /**
  * @author Xanders
@@ -56,11 +57,13 @@ class UserController extends BaseController
         $member_status_group = Group::where('group_name->fr', 'Etat du membre')->first();
         $member_type_group = Group::where('group_name->fr', 'Type de membre')->first();
         $history_type_group = Group::where('group_name->fr', 'Type d\'historique')->first();
+        $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
         // Statuses and types
         $activated_status = !empty($member_status_group) ? Status::where([['status_name->fr', 'Activé'], ['group_id', $member_status_group->id]])->first() : Status::where('status_name->fr', 'Activé')->first();
-        $unread_status = !empty($member_status_group) ? Status::where([['status_name->fr', 'Activé'], ['group_id', $member_status_group->id]])->first() : Status::where('status_name->fr', 'Non lue')->first();
+        $unread_status = !empty($member_status_group) ? Status::where([['status_name->fr', 'Non lue'], ['group_id', $member_status_group->id]])->first() : Status::where('status_name->fr', 'Non lue')->first();
         $ordinary_member_type = !empty($member_type_group) ? Type::where([['type_name->fr', 'Membre ordinaire'], ['group_id', $member_type_group->id]])->first() : Type::where('type_name->fr', 'Membre ordinaire')->first();
         $activities_history_type = !empty($history_type_group) ? Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first() : Type::where('type_name->fr', 'Historique des activités')->first();
+        $new_account_type = !empty($notification_type_group) ? Type::where([['type_name->fr', 'Nouveau compte'], ['group_id', $notification_type_group->id]])->first() : Type::where('type_name->fr', 'Nouveau compte')->first();
         // Get inputs
         $inputs = [
             'firstname' => $request->firstname,
@@ -86,8 +89,10 @@ class UserController extends BaseController
         ];
         $users = User::all();
         $password_resets = PasswordResetToken::all();
-        // $basic  = new \Vonage\Client\Credentials\Basic('', '');
-        // $client = new \Vonage\Client($basic);
+
+        if (trim($inputs['email']) == null AND trim($inputs['phone']) == null) {
+            return $this->handleError(__('validation.custom.email_or_phone.required'));
+        }
 
         if ($inputs['email'] != null) {
             // Check if user email already exists
@@ -144,9 +149,9 @@ class UserController extends BaseController
                 return $this->handleError($request->confirm_password, __('notifications.confirm_password_error'), 400);
             }
 
-            if (preg_match('#^\S*(?=\S{8,})(?=\S*[a-z])(?=\S*[A-Z])(?=\S*[\d])\S*$#', $inputs['password']) == 0) {
-                return $this->handleError($inputs['password'], __('miscellaneous.password.error'), 400);
-            }
+            // if (preg_match('#^\S*(?=\S{8,})(?=\S*[a-z])(?=\S*[A-Z])(?=\S*[\d])\S*$#', $inputs['password']) == 0) {
+            //     return $this->handleError($inputs['password'], __('miscellaneous.password.error'), 400);
+            // }
 
             $random_string = (string) random_int(1000000, 9999999);
 
@@ -157,13 +162,6 @@ class UserController extends BaseController
                     'token' => $random_string,
                     'former_password' => $request->password
                 ]);
-
-                // try {
-                //     $client->sms()->send(new \Vonage\SMS\Message\SMS($password_reset->phone, 'DikiTivi', (string) $password_reset->token));
-
-                // } catch (\Throwable $th) {
-                //     return $this->handleError($th->getMessage(), __('notifications.create_user_SMS_failed'), 500);
-                // }
 
             } else {
                 if ($inputs['email'] != null) {
@@ -180,13 +178,6 @@ class UserController extends BaseController
                         'token' => $random_string,
                         'former_password' => $request->password
                     ]);
-
-                    // try {
-                    //     $client->sms()->send(new \Vonage\SMS\Message\SMS($password_reset->phone, 'DikiTivi', (string) $password_reset->token));
-
-                    // } catch (\Throwable $th) {
-                    //     return $this->handleError($th->getMessage(), __('notifications.create_user_SMS_failed'), 500);
-                    // }
                 }
             }
         }
@@ -204,13 +195,6 @@ class UserController extends BaseController
 
                 $inputs['password'] = Hash::make($password_reset->former_password);
 
-                // try {
-                //     $client->sms()->send(new \Vonage\SMS\Message\SMS($password_reset->phone, 'DikiTivi', (string) $password_reset->token));
-
-                // } catch (\Throwable $th) {
-                //     return $this->handleError($th->getMessage(), __('notifications.create_user_SMS_failed'), 500);
-                // }
-
             } else {
                 if ($inputs['email'] != null) {
                     $password_reset = PasswordResetToken::create([
@@ -230,13 +214,6 @@ class UserController extends BaseController
                     ]);
 
                     $inputs['password'] = Hash::make($password_reset->former_password);
-
-                    // try {
-                    //     $client->sms()->send(new \Vonage\SMS\Message\SMS($password_reset->phone, 'DikiTivi', (string) $password_reset->token));
-
-                    // } catch (\Throwable $th) {
-                    //     return $this->handleError($th->getMessage(), __('notifications.create_user_SMS_failed'), 500);
-                    // }
                 }
             }
         }
@@ -256,55 +233,17 @@ class UserController extends BaseController
         /*
             HISTORY AND/OR NOTIFICATION MANAGEMENT
         */
-        Notification::create([
-            'notification_url' => 'about/tricks',
-            'notification_content' => [
-                'af' => 'Welkom by Kulisha. Klik asseblief hier om alles oor jou netwerk te leer.',
-                'de' => 'Willkommen in Kulisha. Bitte klicken Sie hier, um alles über Ihr Netzwerk zu erfahren.',
-                'ar' => 'مرحبا بكم في كوليشا. من فضلك انقر هنا لمعرفة كل شيء عن شبكتك.',
-                'zh' => '欢迎来到库利沙。 请单击此处了解有关您的网络的所有信息。',
-                'en' => 'Welcome to Kulisha. Please click here to learn everything about your network.',
-                'es' => 'Bienvenidos a Kulisha. Haga clic aquí para aprender todo sobre su red.',
-                'fr' => 'Bienvenue sur Kulisha. Veuillez cliquer ici pour tout savoir sur votre réseau.',
-                'it' => 'Benvenuti a Kulisha. Fai clic qui per scoprire tutto sulla tua rete.',
-                'ja' => 'クリシャへようこそ。 ネットワークに関するすべてを確認するには、ここをクリックしてください。',
-                'nl' => 'Welkom bij Kulisha. Klik hier om alles over uw netwerk te leren.',
-                'ru' => 'Добро пожаловать в Кулишу. Нажмите здесь, чтобы узнать все о вашей сети.',
-                'sw' => 'Karibu Kulisha. Tafadhali bofya hapa ili kujifunza kila kitu kuhusu mtandao wako.',
-                'tr' => 'Kulisha\'ya hoş geldiniz. Ağınızla ilgili her şeyi öğrenmek için lütfen buraya tıklayın.',
-                'cs' => 'Vítejte v destinaci Kuliša. Kliknutím sem se dozvíte vše o vaší síti.'
-            ],
-            'subject' => 'text-success',
-            'subject_id' => 'text-success',
-            'color' => 'text-success',
-            'icon' => 'bi bi-exclamation-circle',
-            'image_url' => 'assets/img/logo-reverse.png',
+        $notification = Notification::create([
+            'color' => 'text-primary',
+            'type_id' => is_null($new_account_type) ? null : $new_account_type->id,
             'status_id' => is_null($unread_status) ? null : $unread_status->id,
-            'user_id' => $user->id
+            'to_user_id' => $user->id
         ]);
         History::create([
             'history_url' => 'account',
-            'history_content' => [
-                'af' => 'Jy het pas jou rekening geskep.',
-                'de' => 'Sie haben gerade Ihr Konto erstellt.',
-                'ar' => 'لقد قمت للتو بإنشاء حسابك.',
-                'zh' => '您刚刚创建了您的帐户。',
-                'en' => 'You have just created your account.',
-                'es' => 'Acabas de crear tu cuenta.',
-                'fr' => 'Vous venez de créer votre compte.',
-                'it' => 'Hai appena creato il tuo account.',
-                'ja' => 'アカウントを作成しました。',
-                'nl' => 'U heeft zojuist uw account aangemaakt.',
-                'ru' => 'Вы только что создали свою учетную запись.',
-                'sw' => 'Umefungua akaunti yako.',
-                'tr' => 'Hesabınızı yeni oluşturdunuz.',
-                'cs' => 'Právě jste vytvořili svůj účet.'
-            ],
-            'color' => 'text-success',
-            'icon' => 'bi bi-person-plus',
-            'image_url' => 'assets/img/user.svg',
             'type_id' => $activities_history_type->id,
-            'user_id' => $user->id
+            'to_user_id' => $user->id,
+            'for_notification_id' => $notification->id
         ]);
 
         $object = new stdClass();
@@ -345,6 +284,7 @@ class UserController extends BaseController
             'firstname' => $request->firstname,
             'lastname' => $request->lastname,
             'surname' => $request->surname,
+            'username' => $request->username,
             'about_me' => $request->about_me,
             'gender' => $request->gender,
             'birth_date' => $request->birth_date,
@@ -789,6 +729,39 @@ class UserController extends BaseController
         $users = User::orderByDesc('created_at')->get();
 
         return $this->handleResponse(ResourcesUser::collection($users), __('notifications.delete_user_success'));
+
+        $password_reset = PasswordResetToken::where('email', $user->email)->orWhere('phone', $user->phone)->first();
+        $personal_access_tokens = PersonalAccessToken::where('tokenable_id', $user->id)->get();
+        $notifications = Notification::where('from_user_id', $user->id)->orWhere('to_user_id', $user->id)->get();
+        $histories = History::where('from_user_id', $user->id)->orWhere('to_user_id', $user->id)->get();
+        $directory = $_SERVER['DOCUMENT_ROOT'] . '/public/storage/images/users/' . $user->id;
+
+        $user->delete();
+        $password_reset->delete();
+
+        if (!is_null($personal_access_tokens)) {
+            foreach ($personal_access_tokens as $personal_access_token):
+                $personal_access_token->delete();
+            endforeach;
+        }
+
+        if (!is_null($notifications)) {
+            foreach ($notifications as $notification):
+                $notification->delete();
+            endforeach;
+        }
+
+        if (!is_null($histories)) {
+            foreach ($histories as $history):
+                $history->delete();
+            endforeach;
+        }
+
+        if (Storage::exists($directory)) {
+            Storage::deleteDirectory($directory);
+        }
+
+        $users = User::orderByDesc('created_at')->get();
     }
 
     // ==================================== CUSTOM METHODS ====================================
