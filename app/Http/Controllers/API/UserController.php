@@ -5,11 +5,13 @@ namespace App\Http\Controllers\API;
 use stdClass;
 use App\Models\Event;
 use App\Models\File;
+use App\Models\Group;
 use App\Models\History;
 use App\Models\Notification;
 use App\Models\PasswordResetToken;
-use App\Models\Status;
+use App\Models\PersonalAccessToken;
 use App\Models\Reaction;
+use App\Models\Status;
 use App\Models\Subscription;
 use App\Models\Type;
 use App\Models\User;
@@ -22,8 +24,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\User as ResourcesUser;
 use App\Http\Resources\PasswordResetToken as ResourcesPasswordReset;
-use App\Models\Group;
-use App\Models\PersonalAccessToken;
 
 /**
  * @author Xanders
@@ -55,12 +55,13 @@ class UserController extends BaseController
         $everybody_visibility = Group::where('visibility_name->fr', 'Tout le monde')->first();
         // Groups
         $member_status_group = Group::where('group_name->fr', 'Etat du membre')->first();
+        $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
         $member_type_group = Group::where('group_name->fr', 'Type de membre')->first();
         $history_type_group = Group::where('group_name->fr', 'Type d\'historique')->first();
         $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
         // Statuses and types
         $activated_status = !empty($member_status_group) ? Status::where([['status_name->fr', 'Activé'], ['group_id', $member_status_group->id]])->first() : Status::where('status_name->fr', 'Activé')->first();
-        $unread_status = !empty($member_status_group) ? Status::where([['status_name->fr', 'Non lue'], ['group_id', $member_status_group->id]])->first() : Status::where('status_name->fr', 'Non lue')->first();
+        $unread_status = !empty($notification_status_group) ? Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first() : Status::where('status_name->fr', 'Non lue')->first();
         $ordinary_member_type = !empty($member_type_group) ? Type::where([['type_name->fr', 'Membre ordinaire'], ['group_id', $member_type_group->id]])->first() : Type::where('type_name->fr', 'Membre ordinaire')->first();
         $activities_history_type = !empty($history_type_group) ? Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first() : Type::where('type_name->fr', 'Historique des activités')->first();
         $new_account_type = !empty($notification_type_group) ? Type::where([['type_name->fr', 'Nouveau compte'], ['group_id', $notification_type_group->id]])->first() : Type::where('type_name->fr', 'Nouveau compte')->first();
@@ -766,36 +767,50 @@ class UserController extends BaseController
 
     // ==================================== CUSTOM METHODS ====================================
     /**
-     * Find by "username"
+     * Search a member
      *
-     * @param  string $username
+     * @param  string $data
      * @param  int $visitor_id
      * @return \Illuminate\Http\Response
      */
     public function search($data, $visitor_id = null)
     {
-        $search_history_type = Type::where('type_name->fr', 'Historique de recherche')->first();
-        $user = User::where('firstname', 'LIKE', '%' . $data . '%')->orWhere('lastname', 'LIKE', '%' . $data . '%')->orWhere('surname', 'LIKE', '%' . $data . '%')->orWhere('username', 'LIKE', '%' . $data . '%')->first();
+        // Groups
+        $history_type_group = Group::where('group_name->fr', 'Type d\'historique')->first();
+        // Types
+        $search_history_type = !empty($history_type_group) ? Type::where([['type_name->fr', 'Historique des recherches'], ['group_id', $history_type_group->id]])->first() : Type::where('type_name->fr', 'Historique des recherches')->first();
+        // Search request
+        $users = User::where('firstname', 'LIKE', '%' . $data . '%')->orWhere('lastname', 'LIKE', '%' . $data . '%')->orWhere('surname', 'LIKE', '%' . $data . '%')->orWhere('username', 'LIKE', '%' . $data . '%')->get();
 
-        if (is_null($user)) {
+        /*
+            HISTORY AND/OR NOTIFICATION MANAGEMENT
+        */
+        if (is_null($users)) {
             return $this->handleError(__('notifications.find_user_404'));
         }
 
-        if ($visitor_id != null) {
-            /*
-                HISTORY AND/OR NOTIFICATION MANAGEMENT
-            */
-            if ($visitor_id != $user->id) {
-                History::create([
-                    'history_url' => 'search/?query=' . $data,
-                    'search_content' => $data,
-                    'type_id' => $search_history_type->id,
-                    'user_id' => $visitor_id
-                ]);
+        if ($users != null) {
+            if ($visitor_id != null) {
+                $visitor = User::find($visitor_id);
+
+                if (is_null($visitor)) {
+                    return $this->handleError(__('notifications.find_visitor_404'));
+                }
+
+                foreach ($users as $user): 
+                    if ($visitor_id != $user->id) {
+                        History::create([
+                            'search_content' => $data,
+                            'type_id' => $search_history_type->id,
+                            'from_user_id' => $visitor->id,
+                            'to_user_id' => $user->id
+                        ]);
+                    }
+                endforeach;
             }
         }
 
-        return $this->handleResponse(new ResourcesUser($user), __('notifications.find_user_success'));
+        return $this->handleResponse(ResourcesUser::collection($users), __('notifications.find_all_users_success'));
     }
 
     /**
@@ -807,7 +822,11 @@ class UserController extends BaseController
      */
     public function profile($username, $visitor_id = null)
     {
-        $consultation_history_type = Type::where('type_name->fr', 'Historique de consultation')->first();
+        // Groups
+        $history_type_group = Group::where('group_name->fr', 'Type d\'historique')->first();
+        // Types
+        $consultation_history_type = Type::where([['type_name->fr', 'Historique des consultations'], ['group_id', $history_type_group->id]])->first();
+        // Request
         $user = User::where('username', $username)->first();
 
         if (is_null($user)) {
@@ -819,11 +838,16 @@ class UserController extends BaseController
                 HISTORY AND/OR NOTIFICATION MANAGEMENT
             */
             if ($visitor_id != $user->id) {
+                $visitor = User::find($visitor_id);
+
+                if (is_null($visitor)) {
+                    return $this->handleError(__('notifications.find_visitor_404'));
+                }
+
                 History::create([
-                    'history_url' => $username,
-                    'profile_content' => $username,
                     'type_id' => $consultation_history_type->id,
-                    'user_id' => $visitor_id
+                    'from_user_id' => $visitor->id,
+                    'to_user_id' => $user->id
                 ]);
             }
         }
@@ -922,6 +946,12 @@ class UserController extends BaseController
                 return $this->handleError($inputs['password'], __('auth.password'), 400);
             }
 
+            $password_reset = PasswordResetToken::where('phone', $user->phone)->first();
+
+            if ($user->phone_verified_at == null) {
+                return $this->handleError(new ResourcesPasswordReset($password_reset), __('notifications.unverified_token'), 400);
+            }
+
             $token = $user->createToken('auth_token')->plainTextToken;
 
             $user->update([
@@ -942,6 +972,12 @@ class UserController extends BaseController
                 return $this->handleError($inputs['password'], __('auth.password'), 400);
             }
 
+            $password_reset = PasswordResetToken::where('email', $user->email)->first();
+
+            if ($user->email_verified_at == null) {
+                return $this->handleError(new ResourcesPasswordReset($password_reset), __('notifications.unverified_token'), 400);
+            }
+
             $token = $user->createToken('auth_token')->plainTextToken;
 
             $user->update([
@@ -959,18 +995,29 @@ class UserController extends BaseController
      * @param  int $id
      * @param  int $visitor_id
      * @param  int $event_id
-     * @param  boolean $notify
      * @return \Illuminate\Http\Response
      */
-    public function subscribeToEvent($id, $visitor_id, $event_id, $notify = false)
+    public function subscribeToEvent($id, $visitor_id, $event_id)
     {
-        $on_hold_status = Status::where('status_name->fr', 'En attente')->first();
-        $accepted_status = Status::where('status_name->fr', 'Admis')->first();
-        $unread_status = Status::where('status_name->fr', 'Non lue')->first();
-        $public_type = Type::where('type_name->fr', 'Public')->first();
-        $private_type = Type::where('type_name->fr', 'Privé')->first();
-        $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
-        $i_participate_reaction = Reaction::where('reaction_name->fr', 'Je participe')->first();
+        // Groups
+        $susbcription_status_group = Group::where('group_name->fr', 'Etat de la souscription')->first();
+        $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
+        $access_type_group = Group::where('group_name->fr', 'Type d\'accès')->first();
+        $history_type_group = Group::where('group_name->fr', 'Type d\'historique')->first();
+        $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
+        $reaction_on_invitation_group = Group::where('group_name->fr', 'Réaction sur invitation')->first();
+        // Statuses
+        $on_hold_status = Status::where([['status_name->fr', 'En attente'], ['group_id', $susbcription_status_group->id]])->first();
+        $accepted_status = Status::where([['status_name->fr', 'Acceptée'], ['group_id', $susbcription_status_group->id]])->first();
+        $unread_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first();
+        // Types
+        $public_type = Type::where([['type_name->fr', 'Public'], ['group_id' => $access_type_group->id]])->first();
+        $private_type = Type::where([['type_name->fr', 'Privé'], ['group_id' => $access_type_group->id]])->first();
+        $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
+        $invitation_type = Type::where([['type_name->fr', 'Invitation'], ['group_id', $notification_type_group->id]])->first();
+        // Reactions
+        $i_accept_reaction = Reaction::where([['reaction_name->fr', 'J\'y serai'], ['group_id', $reaction_on_invitation_group->id]])->first();
+        // Requests
         $user = User::find($id);
         $visitor = User::find($visitor_id);
         $event = Event::find($event_id);
@@ -993,7 +1040,7 @@ class UserController extends BaseController
             if ($event->type_id == $public_type->id) {
                 $event->users()->attach($user->id, [
                     'status_id' => $accepted_status->id,
-                    'reaction_id' => $i_participate_reaction->id,
+                    'reaction_id' => $i_accept_reaction->id,
                 ]);
             }
 
@@ -1001,31 +1048,11 @@ class UserController extends BaseController
             if ($event->type_id == $private_type->id) {
                 $event->users()->attach($user->id, [
                     'status_id' => $on_hold_status->id,
-                    'reaction_id' => $i_participate_reaction->id,
+                    'reaction_id' => $i_accept_reaction->id,
                 ]);
             }
 
             History::create([
-                'history_url' => 'events/' . $event->id,
-                'history_content' => [
-                    'af' => 'Jy het ingeteken op die « ' . $event->event_title . ' »-geleentheid.',
-                    'de' => 'Sie haben die « ' . $event->event_title . ' »-Veranstaltung abonniert.',
-                    'ar' => 'لقد اشتركت في حدث « ' . $event->event_title . ' »',
-                    'zh' => '您已订阅 « ' . $event->event_title . ' » 活动。',
-                    'en' => 'You have subscribed to the « ' . $event->event_title . ' » event.',
-                    'es' => 'Te has suscrito al evento « ' . $event->event_title . ' ».',
-                    'fr' => 'Vous avez souscrit à l\'événement « ' . $event->event_title . ' ».',
-                    'it' => 'Ti sei iscritto all\'evento « ' . $event->event_title . ' ».',
-                    'ja' => '« ' . $event->event_title . ' » イベントに登録しました。',
-                    'nl' => 'Je hebt je ingeschreven voor het « ' . $event->event_title . ' »-evenement.',
-                    'ru' => 'Вы подписались на событие « ' . $event->event_title . ' ».',
-                    'sw' => 'Umejiandikisha kwa tukio la « ' . $event->event_title . ' ».',
-                    'tr' => '« ' . $event->event_title . ' » etkinliğine abone oldunuz.',
-                    'cs' => 'Přihlásili jste se k odběru události « ' . $event->event_title . ' ».'
-                ],
-                'color' => 'text-warning',
-                'icon' => 'bi bi-calendar2-event',
-                'image_url' => $event->cover_photo_path,
                 'type_id' => $activities_history_type->id,
                 'user_id' => $user->id
             ]);
@@ -1038,32 +1065,11 @@ class UserController extends BaseController
             /*
                 HISTORY AND/OR NOTIFICATION MANAGEMENT
             */
-            if ($notify == true) {
-                Notification::create([
-                    'notification_url' => 'events/' . $event->id,
-                    'notification_content' => [
-                        'af' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') het vir jou \'n uitnodiging gestuur na die « ' . $event->event_title . ' »-geleentheid.',
-                        'de' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') hat dir eine Einladung zum « ' . $event->event_title . ' »-Event geschickt.',
-                        'ar' => 'لقد أرسل لك [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') دعوة لحضور حدث « ' . $event->event_title . ' ».',
-                        'zh' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') 已向您发送了参加 « ' . $event->event_title . ' » 活动的邀请。',
-                        'en' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') has sent you an invitation to the « ' . $event->event_title . ' » event.',
-                        'es' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') te ha enviado una invitación al evento « ' . $event->event_title . ' ».',
-                        'fr' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') vous a envoyé une invitation à l\'événement « ' . $event->event_title . ' ».',
-                        'it' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') ti ha inviato un invito all\'evento « ' . $event->event_title . ' ».',
-                        'ja' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') から « ' . $event->event_title . ' » イベントへの招待状が届きました。',
-                        'nl' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') heeft je een uitnodiging gestuurd voor het « ' . $event->event_title . ' »-evenement.',
-                        'ru' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') отправил вам приглашение на мероприятие « ' . $event->event_title . ' ».',
-                        'sw' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') amekutumia mwaliko kwa tukio la « ' . $event->event_title . ' ».',
-                        'tr' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') size « ' . $event->event_title . ' » etkinliği için bir davetiye gönderdi.',
-                        'cs' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') vám poslal pozvánku na akci « ' . $event->event_title . ' ».'
-                    ],
-                    'color' => 'text-info',
-                    'icon' => 'bi bi-calendar2-event',
-                    'image_url' => $event->cover_photo_path,
-                    'status_id' => $unread_status,
-                    'user_id' => $user->id
-                ]);
-            }
+            Notification::create([
+                'status_id' => $unread_status,
+                'user_id' => $user->id
+            ]);
+
             History::create([
                 'history_url' => 'events/' . $event->id,
                 'history_content' => [
