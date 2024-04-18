@@ -140,13 +140,13 @@
         <!-- **************** MAIN CONTENT END **************** -->
 
         <!-- =======================Footer START -->
-        <footer class="pt-2 pb-sm-4 pb-2 position-relative bg-mode">
+        <footer class="pt-2 pb-5 position-relative bg-mode">
             <div class="container">
                 <div class="row justify-content-center">
                     <div class="col-sm-10 col-md-8 col-lg-6">
                         <div class="d-grid d-sm-flex justify-content-center justify-content-sm-between align-items-center mt-3">
                             <!-- Terms -->
-                            <ul class="nav">
+                            <ul class="nav mb-sm-0 mb-3">
                                 <li class="nav-item"><a class="nav-link fw-bold ps-0 pe-2" href="#">Conditions</a></li>
                                 <li class="nav-item"><a class="nav-link fw-bold px-2" href="#">Confidentialité</a></li>
                                 <li class="nav-item"><a class="nav-link fw-bold px-2" href="#">Cookies</a></li>
