@@ -7,10 +7,10 @@
 // Common variables
 const navigator = window.navigator;
 const currentLanguage = $('html').attr('lang');
-const currentUser = $('[name="dktv-visitor"]').attr('content');
-const currentHost = $('[name="dktv-url"]').attr('content');
-const apiHost = $('[name="dktv-api-url"]').attr('content');
-const headers = { 'Authorization': 'Bearer ' + $('[name="dktv-ref"]').attr('content'), 'Accept': $('.mime-type').val(), 'X-localization': navigator.language };
+const currentUser = $('[name="kls-visitor"]').attr('content');
+const currentHost = $('[name="kls-url"]').attr('content');
+const apiHost = $('[name="kls-api-url"]').attr('content');
+const headers = { 'Authorization': 'Bearer ' + $('[name="kls-ref"]').attr('content'), 'Accept': $('.mime-type').val(), 'X-localization': navigator.language };
 // Modals
 const modalUser = $('#cropModalUser');
 // Preview images
@@ -65,118 +65,6 @@ if (isWebview) {
 // } else {
 //     $('.detect-mobile').removeClass('d-none');
 // };
-
-/**
- * Set theme to light
- */
-function themeLight() {
-    $('p, span, small, .btn-close, .list-group-item, .card-header, .card-body, .card-body h4, .dropdown-menu, .dropdown-menu *, .main-menu a i, .side-main-menu a i, .section-title-3 h2').addClass('text-dark').removeClass('text-white');
-    $('.fotter-socail li a, .footer-list li a').removeClass('text-light');
-    $('.mobile-menu').addClass('menu-black');
-    $('.header-medea').addClass('bg-white').removeClass('bg-dark');
-    $('.product-contents h4 a, .movie-details-info h2').addClass('dktv-text-blue').removeClass('dktv-text-yellow');
-    $('#mdb-style').attr('href', MDB_LIGHT);
-
-    document.cookie = "theme=light";
-}
-
-/**
- * Set theme to dark
- */
-function themeDark() {
-    $('p, span, small, .btn-close, .list-group-item, .card-header, .card-body, .card-body h4, .dropdown-menu, .dropdown-menu *, .main-menu a i, .side-main-menu a i,.section-title-3 h2').addClass('text-white').removeClass('text-dark');
-    $('.fotter-socail li a, .footer-list li a').addClass('text-light');
-    $('.header-medea').removeClass('bg-white').addClass('bg-dark');
-    $('.mobile-menu').removeClass('menu-black');
-    $('.product-contents h4 a, .movie-details-info h2').removeClass('dktv-text-blue').addClass('dktv-text-yellow');
-    $('#mdb-style').attr('href', MDB_DARK);
-
-    document.cookie = "theme=dark";
-}
-
-/**
- * Set theme to auto
- */
-function themeAuto() {
-    const darkThemeMq = window.matchMedia("(prefers-color-scheme: dark)");
-
-    if (darkThemeMq.matches) {
-        $('p, span, small, .btn-close, .list-group-item, .card-header, .card-body, .card-body h4, .dropdown-menu, .dropdown-menu *, .main-menu a i, .side-main-menu a i, .section-title-3 h2').addClass('text-white').removeClass('text-dark');
-        $('.fotter-socail li a, .footer-list li a').addClass('text-white');
-        $('.header-medea').removeClass('bg-white').addClass('bg-dark');
-        $('.mobile-menu').removeClass('menu-black');
-        $('.product-contents h4 a, .movie-details-info h2').removeClass('dktv-text-blue').addClass('dktv-text-yellow');
-        $('#mdb-style').attr('href', MDB_DARK);
-
-    } else {
-        $('p, span, small, .btn-close, .list-group-item, .card-header, .card-body, .card-body h4, .dropdown-menu, .dropdown-menu *, .main-menu a i, .side-main-menu a i, .section-title-3 h2').addClass('text-dark').removeClass('text-white');
-        $('.fotter-socail li a, .footer-list li a').removeClass('text-white');
-        $('.header-medea').addClass('bg-white').removeClass('bg-dark');
-        $('.mobile-menu').addClass('menu-black');
-        $('.product-contents h4 a, .movie-details-info h2').addClass('dktv-text-blue').removeClass('dktv-text-yellow');
-        $('#mdb-style').attr('href', MDB_LIGHT);
-    }
-
-    document.cookie = "theme=auto";
-}
-
-/**
- * Check string is numeric
- * 
- * @param string str 
- */
-function isNumeric(str) {
-    if (typeof str != "string") {
-        return false
-    } // we only process strings!
-
-    return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
-        !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
-}
-
-/**
- * Get cookie by name
- * 
- * @param string cname 
- */
-function getCookie(cname) {
-    let name = cname + '=';
-    let decodedCookie = decodeURIComponent(document.cookie);
-    let ca = decodedCookie.split(';');
-
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-
-        while (c.charAt(0) == ' ') {
-            c = c.substring(1);
-        }
-
-        if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length);
-        }
-    }
-
-    return '';
-}
-
-/**
- * Toggle Password Visibility
- * 
- * @param string current 
- * @param string element 
- */
-function passwordVisible(current, element) {
-    var el = document.getElementById(element);
-
-    if (el.type === 'password') {
-        el.type = 'text';
-        current.innerHTML = '<i class="bi bi-eye-slash-fill"></i>'
-
-    } else {
-        el.type = 'password';
-        current.innerHTML = '<i class="bi bi-eye-fill"></i>'
-    }
-}
 
 /**
  * Switch between two elements visibility

@@ -6,11 +6,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <meta name="author" content="xsamtech.com">
         <meta name="keywords" content="@lang('miscellaneous.keywords')">
-        <meta name="dktv-url" content="{{ getWebURL() }}">
-        <meta name="dktv-api-url" content="{{ getApiURL() }}">
-        <meta name="dktv-visitor" content="{{ !empty(Auth::user()) ? Auth::user()->id : null }}">
+        <meta name="kls-url" content="{{ getWebURL() }}">
+        <meta name="kls-api-url" content="{{ getApiURL() }}">
+        <meta name="kls-visitor" content="{{ !empty(Auth::user()) ? Auth::user()->id : null }}">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <meta name="dktv-ref" content="{{ !empty(Auth::user()) ? Auth::user()->api_token : null }}">
+        <meta name="kls-ref" content="{{ !empty(Auth::user()) ? Auth::user()->api_token : null }}">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="description" content="">
 
@@ -59,8 +59,7 @@
             @lang('auth.verified-phone')
                 @endif
             @else
-            Se connecter
-            {{-- @lang('auth.login') --}}
+            @lang('auth.login')
             @endif
 		@endif
 
@@ -126,7 +125,7 @@
                 <div class="row mt-5 mb-4">
                     <div class="col-lg-3 col-sm-4 col-8 mx-auto">
                         <div class="bg-image">
-                            <img src="{{ asset('assets/img/logo-text.png') }}" alt="Kulisha" class="img-fluid">
+                            <img id="brand" src="{{ asset('assets/img/brand.png') }}" alt="Kulisha" class="img-fluid">
                             <div class="mask"><a href="{{ route('home') }}"></a></div>
                         </div>
                     </div>
@@ -134,6 +133,12 @@
 
 @yield('guest-content')
 
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <!-- Copyright -->
+                        <p class="mt-1 mb-3">&copy {{ date('Y') }} <a target="_blank" href="https://xsamtech.com/">Xsam Technologies</a> Tous droits réservés</p>
+                    </div>
+                </div>
             </div>
             <!-- Container END -->
         </main>
@@ -168,11 +173,235 @@
         <!-- ======================= Footer END -->
 
         <!-- ======================= JS libraries, plugins and custom scripts -->
+        <!-- jQuery JS -->
+        <script src="{{ asset('assets/addons/custom/jquery/js/jquery.min.js') }}"></script>
         <!-- Bootstrap JS -->
         <script src="{{ asset('assets/addons/social/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
         <!-- Vendors -->
         <script src="{{ asset('assets/addons/social/pswmeter/pswmeter.min.js') }}"></script>
         <!-- Theme Functions -->
         <script src="{{ asset('assets/js/social/functions.js') }}"></script>
+        <!-- Custom scripts -->
+        {{-- <script src="{{ asset('assets/js/script.custom.js') }}"></script> --}}
+        <script type="text/javascript">
+// Common variables
+const navigator = window.navigator;
+const currentLanguage = $('html').attr('lang');
+const currentUser = $('[name="kls-visitor"]').attr('content');
+const currentHost = $('[name="kls-url"]').attr('content');
+const apiHost = $('[name="kls-api-url"]').attr('content');
+const headers = { 'Authorization': 'Bearer ' + $('[name="kls-ref"]').attr('content'), 'Accept': $('.mime-type').val(), 'X-localization': navigator.language };
+
+/**
+ * Set theme to light
+ */
+function themeLight() {
+    document.documentElement.setAttribute('data-bs-theme', 'light');
+    document.getElementById('brand').setAttribute('src', currentHost + '/assets/img/brand.png');
+    document.cookie = "theme=light";
+}
+
+/**
+ * Set theme to dark
+ */
+function themeDark() {
+    document.documentElement.setAttribute('data-bs-theme', 'dark');
+    document.getElementById('brand').setAttribute('src', currentHost + '/assets/img/brand-reverse.png');
+    document.cookie = "theme=dark";
+}
+
+/**
+ * Set theme to auto
+ */
+function themeAuto() {
+    const darkThemeMq = window.matchMedia("(prefers-color-scheme: dark)");
+
+    if (darkThemeMq.matches) {
+        document.getElementById('brand').setAttribute('src', currentHost + '/assets/img/brand-reverse.png');
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+
+    } else {
+        document.getElementById('brand').setAttribute('src', currentHost + '/assets/img/brand.png');
+        document.documentElement.setAttribute('data-bs-theme', 'light');
+    }
+
+    document.cookie = "theme=auto";
+}
+
+/**
+ * Check string is numeric
+ * 
+ * @param string str 
+ */
+function isNumeric(str) {
+    if (typeof str != "string") {
+        return false
+    } // we only process strings!
+
+    return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
+        !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+}
+
+/**
+ * Get cookie by name
+ * 
+ * @param string cname 
+ */
+ function getCookie(cname) {
+    let name = cname + '=';
+    let decodedCookie = decodeURIComponent(document.cookie);
+    let ca = decodedCookie.split(';');
+
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+
+    return '';
+}
+
+$(document).ready(function () {
+    /* Theme management */
+    // DEFAULT FACTS
+    if (isNumeric(currentUser)) {
+        $.ajax({
+            headers: headers,
+            type: 'GET',
+            contentType: 'application/json',
+            url: apiHost + '/user/' + parseInt(currentUser),
+            success: function (result) {
+                if (result.data.prefered_theme !== null) {
+                    if (result.data.prefered_theme === 'dark') {
+                        themeDark();
+
+                    } else {
+                        if (result.data.prefered_theme === 'light') {
+                            themeLight();
+                        } else {
+                            themeAuto();
+                        }
+                    }
+
+                } else {
+                    themeAuto();
+                }
+            },
+            error: function (xhr, error, status_description) {
+                console.log(xhr.responseJSON);
+                console.log(xhr.status);
+                console.log(error);
+                console.log(status_description);
+            }
+        });
+
+    } else {
+        if (getCookie('theme') === 'dark') {
+            themeDark();
+
+        } else {
+            if (getCookie('theme') === 'light') {
+                themeLight();
+            } else {
+                themeAuto();
+            }
+        }
+    }
+    // USER CHOOSES LIGHT
+    $('#themeToggler .light').on('click', function (e) {
+        e.preventDefault();
+        $('#themeToggler .current-theme').html('<i class="bi bi-sun"></i>');
+        themeLight();
+
+        // If user is connected, set is theme preference
+        if (isNumeric(currentUser)) {
+            themeLight();
+
+            $.ajax({
+                headers: headers,
+                type: 'PUT',
+                contentType: 'application/json',
+                url: apiHost + '/user/' + currentUser,
+                data: JSON.stringify({ 'id': currentUser, 'prefered_theme': 'light' }),
+                success: function () {
+                    $(this).unbind('click');
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                },
+                error: function (xhr, error, status_description) {
+                    console.log(xhr.responseJSON);
+                    console.log(xhr.status);
+                    console.log(error);
+                    console.log(status_description);
+                }
+            });
+        }
+    });
+
+    // USER CHOOSES DARK
+    $('#themeToggler .dark').on('click', function (e) {
+        e.preventDefault();
+        $('#themeToggler .current-theme').html('<i class="bi bi-moon-fill"></i>');
+        themeDark();
+
+        // If user is connected, set is theme preference
+        if (isNumeric(currentUser)) {
+            $.ajax({
+                headers: headers,
+                type: 'PUT',
+                contentType: 'application/json',
+                url: apiHost + '/user/' + currentUser,
+                data: JSON.stringify({ 'id': currentUser, 'prefered_theme': 'dark' }),
+                success: function () {
+                    $(this).unbind('click');
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                },
+                error: function (xhr, error, status_description) {
+                    console.log(xhr.responseJSON);
+                    console.log(xhr.status);
+                    console.log(error);
+                    console.log(status_description);
+                }
+            });
+        }
+    });
+
+    // USER CHOOSES AUTO
+    $('#themeToggler .auto').on('click', function (e) {
+        e.preventDefault();
+        $('#themeToggler .current-theme').html('<i class="bi bi-circle-half"></i>');
+        themeAuto();
+
+        // If user is connected, set is theme preference
+        if (isNumeric(currentUser)) {
+            $.ajax({
+                headers: headers,
+                type: 'PUT',
+                contentType: 'application/json',
+                url: apiHost + '/user/' + currentUser,
+                data: JSON.stringify({ 'id': currentUser, 'prefered_theme': 'auto' }),
+                success: function () {
+                    $(this).unbind('click');
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                },
+                error: function (xhr, error, status_description) {
+                    console.log(xhr.responseJSON);
+                    console.log(xhr.status);
+                    console.log(error);
+                    console.log(status_description);
+                }
+            });
+        }
+    });
+});
+        </script>
     </body>
 </html>

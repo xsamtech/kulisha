@@ -2,14 +2,13 @@
 
 @section('guest-content')
 
-                <div class="row justify-content-center pb-5">
+                <div class="row justify-content-center pb-2">
                     <!-- Main content START -->
                     <div class="col-sm-10 col-md-8 col-lg-7 col-xl-6 col-xxl-5">
                         <!-- Sign in START -->
                         <div class="card card-body text-center p-4 p-sm-5">
                             <!-- Title -->
-                            <h1 class="mb-3 text-success">Identifiez-vous</h1>
-                            <p class="mb-0" style="line-height: 20px;">Vous n'avez pas de compte ?<a href="" role="button"> <br class="d-sm-none d-block">Cliquez ici pour vous inscrire</a></p>
+                            <h1 class="mb-4 text-success">Identifiez-vous</h1>
 
                             <!-- Form START -->
                             <form>
@@ -42,8 +41,8 @@
                                 <div class="d-grid">
                                     <button type="submit" class="btn btn-lg btn-primary">Connexion</button>
                                 </div>
-                                <!-- Copyright -->
-                                <p class="mb-0 mt-3">&copy {{ date('Y') }} <a target="_blank" href="https://www.xsamtech.com/">Xsam Technologies</a> Tous droits réservés</p>
+                                <!-- Register -->
+                                <p class="mt-4 mb-0" style="line-height: 20px;">Vous n'avez pas de compte ?<a href="" role="button"> <br class="d-sm-none d-block">Cliquez ici pour vous inscrire</a></p>
                             </form>
                             <!-- Form END -->
                         </div>
