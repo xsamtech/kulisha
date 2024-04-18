@@ -11,6 +11,7 @@ use App\Http\Controllers\Web\MiscellaneousController;
 use App\Http\Controllers\Web\ThirdPartyController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/start-demo/{role}', function ($role) { session()->put('user_demo', $role); return redirect()->back(); })->name('start_demo'); // Just for demonstration
 /*
 |--------------------------------------------------------------------------
 | Web Routes

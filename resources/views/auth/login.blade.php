@@ -1,48 +1,54 @@
-<x-guest-layout>
-    <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
+@extends('layouts.guest')
 
-        <x-validation-errors class="mb-4" />
+@section('guest-content')
 
-        @if (session('status'))
-            <div class="mb-4 font-medium text-sm text-green-600">
-                {{ session('status') }}
-            </div>
-        @endif
+                <div class="row justify-content-center align-items-center py-5">
+                    <!-- Main content START -->
+                    <div class="col-sm-10 col-md-8 col-lg-7 col-xl-6 col-xxl-5">
+                        <!-- Sign in START -->
+                        <div class="card card-body text-center p-4 p-sm-5">
+                            <!-- Title -->
+                            <h1 class="mb-3 text-success">Identifiez-vous</h1>
+                            <p class="mb-0" style="line-height: 20px;">Vous n'avez pas de compte ?<a role="button"> <br class="d-sm-none d-block">Cliquez ici pour vous inscrire</a></p>
 
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
+                            <!-- Form START -->
+                            <form>
+                                <!-- Email, Phone or Username -->
+                                <div class="mt-4 mb-3 input-group-lg">
+                                    <input type="text" name="login_username" class="form-control" placeholder="E-mail, N° de téléphone ou pseudo" autofocus>
+                                </div>
 
-            <div>
-                <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            </div>
+                                <!-- Password -->
+                                <div class="mb-3 position-relative">
+                                    <!-- Password -->
+                                    <div class="input-group input-group-lg">
+                                        <input type="password" name="login_password" id="psw-input" class="form-control fakepassword" placeholder="Entrer mot de passe">
+                                        <span class="input-group-text p-0">
+                                            <i class="fakepasswordicon fa-solid fa-eye-slash cursor-pointer p-2 w-40px"></i>
+                                        </span>
+                                    </div>
+                                </div>
 
-            <div class="mt-4">
-                <x-label for="password" value="{{ __('Password') }}" />
-                <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="current-password" />
-            </div>
+                                <!-- Remember me -->
+                                <div class="mb-4 d-sm-flex justify-content-between">
+                                    <div>
+                                        <input type="checkbox" class="form-check-input" id="rememberCheck">
+                                        <label class="form-check-label" for="rememberCheck">Rester connecté</label>
+                                    </div>
+                                    <a role="button">Mot de passe oublié ?</a>
+                                </div>
 
-            <div class="block mt-4">
-                <label for="remember_me" class="flex items-center">
-                    <x-checkbox id="remember_me" name="remember" />
-                    <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
-                </label>
-            </div>
+                                <!-- Button -->
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-lg btn-primary">Connexion</button>
+                                </div>
+                                <!-- Copyright -->
+                                <p class="mb-0 mt-3">&copy {{ date('Y') }} <a target="_blank" href="https://www.xsamtech.com/">Xsam Technologies</a> Tous droits réservés</p>
+                            </form>
+                            <!-- Form END -->
+                        </div>
+                        <!-- Sign in START -->
+                    </div>
+                </div> <!-- Row END -->
 
-            <div class="flex items-center justify-end mt-4">
-                @if (Route::has('password.request'))
-                    <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
-                        {{ __('Forgot your password?') }}
-                    </a>
-                @endif
-
-                <x-button class="ms-4">
-                    {{ __('Log in') }}
-                </x-button>
-            </div>
-        </form>
-    </x-authentication-card>
-</x-guest-layout>
+@endsection
