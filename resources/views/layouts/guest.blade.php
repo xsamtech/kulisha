@@ -198,7 +198,7 @@ const headers = { 'Authorization': 'Bearer ' + $('[name="kls-ref"]').attr('conte
 function themeLight() {
     document.documentElement.setAttribute('data-bs-theme', 'light');
     document.getElementById('brand').setAttribute('src', currentHost + '/assets/img/brand.png');
-    document.cookie = "theme=light";
+    document.cookie = "theme=light; SameSite=None; Secure";
 }
 
 /**
@@ -207,7 +207,7 @@ function themeLight() {
 function themeDark() {
     document.documentElement.setAttribute('data-bs-theme', 'dark');
     document.getElementById('brand').setAttribute('src', currentHost + '/assets/img/brand-reverse.png');
-    document.cookie = "theme=dark";
+    document.cookie = "theme=dark; SameSite=None; Secure";
 }
 
 /**
@@ -225,7 +225,7 @@ function themeAuto() {
         document.documentElement.setAttribute('data-bs-theme', 'light');
     }
 
-    document.cookie = "theme=auto";
+    document.cookie = "theme=auto; SameSite=None; Secure";
 }
 
 /**
