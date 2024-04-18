@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 
 /**
  * @author Xanders
- * @see https://team.xsamtech.com/xanderssamoth
+ * @see https://www.linkedin.com/in/xanders-samoth-b2770737/
  */
 class BaseController extends Controller
 {
@@ -14,39 +14,60 @@ class BaseController extends Controller
      * Handle response
      *
      * @param  $result
-     * @param  string $msg
+     * @param  $msg
      * @return \Illuminate\Http\Response
      */
-    public function handleResponse($result, $msg)
+    public function handleResponse($result, $msg, $lastPage = null)
     {
-        $res = [
-            'success' => true,
-            'message' => $msg,
-            'data'    => $result
-        ];
+        if ($lastPage != null) {
+            $res = [
+                'success' => true,
+                'message' => $msg,
+                'data'    => $result,
+                'lastPage'    => $lastPage
+            ];
 
-        return response()->json($res, 200);
+            return response()->json($res, 200);
+
+        } else {
+            $res = [
+                'success' => true,
+                'message' => $msg,
+                'data'    => $result
+            ];
+
+            return response()->json($res, 200);
+        }
     }
 
     /**
      * Handle response error
      *
-     * @param  string $error
-     * @param  array $errorMsg
-     * @param  int $code
+     * @param  $error
+     * @param array  $errorMsg
+     * @param  $code
      * @return \Illuminate\Http\Response
      */
     public function handleError($error, $errorMsg = [], $code = 404)
     {
-        $res = [
-            'success' => false,
-            'message' => $error
-        ];
+        if (empty($errorMsg)) {
+			$res = [
+				'success' => false,
+				'message' => $error
+			];
 
-        if (!empty($errorMsg)) {
-            $res['data'] = $errorMsg;
+			return response()->json($res, $code);
         }
 
-        return response()->json($res, $code);
+        if (!empty($errorMsg)) {
+			$res = [
+				'success' => false,
+				'data' => $error
+			];
+
+            $res['message'] = $errorMsg;
+
+			return response()->json($res, $code);
+        }
     }
 }

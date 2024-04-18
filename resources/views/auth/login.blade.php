@@ -2,14 +2,14 @@
 
 @section('guest-content')
 
-                <div class="row justify-content-center align-items-center py-5">
+                <div class="row justify-content-center pb-5">
                     <!-- Main content START -->
                     <div class="col-sm-10 col-md-8 col-lg-7 col-xl-6 col-xxl-5">
                         <!-- Sign in START -->
                         <div class="card card-body text-center p-4 p-sm-5">
                             <!-- Title -->
                             <h1 class="mb-3 text-success">Identifiez-vous</h1>
-                            <p class="mb-0" style="line-height: 20px;">Vous n'avez pas de compte ?<a role="button"> <br class="d-sm-none d-block">Cliquez ici pour vous inscrire</a></p>
+                            <p class="mb-0" style="line-height: 20px;">Vous n'avez pas de compte ?<a href="" role="button"> <br class="d-sm-none d-block">Cliquez ici pour vous inscrire</a></p>
 
                             <!-- Form START -->
                             <form>
@@ -35,7 +35,7 @@
                                         <input type="checkbox" class="form-check-input" id="rememberCheck">
                                         <label class="form-check-label" for="rememberCheck">Rester connecté</label>
                                     </div>
-                                    <a role="button">Mot de passe oublié ?</a>
+                                    <a href="" role="button">Mot de passe oublié ?</a>
                                 </div>
 
                                 <!-- Button -->
@@ -47,7 +47,7 @@
                             </form>
                             <!-- Form END -->
                         </div>
-                        <!-- Sign in START -->
+                        <!-- Sign in END -->
                     </div>
                 </div> <!-- Row END -->
 

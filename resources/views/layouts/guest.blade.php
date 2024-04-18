@@ -112,15 +112,60 @@
     </head>
 
     <body>
+        <!-- Pre loader -->
+        <div class="preloader">
+            <div class="preloader-item">
+                <div class="spinner-grow text-primary"></div>
+            </div>
+        </div>
+
         <!-- **************** MAIN CONTENT START **************** -->
         <main>
             <!-- Container START -->
             <div class="container">
+                <div class="row mt-5 mb-4">
+                    <div class="col-lg-3 col-sm-4 col-8 mx-auto">
+                        <div class="bg-image">
+                            <img src="{{ asset('assets/img/logo-text.png') }}" alt="Kulisha" class="img-fluid">
+                            <div class="mask"><a href="{{ route('home') }}"></a></div>
+                        </div>
+                    </div>
+                </div>
+
 @yield('guest-content')
+
             </div>
             <!-- Container END -->
         </main>
         <!-- **************** MAIN CONTENT END **************** -->
+
+        <!-- =======================Footer START -->
+        <footer class="pt-2 pb-sm-4 pb-2 position-relative bg-mode">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-sm-10 col-md-8 col-lg-6">
+                        <div class="d-grid d-sm-flex justify-content-center justify-content-sm-between align-items-center mt-3">
+                            <!-- Terms -->
+                            <ul class="nav">
+                                <li class="nav-item"><a class="nav-link fw-bold ps-0 pe-2" href="#">Conditions</a></li>
+                                <li class="nav-item"><a class="nav-link fw-bold px-2" href="#">Confidentialité</a></li>
+                                <li class="nav-item"><a class="nav-link fw-bold px-2" href="#">Cookies</a></li>
+                            </ul>
+
+                            <!-- Theme toggle -->
+                            <div class="d-flex justify-content-center">
+                                <div role="group" id="themeToggler" class="btn-group shadow-0" aria-label="Theme toggler">
+                                    <button type="button" class="btn btn-light light"  data-mdb-ripple-init><i class="bi bi-sun"></i></button>
+                                    <button type="button" class="btn btn-light dark"  data-mdb-ripple-init><i class="bi bi-moon-fill"></i></button>
+                                    <button type="button" class="btn btn-light auto"  data-mdb-ripple-init><i class="bi bi-circle-half"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <!-- ======================= Footer END -->
 
         <!-- ======================= JS libraries, plugins and custom scripts -->
         <!-- Bootstrap JS -->
