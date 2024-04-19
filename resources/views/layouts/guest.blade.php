@@ -120,7 +120,7 @@
         <main class="py-5">
             <!-- Container START -->
             <div class="container">
-                <div class="row d-lg-none mb-4">
+                <div class="row{{ empty($exception) ? ' d-lg-none' : ''}} mb-4">
                     <div class="col-lg-3 col-sm-4 col-8 mx-auto">
                         <div class="bg-image">
                             <img src="{{ asset('assets/img/brand.png') }}" alt="Kulisha" class="img-fluid kulisha-brand">

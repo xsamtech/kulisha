@@ -12,6 +12,7 @@ return [
     |--------------------------------------------------------------------------
     |
     */
+    'demo_message' => 'Espace présentant la maquette de la plateforme',
     'welcome_title' => 'Votre plateforme agroalimentaire',
     'welcome_description_product' => 'Partager, trouvez, achetez ou vendez vos produits agroalimentaires.',
     'welcome_description_service' => 'Offrez ou commandez des services aux agriculteurs, aux éleveurs ou aux pêcheurs.',
@@ -67,7 +68,8 @@ return [
     'deactivate' => 'Désactiver',
     'lock' => 'Bloquer',
     'unlock' => 'Débloquer',
-    'search' => 'Rechercher ...',
+    'search_label' => 'Rechercher des produits, des médicaments ou autres services',
+    'search' => 'Rechercher',
     'mark_all_read' => 'Tout marquer comme lue',
     'empty_list' => 'La liste est vide',
     'see_more' => 'Voir plus',

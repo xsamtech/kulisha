@@ -38,7 +38,8 @@
 
                                 <!-- Button -->
                                 <div class="d-grid">
-                                    <button type="submit" class="btn btn-lg btn-primary rounded-pill">@lang('auth.login')</button>
+                                    {{-- <button type="submit" class="btn btn-lg btn-primary rounded-pill">@lang('auth.login')</button> --}}
+                                    <a href="{{ route('start_demo', ['role' => 'member']) }}" class="btn btn-lg btn-primary rounded-pill">@lang('auth.login')</a>
                                 </div>
                                 <!-- Register -->
                                 <p class="mt-4 mb-0" style="line-height: 20px;">@lang('miscellaneous.not_member')<a href="" role="button"> <br class="d-sm-none d-block">@lang('miscellaneous.register_title2')</a></p>

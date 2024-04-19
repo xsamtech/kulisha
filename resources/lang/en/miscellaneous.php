@@ -12,6 +12,7 @@ return [
     |--------------------------------------------------------------------------
     |
      */
+    'demo_message' => 'Space presenting the model of the platform',
     'welcome_title' => 'Your agri-food platform',
     'welcome_description_product' => 'Share, find, buy or sell your agri-food products.',
     'welcome_description_service' => 'Offer or order services to farmers, ranchers or fishermen.',
@@ -67,7 +68,8 @@ return [
     'deactivate' => 'Deactivate',
     'lock' => 'Lock',
     'unlock' => 'Unlock',
-    'search' => 'Search...',
+    'search_label' => 'Search for products, medications or other services',
+    'search' => 'Search',
     'mark_all_read' => 'Mark all as read',
     'empty_list' => 'The list is empty',
     'see_more' => 'See more',
