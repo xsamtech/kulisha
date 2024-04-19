@@ -2,7 +2,7 @@
  * Custom script
  * 
  * @author Xanders
- * @see https://www.linkedin.com/in/xanders-samoth-b2770737/
+ * @see https://team.xsamtech.com/xanderssamoth
  */
 // Common variables
 const navigator = window.navigator;

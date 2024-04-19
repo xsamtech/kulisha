@@ -12,9 +12,12 @@ return [
     |--------------------------------------------------------------------------
     |
     */
-    'drc' => 'République Démocratique du Congo',
+    'welcome_title' => 'Votre plateforme agroalimentaire',
+    'welcome_description_product' => 'Partager, trouvez, achetez ou vendez vos produits agroalimentaires.',
+    'welcome_description_service' => 'Offrez ou commandez des services aux agriculteurs, aux éleveurs ou aux pêcheurs.',
+    'welcome_description_food' => 'Vendez de la nourriture saine et bio et attirer plus de clients chez vous.',
     'slogan' => 'Mieux nourrir la vie !',
-    'keywords' => 'agribusiness agroalimentaire, kulisha, mieux nourrir la vie',
+    'keywords' => 'kulisha, agribusiness agroalimentaire, agriculteur, éleveur, pêche, pêcheur, mieux nourrir la vie',
     'all_right_reserved' => 'Tous droits réservés',
     'follow_us' => 'Suivez-nous :',
     'call_us' => 'Appelez-nous :',
@@ -182,8 +185,8 @@ return [
     'login_title1' => 'Se connecter',
     'login_title2' => 'Identifiez-vous',
     'login_description' => 'Vos données sont sécurisées avec nous. Alors vous devez vous identifier pour être sûr que c\'est bien vous.',
-    'login_username' => 'N° de téléphone ou E-mail',
-    'remember_me' => 'Se souvenir de moi',
+    'login_username' => 'N° de téléphone, e-mail ou nom d\'utilisateur',
+    'remember_me' => 'Rester connecté',
     'forgotten_password' => 'Mot de passe oublié ?',
     'not_member' => 'Pas encore membre ?',
     'signup_with' => 'ou s\'inscrire avec :',
@@ -191,7 +194,7 @@ return [
 
     // ===== REGISTER PAGE
     'register_title1' => 'S\'inscrire',
-    'register_title2' => 'Inscrivez-vous pour commencer',
+    'register_title2' => 'Cliquez ici pour vous inscrire',
     'register_title3' => 'Ecrivez le code que vous avez reçu',
     'serial_number' => 'N° de série',
     'names' => 'Noms',
@@ -252,9 +255,14 @@ return [
     'menu' => [
         'home' => 'Accueil',
         'dashboard' => 'Tableau de bord',
-        'login' => 'Se connecter',
+        'about' => 'A propos',
+        'terms_of_use' => 'Conditions',
+        'privacy_policy' => 'Confidentialité',
+        'cookies' => 'Cookies',
+        'contact' => 'Contact',
+        'login_register' => 's\'identifier ou s\'inscrire',
         'account_settings' => 'Paramètres du compte',
-        'messages' => 'Messages',
+        'messages' => 'Discussions',
         'notifications' => 'Notifications',
         'admin' => [
             'legal_info' =>  'Info légale',
@@ -263,11 +271,6 @@ return [
         ],
         'developer' => [
             'apis' => 'APIs',
-        ],
-        'manager' => [
-            'members' => 'Membres',
-            'other_managers' => 'Autres managers',
-            'infos' => 'Informations'
         ],
         'public' => [
             'about' => 'A propos',

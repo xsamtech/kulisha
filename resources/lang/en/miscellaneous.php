@@ -12,9 +12,12 @@ return [
     |--------------------------------------------------------------------------
     |
      */
-    'drc' => 'Democratic Republic of the Congo',
+    'welcome_title' => 'Your agri-food platform',
+    'welcome_description_product' => 'Share, find, buy or sell your agri-food products.',
+    'welcome_description_service' => 'Offer or order services to farmers, ranchers or fishermen.',
+    'welcome_description_food' => 'Sell healthy, organic food and attract more customers to your business.',
     'slogan' => 'Better feeding life!',
-    'keywords' => 'agribusiness agrifood, kulisha, better feeding life',
+    'keywords' => 'kulisha, agribusiness agrifood, agriculture, farmer, breeding, breeder, fishing, fisherman, better feeding life',
     'all_right_reserved' => 'All right reserved',
     'follow_us' => 'Follow us:',
     'call_us' => 'Call us:',
@@ -182,8 +185,8 @@ return [
     'login_title1' => 'Log in',
     'login_title2' => 'Identify yourself',
     'login_description' => 'Your data is safe with us. So you need to identify yourself to be sure it\'s you.',
-    'login_username' => 'Phone number or E-mail',
-    'remember_me' => 'Remember me',
+    'login_username' => 'Phone number, E-mail or username',
+    'remember_me' => 'Stay connected',
     'forgotten_password' => 'Forgotten password?',
     'not_member' => 'Not a member?',
     'signup_with' => 'or sign up with:',
@@ -191,7 +194,7 @@ return [
 
     // ===== REGISTER PAGE
     'register_title1' => 'Sign up',
-    'register_title2' => 'Register to start',
+    'register_title2' => 'Click here to join',
     'register_title3' => 'Write the code you received',
     'serial_number' => 'Serial number',
     'names' => 'Names',
@@ -252,9 +255,14 @@ return [
     'menu' => [
         'home' => 'Home',
         'dashboard' => 'Dashboard',
-        'login' => 'Log in',
+        'about' => 'About',
+        'terms_of_use' => 'Terms',
+        'privacy_policy' => 'Privacy',
+        'cookies' => 'Cookies',
+        'contact' => 'Contact',
+        'login_register' => 'log in or register',
         'account_settings' => 'Account settings',
-        'messages' => 'Messages',
+        'messages' => 'Chats',
         'notifications' => 'Notifications',
         'admin' => [
             'legal_info' => 'Legal info',
