@@ -8,7 +8,6 @@
         <meta name="keywords" content="@lang('miscellaneous.keywords')">
         <meta name="kls-url" content="{{ getWebURL() }}">
         <meta name="kls-api-url" content="{{ getApiURL() }}">
-        <meta name="kls-visitor" content="{{ !empty(Auth::user()) ? Auth::user()->id : null }}">
         <meta name="kls-ref" content="{{ (!empty(Auth::user()) ? Auth::user()->api_token : 'nat') . '-' . (request()->has('app_id') ? request()->get('app_id') : 'nai') }}">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="description" content="">

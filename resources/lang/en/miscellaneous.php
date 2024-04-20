@@ -265,25 +265,85 @@ return [
         'login_register' => 'log in or register',
         'account_settings' => 'Account settings',
         'messages' => 'Chats',
-        'notifications' => 'Notifications',
+        'history' => 'Activities history',
+        'notifications' => [
+            'title' => 'Notifications',
+            'the_public' => 'Everybody',
+            'connections' => 'Connections',
+            'mentions' => 'Mentions'
+        ],
         'admin' => [
-            'legal_info' => 'Legal info',
-            'country' => 'Country',
-            'miscellaneous' => 'Miscellaneous',
+            'group' => [
+                'title' => 'Group',
+                'visibility' => 'Visibility',
+                'type' => 'Type',
+                'status' => 'Status',
+                'reaction' => 'Reaction'
+            ],
+            'field' => [
+                'title' => 'Field',
+                'category' => 'Category'
+            ],
+            'miscellaneous' => [
+                'title' => 'Miscellaneous',
+                'role' => 'Role',
+                'reason' => 'Reason',
+                'coverage_area' => 'Coverage area',
+                'budget' => 'Budget',
+            ],
         ],
         'developer' => [
-            'apis' => 'APIs',
-        ],
-        'manager' => [
-            'members' => 'Members',
-            'other_managers' => 'Other managers',
-            'infos' => 'Informations',
+            'apis' => [
+                'title' => 'APIs',
+                'products' => 'Products',
+                'services' => 'Services',
+                'search' => 'Search engine',
+            ],
+            'integration' => [
+                'title' => 'Integration',
+                'button' => 'Button',
+                'post' => 'Post',
+            ],
         ],
         'public' => [
-            'about' => 'About',
-            'news' => 'News',
-            'works' => 'Our works',
-            'donate' => 'Donate',
+            'news_feed' => 'News feed',
+            'orders' => [
+                'title' => 'Orders',
+                'cart' => [
+                    'title' => 'Cart',
+                    'ongoing' => 'Ongoing',
+                    'archives' => 'Archives',
+                ],
+                'wishlist' => 'Wishlist',
+            ],
+            'communities' => [
+                'title' => 'Communities',
+                'yours' => 'Yours',
+                'connections' => 'Connections',
+                'popular' => 'The most popular',
+            ],
+            'events' => [
+                'title' => 'Events',
+                'yours' => 'Yours',
+                'local' => 'Local',
+                'at_the_moment' => 'At the moment',
+                'popular' => 'The most popular',
+            ],
+            'profile' => [
+                'title' => 'My profile',
+                'products' => 'Products',
+                'services' => 'Services',
+                'connections' => 'Connections',
+                'my_activities' => 'My activities',
+            ],
+            'settings' => [
+                'title' => 'Settings',
+                'account' => 'Account',
+                'notification' => 'Notification',
+                'privacy_and_safety' => 'Privacy and safety',
+                'connections' => 'Connections',
+                'messages' => 'messages',
+            ],
         ],
     ],
 

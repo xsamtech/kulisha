@@ -45,7 +45,7 @@ class HomeController extends Controller
     public function index()
     {
         if (Session::has('user_demo')) {
-            return view('welcome');
+            return view('demo.welcome');
 
         } else {
             return redirect()->route('login');
