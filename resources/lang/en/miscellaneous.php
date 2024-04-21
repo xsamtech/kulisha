@@ -23,6 +23,7 @@ return [
     'follow_us' => 'Follow us:',
     'call_us' => 'Call us:',
     'bank_transaction_description' => 'Bank transaction from the Kulisha application',
+    'theme' => 'Mode',
     'your_language' => 'Your language',
     'your_activation_code' => 'Your activation code: ',
     'back_home' => 'Return to the home',
@@ -342,7 +343,7 @@ return [
                 'notification' => 'Notification',
                 'privacy_and_safety' => 'Privacy and safety',
                 'connections' => 'Connections',
-                'messages' => 'messages',
+                'messages' => 'Messaging',
             ],
         ],
     ],
@@ -540,6 +541,7 @@ return [
 
         // Help
         'help' => [
+            'title' => 'Help and support',
         ],
     ],
 ];

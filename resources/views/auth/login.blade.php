@@ -7,7 +7,7 @@
                         <!-- Sign in START -->
                         <div class="card card-body text-center p-4 p-sm-5">
                             <!-- Title -->
-                            <h1 class="mb-4 text-success">@lang('miscellaneous.login_title2')</h1>
+                            <h1 class="mb-4 kls-lime-green-text">@lang('miscellaneous.login_title2')</h1>
 
                             <!-- Form START -->
                             <form>
