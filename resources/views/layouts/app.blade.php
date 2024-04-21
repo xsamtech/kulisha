@@ -91,7 +91,7 @@
         <header class="navbar-light bg-mode fixed-top">
             <!-- Logo Nav START -->
             <nav class="navbar navbar-icon navbar-expand-lg">
-                <div class="container-fluid">
+                <div class="container">
                     <!-- Logo START -->
                     <a class="navbar-brand" href="{{ route('home') }}">
                         <img class="light-mode-item navbar-brand-item" src="{{ asset('assets/img/brand.png') }}" alt="Kulisha">
