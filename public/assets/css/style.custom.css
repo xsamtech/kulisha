@@ -8,14 +8,6 @@ textarea {
     resize: none!important;
 }
 
-a.btn:hover {
-    text-decoration: none!important;
-}
-
-a:hover {
-    text-decoration: underline!important;
-}
-
 /* border */
 .kls-border-blue {
     border-color: #0595be !important;

@@ -32,25 +32,28 @@
         <!-- Overlay Scrollbars CSS -->
 		<link rel="stylesheet" type="text/css" href="{{ asset('assets/addons/social/OverlayScrollbars-master/css/OverlayScrollbars.min.css') }}">
         <!-- Tiny Slider CSS -->
-		<link rel="stylesheet" type="text/css" href="{{ asset('assets/addons/social/OverlayScrollbars-master/css/OverlayScrollbars.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('assets/addons/social/tiny-slider/dist/tiny-slider.css') }}">
         <!-- Choices CSS -->
-		<link rel="stylesheet" type="text/css" href="{{ asset('assets/addons/social/OverlayScrollbars-master/css/OverlayScrollbars.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('assets/addons/social/choices.js/public/assets/styles/choices.min.css') }}">
         <!-- Glightbox CSS -->
-		<link rel="stylesheet" type="text/css" href="{{ asset('assets/addons/social/OverlayScrollbars-master/css/OverlayScrollbars.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('assets/addons/social/glightbox-master/dist/css/glightbox.min.css') }}">
         <!-- Dropzone CSS -->
-		<link rel="stylesheet" type="text/css" href="{{ asset('assets/addons/social/OverlayScrollbars-master/css/OverlayScrollbars.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('assets/addons/social/dropzone/dist/min/dropzone.min.css') }}">
         <!-- Flatpickr CSS -->
-		<link rel="stylesheet" type="text/css" href="{{ asset('assets/addons/social/OverlayScrollbars-master/css/OverlayScrollbars.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('assets/addons/social/flatpickr/dist/flatpickr.min.css') }}">
         <!-- Plyr CSS -->
-		<link rel="stylesheet" type="text/css" href="{{ asset('assets/addons/social/OverlayScrollbars-master/css/OverlayScrollbars.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('assets/addons/social/plyr/plyr.css') }}">
         <!-- Zuck CSS -->
-		<link rel="stylesheet" type="text/css" href="{{ asset('assets/addons/social/OverlayScrollbars-master/css/OverlayScrollbars.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('assets/addons/social/zuck.js/dist/zuck.min.css') }}">
 
         <!-- Theme CSS -->
         <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/social/css/style.css') }}">
 
         <!-- Custom CSS -->
         <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/style.custom.css') }}">
+        <style>
+            .kls-fs-7 { font-size: 0.7rem; }
+        </style>
 
         <title>
 @if (Route::is('home'))
@@ -157,7 +160,7 @@
 {{-- @if (!request()->route()->named('event.home'))
                                     <div class="badge-notif badge-notif-bottom"></div>
 @endif --}}
-                                    <i class="bi {{ Route::is('event.home') ? 'bi-calendar-fill' : 'bi-calendar' }}"></i> <span class="nav-text">@lang('miscellaneous.menu.public.events.title')</span>
+                                    <i class="bi {{ Route::is('event.home') ? 'bi-calendar-event-fill' : 'bi-calendar-event' }}"></i> <span class="nav-text">@lang('miscellaneous.menu.public.events.title')</span>
                                 </a>
                             </li>
 
@@ -222,7 +225,7 @@
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="https://xsamtech.com/messenger" target="_blank">
-                                        <i class="fa-fw bi bi-telephone me-2"></i>@lang('miscellaneous.public.help.title')
+                                        <i class="fa-fw bi bi-telephone me-2"></i>@lang('miscellaneous.public.home.help')
                                     </a>
                                 </li>
                                 <li>
@@ -286,15 +289,15 @@
         <!-- Choices -->
         <script src="{{ asset('assets/addons/social/choices.js/public/assets/scripts/choices.min.js') }}"></script>
         <!-- Glightbox -->
-        <script src="{{ asset('assets/addons/social/tiny-slider/dist/tiny-slider.js') }}"></script>
+        <script src="{{ asset('assets/addons/social/glightbox-master/dist/js/glightbox.min.js') }}"></script>
         <!-- Flatpickr -->
-        <script src="{{ asset('assets/addons/social/tiny-slider/dist/tiny-slider.js') }}"></script>
+        <script src="{{ asset('assets/addons/social/flatpickr/dist/flatpickr.min.js') }}"></script>
         <!-- Plyr -->
-        <script src="{{ asset('assets/addons/social/tiny-slider/dist/tiny-slider.js') }}"></script>
+        <script src="{{ asset('assets/addons/social/plyr/plyr.js') }}"></script>
         <!-- Dropzone -->
-        <script src="{{ asset('assets/addons/social/tiny-slider/dist/tiny-slider.js') }}"></script>
+        <script src="{{ asset('assets/addons/social/dropzone/dist/min/dropzone.min.js') }}"></script>
         <!-- Zuck -->
-        <script src="{{ asset('assets/addons/social/tiny-slider/dist/tiny-slider.js') }}"></script>
+        <script src="{{ asset('assets/addons/social/zuck.js/dist/zuck.min.js') }}"></script>
         <script src="{{ asset('assets/js/social/zuck-stories.js') }}"></script>
         <!-- Theme Functions -->
         <script src="{{ asset('assets/js/social/functions.js') }}"></script>

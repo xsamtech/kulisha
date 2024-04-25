@@ -23,8 +23,8 @@ if (!function_exists('getApiURL')) {
 }
 
 // Friendly username from names
-if (!function_exists("slug")) {
-    function slug($str)
+if (!function_exists("friendlyUsername")) {
+    function friendlyUsername($str)
     {
         // convert to entities
         $string = htmlentities($str, ENT_QUOTES, 'UTF-8');
@@ -53,7 +53,7 @@ if (!function_exists('transformMentionHashtag')) {
     }
 }
 
-// Transform surrounded text to URL
+// Get all hashtags from text
 if (!function_exists('getHashtags')) {
     function getHashtags($subject)
     { 
@@ -67,14 +67,6 @@ if (!function_exists('getHashtags')) {
         }
 
         return explode(" ,", $hashtags);
-    }
-}
-
-// Transform surrounded text to URL
-if (!function_exists('transformSurrounded')) {
-    function transformSurrounded($web_url, $subject)
-    {
-        return preg_replace('/(?<=^|\s)\[([a-z0-9_ a-z0-9_]+)\]\(([a-z0-9\-_\/]+)\)/i', '<strong><a href="' . $web_url . '/$2">$1</a></strong>', $subject);
     }
 }
 

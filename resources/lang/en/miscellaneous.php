@@ -24,6 +24,11 @@ return [
     'call_us' => 'Call us:',
     'bank_transaction_description' => 'Bank transaction from the Kulisha application',
     'theme' => 'Mode',
+    'description' => 'Description',
+    'color' => 'Color',
+    'icon_font' => 'Font icon',
+    'icon_svg' => 'SVG icon',
+    'image_url' => 'Image URL',
     'your_language' => 'Your language',
     'your_activation_code' => 'Your activation code: ',
     'back_home' => 'Return to the home',
@@ -352,17 +357,21 @@ return [
     // Account settings
     'account' => [
         'on_going' => 'Account awaiting activation',
-        'deactivated' => 'You have deactivated your account',
-        'locked' => 'Your account is blocked by the administrator',
+        'deactivated' => [
+            'title' => 'Account disabled',
+            'link' => 'Disable account',
+            'warn' => 'You are about to disable your account.',
+            'message' => 'You have disabled your account',
+        ],
+        'locked' => [
+            'title' => 'Blocked account',
+            'message' => 'Your account is blocked because you do not respect our terms of use.',
+            'deadline' => 'Deadline before unblocking:'
+        ],
         'personal_infos' => [
             'title' => 'Personal Infos',
             'change_avatar' => 'Change the avatar',
             'link' => 'Register update',
-        ],
-        'membership_card' => [
-            'title' => 'Membership card',
-            'error' => 'Complete your personal information first',
-            'print_card' => 'Print card',
         ],
         'update_password' => [
             'title' => 'Change password',
@@ -383,26 +392,6 @@ return [
             'other_descriprion' => 'Describe your identity document',
             'click_to_change' => 'Click on photo to edit',
         ],
-        'my_contributions' => [
-            'title' => 'My contributions',
-            'link' => 'Contribute',
-            'send_money' => [
-                'title' => 'Send money',
-                'description' => 'Choose payment method',
-                'mobile_money' => 'Mobile money',
-                'bank_card' => 'Bank card',
-            ],
-        ],
-    ],
-
-    // Messenger
-    'message' => [
-        'inbox' => 'Inbox',
-        'outbox' => 'Sent messages',
-        'draft' => 'Draft',
-        'spams' => 'Spams',
-        'new' => 'New message',
-        'search_result' => 'Search result',
     ],
 
     // ===== ADMIN PAGES
@@ -410,138 +399,346 @@ return [
         'home' => [
             'title' => 'Admin area',
         ],
-        // Legal infos
-        'legal_info_subject' => [
-            'title' => 'Legal info subject',
-            'details' => 'Legal info subject details',
-            'link' => 'Manage legal info subjects',
-            'add' => 'Add a legal info subject',
-            'edit' => 'Edit the legal info subject',
-            'search' => 'Search a legal info subject',
-            'list' => 'Legal info subjects',
-            'datas' => [
-                'subject' => 'Subject',
-                'description' => 'Description',
+
+        // Group
+        'group' => [
+            'details' => 'Group details',
+            'link' => 'Manage groups',
+            'add' => 'Add a group',
+            'edit' => 'Edit the group',
+            'search' => 'Search a group',
+            'list' => 'Groups list',
+            'choose_group' => 'Choose a group',
+            'data' => [
+                'group_name' => 'Group name'
             ],
-            'other_datas' => 'Other datas',
-            // Title
-            'legal_info_title' => [
-                'title' => 'Legal info title',
-                'details' => 'Legal info title details',
-                'link' => 'Manage legal info titles',
-                'add' => 'Add a legal info title',
-                'edit' => 'Edit the legal info title',
-                'search' => 'Search a legal info title',
-                'list' => 'Legal info titles',
+
+            // Visibility
+            'visibility' => [
+                'details' => 'Visibility details',
+                'link' => 'Manage visibilities',
+                'add' => 'Add a visibility',
+                'edit' => 'Edit the visibility',
+                'search' => 'Search a visibility',
+                'list' => 'Visibilities list',
+                'data' => [
+                    'visibility_name' => 'Visibility name'
+                ],
             ],
-            // Content
-            'legal_info_content' => [
-                'title' => 'Legal info content',
-                'details' => 'Legal info content details',
-                'link' => 'Manage legal info contents',
-                'add' => 'Add a legal info content',
-                'edit' => 'Edit the legal info content',
-                'search' => 'Search a legal info content',
-                'list' => 'Legal info contents',
+
+            // Type
+            'type' => [
+                'details' => 'Type details',
+                'link' => 'Manage types',
+                'add' => 'Add a type',
+                'edit' => 'Edit the type',
+                'search' => 'Search a type',
+                'list' => 'Types list',
+                'data' => [
+                    'type_name' => 'Type name'
+                ],
+            ],
+
+            // Status
+            'status' => [
+                'details' => 'Status details',
+                'link' => 'Manage statuses',
+                'add' => 'Add a status',
+                'edit' => 'Edit the status',
+                'search' => 'Search a status',
+                'list' => 'Statuses list',
+                'data' => [
+                    'status_name' => 'Status name'
+                ],
+            ],
+
+            // Reaction
+            'reaction' => [
+                'details' => 'Reaction details',
+                'link' => 'Manage reactions',
+                'add' => 'Add a reaction',
+                'edit' => 'Edit the reaction',
+                'search' => 'Search a reaction',
+                'list' => 'Reactions list',
+                'data' => [
+                    'reaction_name' => 'Reaction name'
+                ],
             ],
         ],
 
-        // Country
-        'country' => [
-            'title' => 'Country',
-            'details' => 'Country details',
-            'link' => 'Manage countries',
-            'add' => 'Add a country',
-            'edit' => 'Edit country',
-            'search' => 'Search a country',
-            'list' => 'Countries list',
+        // Field
+        'field' => [
+            'details' => 'Field détails',
+            'link' => 'Manage fields',
+            'add' => 'Add a field',
+            'edit' => 'Edit the field',
+            'search' => 'Search a field',
+            'list' => 'Fields list',
             'data' => [
-                'country_name' => 'Country name',
-                'country_phone_code' => 'Phone code',
-                'country_lang_code' => 'Language code',
+                'field_name' => 'Field name'
+            ],
+
+            // Category
+            'category' => [
+                'details' => 'Category details',
+                'link' => 'Manage categories',
+                'add' => 'Add a category',
+                'edit' => 'Edit the category',
+                'search' => 'Search a category',
+                'list' => 'Categories list',
+                'data' => [
+                    'category_name' => 'Category name',
+                    'choose_type' => 'Choose a type'
+                ],
             ],
         ],
 
         // Miscellaneous
         'miscellaneous' => [
-            'title' => 'Miscellaneous',
-            'link' => 'Manage other datas',
-            'search' => 'Search among the other datas',
-            // Group
-            'group' => [
-                'title' => 'Group',
-                'details' => 'Group details',
-                'link' => 'Manage groups',
-                'add' => 'Add a group',
-                'edit' => 'Edit group',
-                'search' => 'Search a group',
-                'list' => 'Groups list',
-            ],
-            // Status
-            'status' => [
-                'title' => 'Status',
-                'details' => 'Status details',
-                'link' => 'Manage statuses',
-                'add' => 'Add a status',
-                'edit' => 'Edit status',
-                'search' => 'Search a status',
-                'list' => 'Statuses list',
-            ],
-            // Type
-            'type' => [
-                'title' => 'Type',
-                'details' => 'Type details',
-                'link' => 'Manage types',
-                'add' => 'Add a type',
-                'edit' => 'Edit type',
-                'search' => 'Search a type',
-                'list' => 'Types list',
-            ],
+            'link' => 'Manage other data',
+            'search' => 'Search among other data',
+
             // Role
             'role' => [
-                'title' => 'Role',
                 'details' => 'Role details',
-                'link' => 'Manage roles',
+                'link' => 'Mange roles',
                 'add' => 'Add a role',
-                'edit' => 'Edit role',
+                'edit' => 'Edit the role',
                 'search' => 'Search a role',
                 'list' => 'Roles list',
+                'data' => [
+                    'role_name' => 'Role name'
+                ],
             ],
-            // Other administrators
-            'other_admin' => [
-                'title' => 'Other administrators',
+
+            // Reason
+            'reason' => [
+                'details' => 'Reason details',
+                'link' => 'Manage reasons',
+                'add' => 'Add a reason',
+                'edit' => 'Edit the reason',
+                'search' => 'Search a reason',
+                'list' => 'Reasons list',
+                'data' => [
+                    'reason_content' => 'Reason content',
+                    'report_count' => 'Number of reactions',
+                    'number_of_days' => 'Number of days'
+                ],
             ],
-            // Developers
-            'developers' => [
-                'title' => 'Manage developers',
+
+            // Coverage area
+            'coverage_area' => [
+                'details' => 'Coverage area details',
+                'link' => 'Manage coverage areas',
+                'add' => 'Add a coverage area',
+                'edit' => 'Edit the coverage area',
+                'search' => 'Search a coverage area',
+                'list' => 'Coverage areas list',
+                'data' => [
+                    'area_name' => 'Coverage area name',
+                    'percentage' => 'Percentage'
+                ],
             ],
-            // Managers
-            'managers' => [
-                'title' => 'Manage managers',
+
+            // Budget
+            'budget' => [
+                'details' => 'Budget details',
+                'link' => 'Manage budgets',
+                'add' => 'Add a budget',
+                'edit' => 'Edit the budget',
+                'search' => 'Search a budget',
+                'list' => 'Budgets list',
+                'data' => [
+                    'notifications_count' => 'Number of notifications',
+                    'reactions_count' => 'Number of reations',
+                    'amount' => 'Price'
+                ],
             ],
-        ],
+        ]
     ],
 
     // ===== DEVELOPER PAGES
     'developer' => [
+        // Home
         'home' => [
             'title' => 'Developer area',
+        ],
+
+        // APIs
+        'apis' => [
+            // Product
+            'product' => [
+            ],
+
+            // Service
+            'service' => [
+            ],
+
+            // Search
+            'search' => [
+            ],
+        ],
+
+        // Integration
+        'integration' => [
+            // Button
+            'button' => [
+            ],
+
+            // Post
+            'post' => [
+            ],
         ],
     ],
 
     // ===== PUBLIC PAGES
     'public' => [
-        // Footer
-        'footer' => [
-        ],
-
         // Home
         'home' => [
+            'view_profile' => 'View profile',
+            'help' => 'Help and support',
+
+            // Posts
+            'posts' => [
+                'new' => 'Share something...',
+                'type' => [
+                    'photo' => 'Photo',
+                    'video' => 'Video',
+                    'event' => 'Event',
+                    'poll' => 'Create a poll',
+                    'anonymous_question' => 'Anonymous question',
+                ],
+            ],
+
+            // Stories
+            'stories' => [
+                'new' => 'Post a story',
+            ],
+
+            // Trends
+            'trends' => [
+            ],
+
+            // Suggestions
+            'suggestions' => [
+            ],
+
+            // Articles
+            'articles' => [
+            ],
+
+            // At the moment
+            'at_the_moment' => [
+            ],
         ],
 
-        // Help
-        'help' => [
-            'title' => 'Help and support',
+        // Orders
+        'orders' => [
+            // Cart
+            'cart' => [
+            ],
+
+            // Wishlist
+            'wishlist' => [
+            ],
+        ],
+
+        // Notification
+        'notifications' => [
+            // The public
+            'the_public' => [
+            ],
+
+            // Connections
+            'connections' => [
+            ],
+
+            // Mentions
+            'mentions' => [
+            ],
+        ],
+
+        // Communities
+        'communities' => [
+            // Yours
+            'yours' => [
+            ],
+
+            // Connections
+            'connections' => [
+            ],
+
+            // Popular
+            'popular' => [
+            ],
+        ],
+
+        // events
+        'events' => [
+            // Yours
+            'yours' => [
+            ],
+
+            // Connections
+            'local' => [
+            ],
+
+            // At the moment
+            'at_the_moment' => [
+            ],
+
+            // Popular
+            'popular' => [
+            ],
+        ],
+
+        // Profile
+        'profile' => [
+            // Statistics
+            'statistics' => [
+                'posts' => 'Post',
+                'followers' => 'Followers',
+                'following' => 'Following',
+            ],
+
+            // Products
+            'products' => [
+            ],
+
+            // Services
+            'services' => [
+            ],
+
+            // Connections
+            'connections' => [
+            ],
+
+            // My activities
+            'my_activities' => [
+            ],
+        ],
+
+        // Settings
+        'settings' => [
+            // Account
+            'account' => [
+            ],
+
+            // Notification
+            'notification' => [
+            ],
+
+            // Privacy and safety
+            'privacy_and_safety' => [
+            ],
+
+            // Connections
+            'connections' => [
+            ],
+
+            // Messages
+            'messages' => [
+            ],
         ],
     ],
 ];

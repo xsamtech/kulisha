@@ -28,5 +28,13 @@ const isWebview2 = (isAndroid && /; wv\)/.test(normalizedUserAgent)) || (isIos 
 function loadJS() {
     $(function () {
         $.getScript(currentHost + '/assets/addons/custom/jquery/js/jquery.min.js');
+        $.getScript(currentHost + '/assets/addons/social/bootstrap/dist/js/bootstrap.bundle.min.js');
+        $.getScript(currentHost + '/assets/addons/social/pswmeter/pswmeter.min.js');
+        $.getScript(currentHost + '/assets/js/social/functions.js');
+        $.getScript(currentHost + '/assets/addons/custom/autosize/js/autosize.min.js');
+        $.getScript(currentHost + '/assets/addons/custom/perfect-scrollbar/dist/perfect-scrollbar.min.js');
+        $.getScript(currentHost + '/assets/addons/custom/jquery/scroll4ever/js/jquery.scroll4ever.js');
+        $.getScript(currentHost + '/assets/js/load-guest-scripts.js');
+        $.getScript(currentHost + '/assets/js/script.guest.js');
     });
 }
