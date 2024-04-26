@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Translatable\HasTranslations;
 
 /**
@@ -15,12 +16,25 @@ class Session extends Model
 {
     use HasFactory, HasTranslations;
 
+	protected $primaryKey = 'id';
+	public $incrementing = false;
+	protected $keyType = 'string';
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
     protected $guarded = [];
+
+    /**
+     * MANY-TO-MANY
+     * Several posts for several sessions
+     */
+    public function posts(): BelongsToMany
+    {
+        return $this->belongsToMany(Post::class)->withTimestamps();
+    }
 
     /**
      * ONE-TO-MANY

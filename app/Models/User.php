@@ -41,7 +41,7 @@ class User extends Authenticatable
      *
      * @var array<string, string>
      */
-    protected $casts = ['email_verified_at' => 'datetime'];
+    protected $casts = ['email_verified_at' => 'datetime', 'phone_verified_at' => 'datetime'];
 
     /**
      * The accessors to append to the model's array form.
@@ -80,7 +80,7 @@ class User extends Authenticatable
      */
     public function communities(): BelongsToMany
     {
-        return $this->belongsToMany(Community::class)->withPivot('is_admin', 'created_at', 'updated_at', 'reaction_id');
+        return $this->belongsToMany(Community::class)->withTimestamps()->withPivot(['is_admin', 'status_id', 'reaction_id']);
     }
 
     /**
@@ -91,7 +91,18 @@ class User extends Authenticatable
      */
     public function events(): BelongsToMany
     {
-        return $this->belongsToMany(Event::class)->withPivot('is_speaker', 'created_at', 'updated_at', 'reaction_id');
+        return $this->belongsToMany(Event::class)->withTimestamps()->withPivot(['is_speaker', 'status_id', 'reaction_id']);
+    }
+
+    /**
+     * MANY-TO-MANY
+     * Several posts for several users
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function posts(): BelongsToMany
+    {
+        return $this->belongsToMany(Post::class)->withTimestamps();
     }
 
     /**
@@ -102,7 +113,7 @@ class User extends Authenticatable
      */
     public function surveychoices(): BelongsToMany
     {
-        return $this->belongsToMany(Surveychoice::class);
+        return $this->belongsToMany(Surveychoice::class)->withTimestamps();
     }
 
     /**
@@ -261,11 +272,11 @@ class User extends Authenticatable
 
     /**
      * MANY-TO-ONE
-     * Several posts for a user
+     * Several owned_posts for a user
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function posts(): HasMany
+    public function owned_posts(): HasMany
     {
         return $this->hasMany(Post::class);
     }

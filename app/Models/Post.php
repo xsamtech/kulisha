@@ -31,7 +31,25 @@ class Post extends Model
      */
     public function hashtags(): BelongsToMany
     {
-        return $this->belongsToMany(Hashtag::class);
+        return $this->belongsToMany(Hashtag::class)->withTimestamps();
+    }
+
+    /**
+     * MANY-TO-MANY
+     * Several sessions for several posts
+     */
+    public function sessions(): BelongsToMany
+    {
+        return $this->belongsToMany(Session::class)->withTimestamps();
+    }
+
+    /**
+     * MANY-TO-MANY
+     * Several users for several posts
+     */
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)->withTimestamps();
     }
 
     /**
