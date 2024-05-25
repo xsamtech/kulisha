@@ -81,7 +81,7 @@
 											</li>
 											<li class="nav-item">
 												<a class="nav-link" href="{{ route('profile.entity', ['username' => 'tonystark', 'entity' => 'products']) }}">
-													<i class="fa-solid fa-seedling me-2 fs-5 align-middle text-success-emphasis"></i>
+													<i class="fa-solid fa-seedling me-3 fs-5 align-middle text-success-emphasis"></i>
 													<span>@lang('miscellaneous.menu.public.profile.products')</span>
 												</a>
 											</li>
@@ -93,7 +93,7 @@
 											</li>
 											<li class="nav-item">
 												<a class="nav-link" href="{{ route('profile.entity', ['username' => 'tonystark', 'entity' => 'my_activities']) }}">
-													<i class="fa-regular fa-clock-four me-2 fs-5 align-middle text-primary"></i>
+													<i class="fa-regular fa-clock-four me-3 fs-5 align-middle text-primary"></i>
 													<span>@lang('miscellaneous.menu.public.profile.my_activities')</span>
 												</a>
 											</li>
@@ -123,7 +123,7 @@
 									<li class="nav-item">
 										<a class="nav-link" href="https://xsamtech.com/products/kulisha/privacy_policy">@lang('miscellaneous.menu.privacy_policy')</a>
 									</li>
-									<li class="nav-item dropup">
+									<li class="nav-item dropdown">
 										<a role="button" id="dropdownLanguage" class="nav-link" data-bs-toggle="dropdown" aria-expanded="false">
 											@lang('miscellaneous.your_language') <i class="fa-solid fa-angle-down"></i>
 										</a>
@@ -156,7 +156,7 @@
 				<!-- Sidenav END -->
 
 				<!-- Main content START -->
-				<div class="col-lg-6 col-md-8 vstack gap-4">
+				<div class="col-lg-6 col-md-8 vstack gap-4 mt-0">
 					<!-- Story START -->
 					<div class="d-flex gap-3 mb-n3">
 						<div class="position-relative text-center">
@@ -193,22 +193,22 @@
 						<ul class="nav nav-pills nav-stack small fw-normal">
 							<li class="nav-item">
 								<a class="nav-link bg-light py-1 px-2 mb-0" href="#!" data-bs-toggle="modal" data-bs-target="#feedActionPhoto">
-									<i class="bi bi-image-fill text-success pe-2"></i>@lang('miscellaneous.public.home.posts.type.photo')
+									<i class="bi bi-camera pe-2 fs-6 text-success"></i><span class="kls-text-secondary">@lang('miscellaneous.public.home.posts.type.image')</span>
 								</a>
 							</li>
 							<li class="nav-item">
-								<a class="nav-link bg-light py-1 px-2 mb-0" href="#!" data-bs-toggle="modal" data-bs-target="#feedActionVideo">
-									<i class="bi bi-camera-reels-fill text-info pe-2"></i>@lang('miscellaneous.public.home.posts.type.video')
-								</a>
-							</li>
-							<li class="nav-item">
-								<a href="#" class="nav-link bg-light py-1 px-2 mb-0" data-bs-toggle="modal" data-bs-target="#modalCreateEvents">
-									<i class="bi bi-calendar2-event-fill text-danger pe-2"></i>@lang('miscellaneous.public.home.posts.type.event')
+								<a class="nav-link bg-light py-1 px-2 mb-0" href="#!" data-bs-toggle="modal" data-bs-target="#modalCreateEvents">
+									<i class="bi bi-calendar2-event-fill pe-2 fs-6 text-danger"></i><span class="kls-text-secondary">@lang('miscellaneous.public.home.posts.type.event')</span>
 								</a>
 							</li>
 							<li class="nav-item">
 								<a class="nav-link bg-light py-1 px-2 mb-0" href="#!" data-bs-toggle="modal" data-bs-target="#modalCreatePoll">
-									<i class="bi bi-list-check text-warning pe-2"></i>@lang('miscellaneous.public.home.posts.type.poll')
+									<i class="bi bi-list-check pe-2 fs-6 text-warning"></i><span class="kls-text-secondary">@lang('miscellaneous.public.home.posts.type.poll')</span>
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link bg-light py-1 px-2 mb-0" href="#!" data-bs-toggle="modal" data-bs-target="#feedActionVideo">
+									<i class="bi bi-question-circle pe-2 fs-6 text-info"></i><span class="kls-text-secondary">@lang('miscellaneous.public.home.posts.type.anonymous_question')</span>
 								</a>
 							</li>
 						</ul>
@@ -245,26 +245,23 @@
 								<!-- Card feed action dropdown START -->
 								<div class="dropdown">
 									<a href="#" class="text-secondary btn btn-secondary-soft-hover py-1 px-2" id="cardFeedAction" data-bs-toggle="dropdown" aria-expanded="false">
-										<i class="bi bi-three-dots"></i>
+										<i class="bi bi-chevron-down"></i>
 									</a>
 
 									<!-- Card feed action dropdown menu -->
 									<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="cardFeedAction">
 										<li>
-											<a class="dropdown-item" href="#"><i class="bi bi-bookmark fa-fw pe-2"></i>Save post</a>
+											<a class="dropdown-item" href="#"><i class="fa-regular fa-bookmark fa-fw me-2"></i>@lang('miscellaneous.public.home.posts.actions.save')</a>
 										</li>
 										<li>
-											<a class="dropdown-item" href="#"><i class="bi bi-person-x fa-fw pe-2"></i>Unfollow lori ferguson</a>
+											<a class="dropdown-item" href="#"><i class="fa-solid fa-user-large-slash fa-fw me-2"></i>@lang('miscellaneous.public.home.posts.actions.unfollow_owner', ['owner' => 'loriferguson'])</a>
 										</li>
 										<li>
-											<a class="dropdown-item" href="#"><i class="bi bi-x-circle fa-fw pe-2"></i>Hide post</a>
-										</li>
-										<li>
-											<a class="dropdown-item" href="#"><i class="bi bi-slash-circle fa-fw pe-2"></i>Block</a>
+											<a class="dropdown-item" href="#"><i class="fa-regular fa-eye-slash fa-fw me-2"></i>@lang('miscellaneous.public.home.posts.actions.hide')</a>
 										</li>
 										<li><hr class="dropdown-divider"></li>
 										<li>
-											<a class="dropdown-item" href="#"><i class="bi bi-flag fa-fw pe-2"></i>Report post</a>
+											<a class="dropdown-item" href="#"><i class="fa-regular fa-flag fa-fw me-2"></i>@lang('miscellaneous.public.home.posts.actions.report')</a>
 										</li>
 									</ul>
 								</div>
@@ -1697,7 +1694,7 @@
 				<!-- Main content END -->
 
 					<!-- Right sidebar START -->
-					<div class="col-lg-3">
+					<div class="col-lg-3 mt-0">
 						<div class="row g-4">
 							<!-- Card follow START -->
 							<div class="col-sm-6 col-lg-12">

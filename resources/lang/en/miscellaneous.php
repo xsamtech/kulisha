@@ -601,12 +601,21 @@ return [
             // Posts
             'posts' => [
                 'new' => 'Share something...',
+
+                // Type
                 'type' => [
-                    'photo' => 'Photo',
-                    'video' => 'Video',
+                    'image' => 'Image',
                     'event' => 'Event',
                     'poll' => 'Create a poll',
                     'anonymous_question' => 'Anonymous question',
+                ],
+
+                // Actions
+                'actions' => [
+                    'save' => 'Save the post',
+                    'unfollow_owner' => 'Unfollow @:owner',
+                    'hide' => 'Hide this post',
+                    'report' => 'Report this post',
                 ],
             ],
 

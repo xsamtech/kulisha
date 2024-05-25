@@ -604,20 +604,18 @@ return [
 
                 // Type
                 'type' => [
-                    'photo' => 'Photo',
-                    'video' => 'Vidéo',
+                    'image' => 'Image',
                     'event' => 'Evénement',
-                    'poll' => 'Créer un sondage',
+                    'poll' => 'Créer sondage',
                     'anonymous_question' => 'Question anonyme',
                 ],
 
-                // Statistics
-                'statistics' => [
-                    'photo' => 'Photo',
-                    'video' => 'Vidéo',
-                    'event' => 'Evénement',
-                    'poll' => 'Créer un sondage',
-                    'anonymous_question' => 'Question anonyme',
+                // Actions
+                'actions' => [
+                    'save' => 'Enregistrer le post',
+                    'unfollow_owner' => 'Ne plus suivre @:owner',
+                    'hide' => 'Cacher ce post',
+                    'report' => 'Signaler ce post',
                 ],
             ],
 
