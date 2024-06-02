@@ -88,7 +88,7 @@ class TypeController extends BaseController
         // Check if type name already exists
         foreach ($types as $another_type):
             if ($another_type->type_name == $inputs['type_name']) {
-                return $this->handleError($inputs['type_name'], __('validation.custom.type_name.exists'), 400);
+                return $this->handleError($inputs['type_name'], __('validation.custom.name.exists'), 400);
             }
         endforeach;
 
@@ -172,7 +172,7 @@ class TypeController extends BaseController
             foreach ($types as $another_type):
                 if ($current_type->type_name != $inputs['type_name']) {
                     if ($another_type->type_name == $inputs['type_name']) {
-                        return $this->handleError($inputs['type_name'], __('validation.custom.type_name.exists'), 400);
+                        return $this->handleError($inputs['type_name'], __('validation.custom.name.exists'), 400);
                     }
                 }
             endforeach;
@@ -265,7 +265,7 @@ class TypeController extends BaseController
     }
 
     /**
-     * Find all type by group.
+     * Find all types by group.
      *
      * @param  string $locale
      * @param  string $group_name

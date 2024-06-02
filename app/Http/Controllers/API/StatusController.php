@@ -88,7 +88,7 @@ class StatusController extends BaseController
         // Check if status name already exists
         foreach ($statuses as $another_status):
             if ($another_status->status_name == $inputs['status_name']) {
-                return $this->handleError($inputs['status_name'], __('validation.custom.status_name.exists'), 400);
+                return $this->handleError($inputs['status_name'], __('validation.custom.name.exists'), 400);
             }
         endforeach;
 
@@ -172,7 +172,7 @@ class StatusController extends BaseController
             foreach ($statuses as $another_status):
                 if ($current_status->status_name != $inputs['status_name']) {
                     if ($another_status->status_name == $inputs['status_name']) {
-                        return $this->handleError($inputs['status_name'], __('validation.custom.status_name.exists'), 400);
+                        return $this->handleError($inputs['status_name'], __('validation.custom.name.exists'), 400);
                     }
                 }
             endforeach;
@@ -263,7 +263,7 @@ class StatusController extends BaseController
     }
 
     /**
-     * Find all type by group.
+     * Find all statuses by group.
      *
      * @param  string $locale
      * @param  string $group_name

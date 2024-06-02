@@ -78,7 +78,7 @@ class GroupController extends BaseController
         // Check if group name already exists
         foreach ($groups as $another_group):
             if ($another_group->group_name == $inputs['group_name']) {
-                return $this->handleError($inputs['group_name'], __('validation.custom.group_name.exists'), 400);
+                return $this->handleError($inputs['group_name'], __('validation.custom.name.exists'), 400);
             }
         endforeach;
 
@@ -157,7 +157,7 @@ class GroupController extends BaseController
             foreach ($groups as $another_group):
                 if ($current_group->group_name != $inputs['group_name']) {
                     if ($another_group->group_name == $inputs['group_name']) {
-                        return $this->handleError($inputs['group_name'], __('validation.custom.group_name.exists'), 400);
+                        return $this->handleError($inputs['group_name'], __('validation.custom.name.exists'), 400);
                     }
                 }
             endforeach;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Models\Group;
 use App\Models\Visibility;
 use Illuminate\Http\Request;
 use App\Http\Resources\Visibility as ResourcesVisibility;
@@ -82,7 +83,7 @@ class VisibilityController extends BaseController
         // Check if visibility name already exists
         foreach ($visibilities as $another_visibility):
             if ($another_visibility->visibility_name == $inputs['visibility_name']) {
-                return $this->handleError($inputs['visibility_name'], __('validation.custom.visibility_name.exists'), 400);
+                return $this->handleError($inputs['visibility_name'], __('validation.custom.name.exists'), 400);
             }
         endforeach;
 
@@ -165,7 +166,7 @@ class VisibilityController extends BaseController
             foreach ($visibilities as $another_visibility):
                 if ($current_visibility->visibility_name != $inputs['visibility_name']) {
                     if ($another_visibility->visibility_name == $inputs['visibility_name']) {
-                        return $this->handleError($inputs['visibility_name'], __('validation.custom.visibility_name.exists'), 400);
+                        return $this->handleError($inputs['visibility_name'], __('validation.custom.name.exists'), 400);
                     }
                 }
             endforeach;
@@ -246,5 +247,25 @@ class VisibilityController extends BaseController
         }
 
         return $this->handleResponse(new ResourcesVisibility($visibility), __('notifications.find_visibility_success'));
+    }
+
+    /**
+     * Find all visibilities by group.
+     *
+     * @param  string $locale
+     * @param  string $group_name
+     * @return \Illuminate\Http\Response
+     */
+    public function findByGroup($locale, $group_name)
+    {
+        $group = Group::where('group_name->' . $locale, $group_name)->first();
+
+        if (is_null($group)) {
+            return $this->handleError(__('notifications.find_group_404'));
+        }
+
+        $visibilities = Visibility::where('group_id', $group->id)->get();
+
+        return $this->handleResponse(ResourcesVisibility::collection($visibilities), __('notifications.find_all_visibilities_success'));
     }
 }

@@ -162,11 +162,8 @@ return [
         'email_or_phone' => [
             'required' => 'The email address or the phone number must be defined'
         ],
-        'group_name' => [
-            'exists' => 'This group name already exists'
-        ],
-        'role_name' => [
-            'exists' => 'This role name already exists'
+        'name' => [
+            'exists' => 'This name already exists'
         ],
         'code' => [
             'exists' => 'This code already exists'
@@ -189,17 +186,11 @@ return [
         'description' => [
             'exists' => 'This description already exists'
         ],
-        'country_name' => [
-            'exists' => 'This country already exists'
-        ],
         'deadline' => [
             'exists' => 'This deadline already exists'
         ],
         'owner' => [
             'required' => 'What entity does it belong to?'
-        ],
-        'type_name' => [
-            'exists' => 'This type name already exists'
         ],
     ],
 

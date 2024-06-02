@@ -15,6 +15,7 @@ use App\Models\Status;
 use App\Models\Subscription;
 use App\Models\Type;
 use App\Models\User;
+use App\Models\Visibility;
 use Nette\Utils\Random;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -51,20 +52,21 @@ class UserController extends BaseController
      */
     public function store(Request $request)
     {
-        // Visibility
-        $everybody_visibility = Group::where('visibility_name->fr', 'Tout le monde')->first();
         // Groups
         $member_status_group = Group::where('group_name->fr', 'Etat du membre')->first();
         $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
         $member_type_group = Group::where('group_name->fr', 'Type de membre')->first();
         $history_type_group = Group::where('group_name->fr', 'Type d\'historique')->first();
         $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
+        $to_connect_visibility_group = Group::where('group_name->fr', 'Visibilité pour se connecter')->first();
         // Statuses and types
         $activated_status = !empty($member_status_group) ? Status::where([['status_name->fr', 'Activé'], ['group_id', $member_status_group->id]])->first() : Status::where('status_name->fr', 'Activé')->first();
         $unread_status = !empty($notification_status_group) ? Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first() : Status::where('status_name->fr', 'Non lue')->first();
         $ordinary_member_type = !empty($member_type_group) ? Type::where([['type_name->fr', 'Membre ordinaire'], ['group_id', $member_type_group->id]])->first() : Type::where('type_name->fr', 'Membre ordinaire')->first();
         $activities_history_type = !empty($history_type_group) ? Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first() : Type::where('type_name->fr', 'Historique des activités')->first();
         $new_account_type = !empty($notification_type_group) ? Type::where([['type_name->fr', 'Nouveau compte'], ['group_id', $notification_type_group->id]])->first() : Type::where('type_name->fr', 'Nouveau compte')->first();
+        // Visibility
+        $everybody_on_kulisha_visibility = !empty($to_connect_visibility_group) ? Visibility::where([['visibility_name->fr', 'Tout le monde sur Kulisha (recommandé)'], ['group_id', $member_status_group->id]])->first() : Visibility::where('visibility_name->fr', 'Tout le monde sur Kulisha (recommandé)')->first();
         // Get inputs
         $inputs = [
             'firstname' => $request->firstname,
@@ -84,9 +86,9 @@ class UserController extends BaseController
             'password' => empty($request->password) ? null : Hash::make($request->password),
             'prefered_theme' => $request->prefered_theme,
             'prefered_language' => $request->prefered_language,
-            'status_id' => is_null($activated_status) ? null : $activated_status->id,
-            'type_id' => is_null($ordinary_member_type) ? null : $ordinary_member_type->id,
-            'visibility_id' => !empty($request->visibility_id) ? $request->visibility_id : (is_null($everybody_visibility) ? null : $everybody_visibility->id)
+            'status_id' => is_null($activated_status) ? (!empty($request->status_id) ? $request->status_id : null) : $activated_status->id,
+            'type_id' => is_null($ordinary_member_type) ? (!empty($request->type_id) ? $request->type_id : null) : $ordinary_member_type->id,
+            'visibility_id' => !empty($request->visibility_id) ? $request->visibility_id : (!is_null($everybody_on_kulisha_visibility) ? $everybody_on_kulisha_visibility->id : null)
         ];
         $users = User::all();
         $password_resets = PasswordResetToken::all();
