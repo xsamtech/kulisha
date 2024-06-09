@@ -1,7 +1,7 @@
 <?php
 /**
  * @author Xanders
- * @see https://www.linkedin.com/in/xanders-samoth-b2770737/
+ * @see https://team.xsamtech.com/xanderssamoth
  */
 
 return [
@@ -271,7 +271,7 @@ return [
         'login_register' => 's\'identifier ou s\'inscrire',
         'account_settings' => 'Paramètres du compte',
         'messages' => 'Discussions',
-        'history' => 'Activities history',
+        'history' => 'Historique des activités',
         'notifications' => [
             'title' => 'Notifications',
             'the_public' => 'Le public',
@@ -456,7 +456,7 @@ return [
             'reaction' => [
                 'details' => 'Détails sur la réaction',
                 'link' => 'Gérer les réactions',
-                'add' => 'Ajouter un réaction',
+                'add' => 'Ajouter une réaction',
                 'edit' => 'Editer la réaction',
                 'search' => 'Rechercher une réaction',
                 'list' => 'Liste des réactions',

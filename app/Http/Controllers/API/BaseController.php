@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 
 /**
  * @author Xanders
- * @see https://www.linkedin.com/in/xanders-samoth-b2770737/
+ * @see https://team.xsamtech.com/xanderssamoth
  */
 class BaseController extends Controller
 {
