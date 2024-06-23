@@ -72,7 +72,7 @@ class GroupController extends BaseController
 
         // Validate required fields
         if ($inputs['group_name'] == null) {
-            return $this->handleError($inputs['group_name'], __('validation.required'), 400);
+            return $this->handleError($inputs['group_name'], __('validation.required', ['field_name' => __('miscellaneous.admin.group.data.group_name')]), 400);
         }
 
         // Check if group name already exists

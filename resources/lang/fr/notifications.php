@@ -203,6 +203,13 @@ return [
     'create_donation_success' => 'Donation créée',
     'update_donation_success' => 'Donation modifiée',
     'delete_donation_success' => 'Donation supprimée',
+    // Visibility
+    'find_all_visibilities_success' => 'Visibilités trouvées',
+    'find_visibility_success' => 'Visibilité trouvée',
+    'find_visibility_404' => 'Visibilité non trouvée',
+    'create_visibility_success' => 'Visibilité créée',
+    'update_visibility_success' => 'Visibilité modifiée',
+    'delete_visibility_success' => 'Visibilité supprimée',
 
     // ===== USER HISTORIES
     // Subscriptions

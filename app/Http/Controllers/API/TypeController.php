@@ -78,11 +78,11 @@ class TypeController extends BaseController
 
         // Validate required fields
         if ($inputs['type_name'] == null) {
-            return $this->handleError($inputs['type_name'], __('validation.required'), 400);
+            return $this->handleError($inputs['type_name'], __('validation.required', ['field_name' => __('miscellaneous.admin.group.type.data.type_name')]), 400);
         }
 
         if (trim($inputs['group_id']) == null) {
-            return $this->handleError($inputs['group_id'], __('validation.required'), 400);
+            return $this->handleError($inputs['group_id'], __('miscellaneous.admin.group.choose_group'), 400);
         }
 
         // Check if type name already exists

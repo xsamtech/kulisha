@@ -242,7 +242,11 @@ return [
         'city' => 'Ville',
     ],
     'addresses' => 'Adresses',
-    'username' => 'Nom d\'utilisateur',
+    'username' => [
+        'label' => 'Pseudo',
+        'description' => 'Très utile pour les discussions',
+        'error' => 'Ne doit contenir que des chiffres, des lettres en minuscules/majuscules ou des sous-traits'
+    ],
     'password' => [
         'label' => 'Mot de passe',
         'error' => 'Doit avoir au moins 8 caractère, être alphanumérique, avoir au moins une lettre majuscule et avoir un caractère spécial',

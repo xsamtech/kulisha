@@ -39,9 +39,10 @@ class UserController extends BaseController
      */
     public function index()
     {
-        $users = User::orderByDesc('created_at')->get();
+        $users = User::orderByDesc('created_at')->paginate(10);
+        $count_users = User::count();
 
-        return $this->handleResponse(ResourcesUser::collection($users), __('notifications.find_all_users_success'));
+        return $this->handleResponse(ResourcesUser::collection($users), __('notifications.find_all_users_success'), $users->lastPage(), $count_users);
     }
 
     /**
@@ -152,9 +153,9 @@ class UserController extends BaseController
                 return $this->handleError($request->confirm_password, __('notifications.confirm_password_error'), 400);
             }
 
-            // if (preg_match('#^\S*(?=\S{8,})(?=\S*[a-z])(?=\S*[A-Z])(?=\S*[\d])\S*$#', $inputs['password']) == 0) {
-            //     return $this->handleError($inputs['password'], __('miscellaneous.password.error'), 400);
-            // }
+            if (preg_match('#^\S*(?=\S{8,})(?=\S*[a-z])(?=\S*[A-Z])(?=\S*[\d])\S*$#', $inputs['password']) == 0) {
+                return $this->handleError($inputs['password'], __('miscellaneous.password.error'), 400);
+            }
 
             $random_string = (string) random_int(1000000, 9999999);
 
@@ -222,6 +223,29 @@ class UserController extends BaseController
         }
 
         $user = User::create($inputs);
+
+        if ($request->role_id != null) {
+            $user->roles()->attach([$request->role_id]);
+        }
+
+        if ($request->image_64 != null) {
+            // $extension = explode('/', explode(':', substr($request->image_64, 0, strpos($request->image_64, ';')))[1])[1];
+            $replace = substr($request->image_64, 0, strpos($request->image_64, ',') + 1);
+            // Find substring from replace here eg: data:image/png;base64,
+            $image = str_replace($replace, '', $request->image_64);
+            $image = str_replace(' ', '+', $image);
+            // Create image URL
+            $image_url = 'images/users/' . $user->id . '/avatar/' . Str::random(50) . '.png';
+
+            // Upload image
+            Storage::url(Storage::disk('public')->put($image_url, base64_decode($image)));
+
+            $user->update([
+                'profile_photo_path' => '/storage/' . $image_url,
+                'updated_at' => now()
+            ]);
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         $user->update([
@@ -229,19 +253,16 @@ class UserController extends BaseController
             'updated_at' => now()
         ]);
 
-        if ($request->role_id != null) {
-            $user->roles()->attach([$request->role_id]);
-        }
-
         /*
             HISTORY AND/OR NOTIFICATION MANAGEMENT
         */
         $notification = Notification::create([
-            'color' => 'text-primary',
+            'color' => 'primary',
             'type_id' => is_null($new_account_type) ? null : $new_account_type->id,
             'status_id' => is_null($unread_status) ? null : $unread_status->id,
             'to_user_id' => $user->id
         ]);
+
         History::create([
             'history_url' => 'account',
             'type_id' => $activities_history_type->id,
@@ -318,7 +339,9 @@ class UserController extends BaseController
             'allow_search_engine' => $request->allow_search_engine,
             'allow_search_by_email' => $request->allow_search_by_email,
             'allow_sponsored_messages' => $request->allow_sponsored_messages,
-            'tips_at_every_connection' => $request->tips_at_every_connection,
+            'allow_messages_not_connected' => $request->allow_messages_not_connected,
+            'tips_at_every_login' => $request->tips_at_every_login,
+            'is_online' => $request->is_online,
             'status_id' => $request->status_id,
             'type_id' => $request->type_id,
             'visibility_id' => $request->visibility_id
@@ -688,9 +711,23 @@ class UserController extends BaseController
             ]);
         }
 
-        if ($inputs['tips_at_every_connection'] != null) {
+        if ($inputs['allow_messages_not_connected'] != null) {
             $user->update([
-                'tips_at_every_connection' => $inputs['tips_at_every_connection'],
+                'allow_messages_not_connected' => $inputs['allow_messages_not_connected'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['tips_at_every_login'] != null) {
+            $user->update([
+                'tips_at_every_login' => $inputs['tips_at_every_login'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['is_online'] != null) {
+            $user->update([
+                'is_online' => $inputs['is_online'],
                 'updated_at' => now(),
             ]);
         }
@@ -765,6 +802,8 @@ class UserController extends BaseController
         }
 
         $users = User::orderByDesc('created_at')->get();
+
+        return $this->handleResponse(ResourcesUser::collection($users), __('notifications.delete_user_success'));
     }
 
     // ==================================== CUSTOM METHODS ====================================
@@ -827,7 +866,7 @@ class UserController extends BaseController
         // Groups
         $history_type_group = Group::where('group_name->fr', 'Type d\'historique')->first();
         // Types
-        $consultation_history_type = Type::where([['type_name->fr', 'Historique des consultations'], ['group_id', $history_type_group->id]])->first();
+        $consultation_history_type = !empty($history_type_group) ? Type::where([['type_name->fr', 'Historique des consultations'], ['group_id', $history_type_group->id]])->first() : Type::where('type_name->fr', 'Historique des consultations')->first();
         // Request
         $user = User::where('username', $username)->first();
 
@@ -847,7 +886,7 @@ class UserController extends BaseController
                 }
 
                 History::create([
-                    'type_id' => $consultation_history_type->id,
+                    'type_id' => !empty($consultation_history_type) ? $consultation_history_type->id : null,
                     'from_user_id' => $visitor->id,
                     'to_user_id' => $user->id
                 ]);
@@ -1090,7 +1129,7 @@ class UserController extends BaseController
                     'tr' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ')\'a « ' . $event->event_title . ' » etkinliğine katılma isteği gönderdiniz.',
                     'cs' => 'Odeslali jste [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') žádost o připojení k události « ' . $event->event_title . ' ».'
                 ],
-                'color' => 'text-primary',
+                'color' => 'primary',
                 'icon' => 'bi bi-calendar2-event',
                 'image_url' => $user->profile_photo_path,
                 'type_id' => $activities_history_type->id,
@@ -1164,7 +1203,7 @@ class UserController extends BaseController
                     'tr' => '« ' . $community->community_name . ' » topluluğuna abone oldunuz.',
                     'cs' => 'Přihlásili jste se do komunity « ' . $community->community_name . ' ».'
                 ],
-                'color' => 'text-warning',
+                'color' => 'warning',
                 'icon' => 'bi bi-people',
                 'image_url' => $community->cover_photo_path,
                 'type_id' => $activities_history_type->id,
@@ -1198,7 +1237,7 @@ class UserController extends BaseController
                         'tr' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') sizi « ' . $community->community_name . ' » topluluğuna davet etti.',
                         'cs' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') vás pozval do komunity « ' . $community->community_name . ' ».'
                     ],
-                    'color' => 'text-info',
+                    'color' => 'info',
                     'icon' => 'bi bi-people',
                     'image_url' => $community->cover_photo_path,
                     'status_id' => $unread_status,
@@ -1223,7 +1262,7 @@ class UserController extends BaseController
                     'tr' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ')\'ı « ' . $community->community_name . ' » topluluğuna davet ettiniz.',
                     'cs' => 'Pozvali jste [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') do komunity « ' . $community->community_name . ' ».'
                 ],
-                'color' => 'text-primary',
+                'color' => 'primary',
                 'icon' => 'bi bi-people',
                 'image_url' => $user->profile_photo_path,
                 'type_id' => $activities_history_type->id,
@@ -1286,7 +1325,7 @@ class UserController extends BaseController
                     'tr' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') size bir bağlantı isteği gönderdi.',
                     'cs' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') vám poslal žádost o připojení.'
                 ],
-                'color' => 'text-primary',
+                'color' => 'primary',
                 'icon' => 'bi bi-person-plus',
                 'image_url' => $user->profile_photo_path,
                 'status_id' => $unread_status,
@@ -1311,7 +1350,7 @@ class UserController extends BaseController
                 'tr' => $concerned->firstname . ' ' . $concerned->lastname . '\'a bir bağlantı isteği gönderdiniz.',
                 'cs' => 'Poslali jste žádost o připojení ' . $concerned->firstname . ' ' . $concerned->lastname . '.'
             ],
-            'color' => 'text-warning',
+            'color' => 'warning',
             'icon' => 'bi bi-person-plus',
             'image_url' => $concerned->profile_photo_path,
             'type_id' => $activities_history_type->id,
@@ -1380,7 +1419,7 @@ class UserController extends BaseController
                         'tr' => '',
                         'cs' => ''
                     ],
-                    'color' => 'text-danger',
+                    'color' => 'danger',
                     'icon' => 'bi bi-person-dash',
                     'image_url' => $event->cover_photo_path,
                     'type_id' => $activities_history_type->id,
@@ -1406,7 +1445,7 @@ class UserController extends BaseController
                             'tr' => '',
                             'cs' => ''
                         ],
-                        'color' => 'text-info',
+                        'color' => 'info',
                         'icon' => 'bi bi-calendar2-event',
                         'image_url' => $event->cover_photo_path,
                         'status_id' => $unread_status,
@@ -1470,7 +1509,7 @@ class UserController extends BaseController
                         'tr' => 'Hesabınız aktive edildi. Lütfen başlamadan önce şartlarımızı okuyun.',
                         'cs' => 'Váš účet byl aktivován. Než začnete, přečtěte si prosím naše podmínky.'
                     ],
-                    'color' => 'text-success',
+                    'color' => 'success',
                     'icon' => 'bi bi-shield-lock',
                     'image_url' => 'assets/img/logo-reverse.png',
                     'status_id' => $unread_status->id,
@@ -1509,7 +1548,7 @@ class UserController extends BaseController
                         'tr' => 'Hesabınız engellendi. Bu, şartlarımızı ihlal ettiğinizde veya hesabınız saldırıya uğradığında meydana gelebilir.',
                         'cs' => 'Váš účet byl zablokován. To se může stát, když porušíte naše podmínky nebo byl váš účet napaden hackery.'
                     ],
-                    'color' => 'text-danger',
+                    'color' => 'danger',
                     'icon' => 'bi bi-lock-fill',
                     'image_url' => 'assets/img/logo-reverse.png',
                     'status_id' => $unread_status->id,
@@ -1548,7 +1587,7 @@ class UserController extends BaseController
                         'tr' => 'Hesabınızı devre dışı bırakarak aramızdan ayrıldınız. Sizi tekrar görmeyi sabırsızlıkla bekliyoruz. Hesabınızı yeniden etkinleştirmek için burayı tıklayın.',
                         'cs' => 'Odešli jste od nás deaktivací svého účtu. Těšíme se na další shledání. Chcete-li znovu aktivovat svůj účet, klikněte sem.'
                     ],
-                    'color' => 'text-danger',
+                    'color' => 'danger',
                     'icon' => 'bi bi-lock-fill',
                     'image_url' => 'assets/img/logo-reverse.png',
                     'status_id' => $unread_status->id,
@@ -1624,7 +1663,7 @@ class UserController extends BaseController
                         'sw' => 'Karibu Kulisha Premium Service. Tafadhali bofya hapa ili kuona maelezo kuhusu huduma hii.',
                         'tr' => 'Kulisha Premium Hizmetine hoş geldiniz. Bu hizmete ilişkin ayrıntıları görüntülemek için lütfen buraya tıklayın.',
                         'cs' => 'Vítejte v prémiové službě Kuliša. Kliknutím sem zobrazíte podrobnosti o této službě.' ],
-                    'color' => 'text-success',
+                    'color' => 'success',
                     'icon' => 'bi bi-shield-lock',
                     'image_url' => 'assets/img/logo-reverse.png',
                     'status_id' => $unread_status->id,
@@ -1691,7 +1730,7 @@ class UserController extends BaseController
                 'tr' => 'Görünürlüğünüzü değiştirdiniz.',
                 'cs' => 'Změnili jste viditelnost.'
             ],
-            'color' => 'text-warning',
+            'color' => 'warning',
             'icon' => 'bi bi-shield-lock',
             'image_url' => $user->profile_photo_path,
             'type_id' => $activities_history_type->id,
@@ -1808,7 +1847,7 @@ class UserController extends BaseController
                 'tr' => 'Şifrenizi değiştirdiniz.',
                 'cs' => 'Změnili jste heslo.'
             ],
-            'color' => 'text-primary',
+            'color' => 'primary',
             'icon' => 'bi bi-shield-lock',
             'image_url' => $user->profile_photo_path,
             'type_id' => $activities_history_type->id,
@@ -1875,7 +1914,7 @@ class UserController extends BaseController
                 'tr' => 'Avatarınızı değiştirdiniz.',
                 'cs' => 'Upravili jste svůj avatar.'
             ],
-            'color' => 'text-info',
+            'color' => 'info',
             'icon' => 'bi bi-file-earmark-person',
             'image_url' => $user->profile_photo_path,
             'type_id' => $activities_history_type->id,
@@ -1947,7 +1986,7 @@ class UserController extends BaseController
                 'tr' => 'Kapak fotoğrafınızı düzenlediniz.',
                 'cs' => 'Upravili jste svou titulní fotku.'
             ],
-            'color' => 'text-danger',
+            'color' => 'danger',
             'icon' => 'bi bi-image',
             'image_url' => $user->cover_coordinates,
             'type_id' => $activities_history_type->id,

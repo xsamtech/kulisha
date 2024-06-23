@@ -109,7 +109,7 @@ return [
     'prohibited_unless' => 'Ce champ est interdit à moins que :other soit dans :values.',
     'prohibits' => 'Ce champ interdit :other d\'être présent.',
     'regex' => 'Le format de :attribute est invalide.',
-    'required' => 'Ce champ est obligatoire.',
+    'required' => 'Le champ :field_name est obligatoire.',
     'required_if' => 'Ce champ est obligatoire lorsque :other est :value.',
     'required_unless' => 'Ce champ est obligatoire à moins que :other soit dans :values.',
     'required_with' => 'Ce champ est obligatoire lorsque :values est pr&eacure;sent.',

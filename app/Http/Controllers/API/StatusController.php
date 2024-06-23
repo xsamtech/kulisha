@@ -78,11 +78,11 @@ class StatusController extends BaseController
 
         // Validate required fields
         if ($inputs['status_name'] == null) {
-            return $this->handleError($inputs['status_name'], __('validation.required'), 400);
+            return $this->handleError($inputs['status_name'], __('validation.required', ['field_name' => __('miscellaneous.admin.group.status.data.status_name')]), 400);
         }
 
         if (trim($inputs['group_id']) == null) {
-            return $this->handleError($inputs['group_id'], __('validation.required'), 400);
+            return $this->handleError($inputs['group_id'], __('miscellaneous.admin.group.choose_group'), 400);
         }
 
         // Check if status name already exists

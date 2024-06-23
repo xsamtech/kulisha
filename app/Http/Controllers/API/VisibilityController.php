@@ -77,7 +77,7 @@ class VisibilityController extends BaseController
 
         // Validate required fields
         if ($inputs['visibility_name'] == null) {
-            return $this->handleError($inputs['visibility_name'], __('validation.required'), 400);
+            return $this->handleError($inputs['visibility_name'], __('validation.required', ['field_name' => __('miscellaneous.admin.group.visibility.data.visibility_name')]), 400);
         }
 
         // Check if visibility name already exists

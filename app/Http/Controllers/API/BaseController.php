@@ -17,24 +17,43 @@ class BaseController extends Controller
      * @param  $msg
      * @return \Illuminate\Http\Response
      */
-    public function handleResponse($result, $msg, $lastPage = null)
+    public function handleResponse($result, $msg, $lastPage = null, $count = null)
     {
-        if ($lastPage != null) {
+        if ($lastPage != null && $count != null) {
             $res = [
-                'success' => true,
-                'message' => $msg,
-                'data'    => $result,
-                'lastPage'    => $lastPage
+                'success'   => true,
+                'message'   => $msg,
+                'data'      => $result,
+                'lastPage'  => $lastPage,
+                'count'     => $count
             ];
 
             return response()->json($res, 200);
 
         } else {
-            $res = [
-                'success' => true,
-                'message' => $msg,
-                'data'    => $result
-            ];
+            if ($lastPage != null && $count == null) {
+                $res = [
+                    'success'   => true,
+                    'message'   => $msg,
+                    'data'      => $result,
+                    'lastPage'  => $lastPage
+                ];
+
+            } else if ($lastPage == null && $count != null) {
+                $res = [
+                    'success'   => true,
+                    'message'   => $msg,
+                    'data'      => $result,
+                    'count'     => $count
+                ];
+
+            } else {
+                $res = [
+                    'success' => true,
+                    'message' => $msg,
+                    'data'    => $result
+                ];
+            }
 
             return response()->json($res, 200);
         }

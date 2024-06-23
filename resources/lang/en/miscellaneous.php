@@ -242,7 +242,11 @@ return [
         'city' => 'City',
     ],
     'addresses' => 'Addresses',
-    'username' => 'User name',
+    'username' => [
+        'label' => 'Username',
+        'description' => 'Very useful for chats',
+        'error' => 'Should only contain numbers, lowercase/uppercase letters or subdashes'
+    ],
     'password' => [
         'label' => 'Password',
         'error' => 'Must have at least 8 characters, be alphanumeric, have at least one uppercase and have a special character',
