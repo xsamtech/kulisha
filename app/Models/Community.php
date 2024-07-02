@@ -31,7 +31,7 @@ class Community extends Model
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class)->withTimestamps()->withPivot(['is_admin', 'status_id', 'reaction_id']);
+        return $this->belongsToMany(User::class)->orderByPivot('created_at', 'desc')->withTimestamps()->withPivot(['is_admin', 'status_id', 'reaction_id']);
     }
 
     /**

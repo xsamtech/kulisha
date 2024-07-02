@@ -24,7 +24,7 @@ return [
     'verify-email' => 'Vérifier e-mail',
     'confirm-password' => 'Confirmer mot de passe',
     // Error messages
-    'unauthorized' => 'Cet espace est réservé à l\'administrateur',
+    'unauthorized' => 'Cet espace est réservé à l’administrateur',
     'failed' => 'Ces informations d\identification ne correspondent pas à nos enregistrement.',
     'token_error' => 'Le code est incorrect.',
     'username' => 'Utilisateur inconnu.',

@@ -37,7 +37,7 @@ class Field extends Model
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(User::class)->orderByPivot('created_at', 'desc');
     }
 
     /**
@@ -48,7 +48,7 @@ class Field extends Model
      */
     public function events(): BelongsToMany
     {
-        return $this->belongsToMany(Event::class);
+        return $this->belongsToMany(Event::class)->orderByPivot('created_at', 'desc');
     }
 
     /**
@@ -59,6 +59,6 @@ class Field extends Model
      */
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(Category::class);
+        return $this->belongsToMany(Category::class)->orderByPivot('created_at', 'desc');
     }
 }

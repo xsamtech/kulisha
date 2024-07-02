@@ -173,7 +173,7 @@ class SubscriptionController extends BaseController
     public function inviteContact($data, $visitor_id = null)
     {
         // Groups
-        $history_type_group = Group::where('group_name->fr', 'Type d\'historique')->first();
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
         // Types
         $invitation_history_type = Type::where([['type_name->fr', 'Historique des invitations'], ['group_id', $history_type_group->id]])->first();
         // Visitor

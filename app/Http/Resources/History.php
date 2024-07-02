@@ -32,6 +32,8 @@ class History extends JsonResource
             'team' => Team::make($this->team),
             'reaction' => Reaction::make($this->reaction),
             'cart' => Cart::make($this->cart),
+            'session' => Session::make($this->session),
+            'subscription' => Subscription::make($this->subscription),
             'for_notification' => Notification::make($this->for_notification),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),

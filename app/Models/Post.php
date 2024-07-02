@@ -31,7 +31,7 @@ class Post extends Model
      */
     public function hashtags(): BelongsToMany
     {
-        return $this->belongsToMany(Hashtag::class)->withTimestamps();
+        return $this->belongsToMany(Hashtag::class)->orderByPivot('created_at', 'desc')->withTimestamps();
     }
 
     /**
@@ -40,7 +40,7 @@ class Post extends Model
      */
     public function sessions(): BelongsToMany
     {
-        return $this->belongsToMany(Session::class)->withTimestamps();
+        return $this->belongsToMany(Session::class)->orderByPivot('created_at', 'desc')->withTimestamps();
     }
 
     /**
@@ -49,7 +49,7 @@ class Post extends Model
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class)->withTimestamps();
+        return $this->belongsToMany(User::class)->orderByPivot('created_at', 'desc')->withTimestamps();
     }
 
     /**

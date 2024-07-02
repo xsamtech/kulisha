@@ -25,6 +25,11 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\User as ResourcesUser;
 use App\Http\Resources\PasswordResetToken as ResourcesPasswordReset;
+use App\Http\Resources\Community as ResourcesCommunity;
+use App\Http\Resources\Event as ResourcesEvent;
+use App\Http\Resources\Subscription as ResourcesSubscription;
+use App\Models\Community;
+use App\Models\Session;
 
 /**
  * @author Xanders
@@ -57,17 +62,18 @@ class UserController extends BaseController
         $member_status_group = Group::where('group_name->fr', 'Etat du membre')->first();
         $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
         $member_type_group = Group::where('group_name->fr', 'Type de membre')->first();
-        $history_type_group = Group::where('group_name->fr', 'Type d\'historique')->first();
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
         $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
         $to_connect_visibility_group = Group::where('group_name->fr', 'Visibilité pour se connecter')->first();
-        // Statuses and types
+        // Statuses
         $activated_status = !empty($member_status_group) ? Status::where([['status_name->fr', 'Activé'], ['group_id', $member_status_group->id]])->first() : Status::where('status_name->fr', 'Activé')->first();
         $unread_status = !empty($notification_status_group) ? Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first() : Status::where('status_name->fr', 'Non lue')->first();
+        // Types
         $ordinary_member_type = !empty($member_type_group) ? Type::where([['type_name->fr', 'Membre ordinaire'], ['group_id', $member_type_group->id]])->first() : Type::where('type_name->fr', 'Membre ordinaire')->first();
         $activities_history_type = !empty($history_type_group) ? Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first() : Type::where('type_name->fr', 'Historique des activités')->first();
         $new_account_type = !empty($notification_type_group) ? Type::where([['type_name->fr', 'Nouveau compte'], ['group_id', $notification_type_group->id]])->first() : Type::where('type_name->fr', 'Nouveau compte')->first();
         // Visibility
-        $everybody_on_kulisha_visibility = !empty($to_connect_visibility_group) ? Visibility::where([['visibility_name->fr', 'Tout le monde sur Kulisha (recommandé)'], ['group_id', $member_status_group->id]])->first() : Visibility::where('visibility_name->fr', 'Tout le monde sur Kulisha (recommandé)')->first();
+        $everybody_on_kulisha_visibility = !empty($to_connect_visibility_group) ? Visibility::where([['visibility_name->fr', 'Tout le monde sur Kulisha (recommandé)'], ['group_id', $to_connect_visibility_group->id]])->first() : Visibility::where('visibility_name->fr', 'Tout le monde sur Kulisha (recommandé)')->first();
         // Get inputs
         $inputs = [
             'firstname' => $request->firstname,
@@ -257,15 +263,14 @@ class UserController extends BaseController
             HISTORY AND/OR NOTIFICATION MANAGEMENT
         */
         $notification = Notification::create([
-            'color' => 'primary',
             'type_id' => is_null($new_account_type) ? null : $new_account_type->id,
             'status_id' => is_null($unread_status) ? null : $unread_status->id,
             'to_user_id' => $user->id
         ]);
 
         History::create([
-            'history_url' => 'account',
             'type_id' => $activities_history_type->id,
+            'status_id' => is_null($unread_status) ? null : $unread_status->id,
             'to_user_id' => $user->id,
             'for_notification_id' => $notification->id
         ]);
@@ -280,15 +285,72 @@ class UserController extends BaseController
     /**
      * Display the specified resource.
      *
-     * @param  $id
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        $consultation_history_type = !empty($history_type_group) ? Type::where([['type_name->fr', 'Historique des consultations'], ['group_id', $history_type_group->id]])->first() : Type::where('type_name->fr', 'Historique des consultations')->first();
         $user = User::find($id);
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        if ($request->hasHeader('X-user-id') and $request->hasHeader('X-ip-address') or $request->hasHeader('X-user-id') and !$request->hasHeader('X-ip-address')) {
+            $session = Session::where('user_id', $request->header('X-user-id'))->first();
+
+            if (is_null($session)) {
+                $new_session = Session::create([
+                    'id' => Str::random(255),
+                    'ip_address' =>  $request->hasHeader('X-ip-address') ? $request->header('X-ip-address') : null,
+                    'user_agent' => $request->header('X-user-agent'),
+                    'user_id' => $request->header('X-user-id')
+                ]);
+
+                History::create([
+                    'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
+                    'from_user_id' => $new_session->user_id,
+                    'to_user_id' => $user->id,
+                    'session_id' => $new_session->id
+                ]);
+
+            } else {
+                History::create([
+                    'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
+                    'from_user_id' => $session->user_id,
+                    'to_user_id' => $user->id,
+                    'session_id' => $session->id
+                ]);
+            }
+        }
+
+        if ($request->hasHeader('X-ip-address')) {
+            $session = Session::where('ip_address', $request->header('X-ip-address'))->first();
+
+            if (is_null($session)) {
+                $new_session = Session::create([
+                    'id' => Str::random(255),
+                    'ip_address' =>  $request->header('X-ip-address'),
+                    'user_agent' => $request->header('X-user-agent')
+                ]);
+
+                History::create([
+                    'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
+                    'to_user_id' => $user->id,
+                    'session_id' => $new_session->id
+                ]);
+
+            } else {
+                History::create([
+                    'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
+                    'from_user_id' => is_null($session->user_id) ? null : $session->user_id,
+                    'to_user_id' => $user->id,
+                    'session_id' => $session->id
+                ]);
+            }
         }
 
         return $this->handleResponse(new ResourcesUser($user), __('notifications.find_user_success'));
@@ -816,9 +878,9 @@ class UserController extends BaseController
      */
     public function search($data, $visitor_id = null)
     {
-        // Groups
-        $history_type_group = Group::where('group_name->fr', 'Type d\'historique')->first();
-        // Types
+        // Group
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        // Type
         $search_history_type = !empty($history_type_group) ? Type::where([['type_name->fr', 'Historique des recherches'], ['group_id', $history_type_group->id]])->first() : Type::where('type_name->fr', 'Historique des recherches')->first();
         // Search request
         $users = User::where('firstname', 'LIKE', '%' . $data . '%')->orWhere('lastname', 'LIKE', '%' . $data . '%')->orWhere('surname', 'LIKE', '%' . $data . '%')->orWhere('username', 'LIKE', '%' . $data . '%')->get();
@@ -857,15 +919,16 @@ class UserController extends BaseController
     /**
      * Find by "username"
      *
+     * @param  \Illuminate\Http\Request  $request
      * @param  string $username
-     * @param  int $visitor_id
      * @return \Illuminate\Http\Response
+
      */
-    public function profile($username, $visitor_id = null)
+    public function profile(Request $request, $username)
     {
-        // Groups
-        $history_type_group = Group::where('group_name->fr', 'Type d\'historique')->first();
-        // Types
+        // Group
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        // Type
         $consultation_history_type = !empty($history_type_group) ? Type::where([['type_name->fr', 'Historique des consultations'], ['group_id', $history_type_group->id]])->first() : Type::where('type_name->fr', 'Historique des consultations')->first();
         // Request
         $user = User::where('username', $username)->first();
@@ -874,21 +937,56 @@ class UserController extends BaseController
             return $this->handleError(__('notifications.find_user_404'));
         }
 
-        if ($visitor_id != null) {
-            /*
-                HISTORY AND/OR NOTIFICATION MANAGEMENT
-            */
-            if ($visitor_id != $user->id) {
-                $visitor = User::find($visitor_id);
+        if ($request->hasHeader('X-user-id') and $request->hasHeader('X-ip-address') or $request->hasHeader('X-user-id') and !$request->hasHeader('X-ip-address')) {
+            $session = Session::where('user_id', $request->header('X-user-id'))->first();
 
-                if (is_null($visitor)) {
-                    return $this->handleError(__('notifications.find_visitor_404'));
-                }
+            if (is_null($session)) {
+                $new_session = Session::create([
+                    'id' => Str::random(255),
+                    'ip_address' =>  $request->hasHeader('X-ip-address') ? $request->header('X-ip-address') : null,
+                    'user_agent' => $request->header('X-user-agent'),
+                    'user_id' => $request->header('X-user-id')
+                ]);
 
                 History::create([
-                    'type_id' => !empty($consultation_history_type) ? $consultation_history_type->id : null,
-                    'from_user_id' => $visitor->id,
-                    'to_user_id' => $user->id
+                    'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
+                    'from_user_id' => $new_session->user_id,
+                    'to_user_id' => $user->id,
+                    'session_id' => $new_session->id
+                ]);
+
+            } else {
+                History::create([
+                    'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
+                    'from_user_id' => $session->user_id,
+                    'to_user_id' => $user->id,
+                    'session_id' => $session->id
+                ]);
+            }
+        }
+
+        if ($request->hasHeader('X-ip-address')) {
+            $session = Session::where('ip_address', $request->header('X-ip-address'))->first();
+
+            if (is_null($session)) {
+                $new_session = Session::create([
+                    'id' => Str::random(255),
+                    'ip_address' =>  $request->header('X-ip-address'),
+                    'user_agent' => $request->header('X-user-agent')
+                ]);
+
+                History::create([
+                    'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
+                    'to_user_id' => $user->id,
+                    'session_id' => $new_session->id
+                ]);
+
+            } else {
+                History::create([
+                    'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
+                    'from_user_id' => is_null($session->user_id) ? null : $session->user_id,
+                    'to_user_id' => $user->id,
+                    'session_id' => $session->id
                 ]);
             }
         }
@@ -955,6 +1053,39 @@ class UserController extends BaseController
     }
 
     /**
+     * Search all users having specific visibility.
+     *
+     * @param  int $user_id
+     * @return \Illuminate\Http\Response
+     */
+    public function connectionsProposal($user_id)
+    {
+        // Groups
+        $to_connect_visibility_group = Group::where('group_name->fr', 'Visibilité pour se connecter')->first();
+        // Visibility
+        $everybody_on_kulisha_visibility = Visibility::where([['visibility_name->fr', 'Tout le monde sur Kulisha (recommandé)'], ['group_id', $to_connect_visibility_group->id]])->first();
+        $only_mutual_connections_visibility = Visibility::where([['visibility_name->fr', 'Uniquement les connexions mutuelles'], ['group_id', $to_connect_visibility_group->id]])->first();
+        // User
+        $user = User::find($user_id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        // All users visibles by everybody or those who have the same connections as the current user
+        $users = User::where(function ($query) use ($everybody_on_kulisha_visibility) {
+                            $query->where('visibility_id.' . $everybody_on_kulisha_visibility->id);
+                        })
+                        ->orWhere(function ($query) use ($only_mutual_connections_visibility, $user) {
+                            $query->where('visibility_id' . $only_mutual_connections_visibility->id)->whereHas('subscriptions', function ($q) use ($user) {
+                                        $q->where('subscriptions.user_id' . $user->id)->orWhere('subscriptions.subscriber_id' . $user->id);
+                                    });
+                        })->orderByDesc('created_at')->get();
+
+        return $this->handleResponse(ResourcesUser::collection($users), __('notifications.find_all_users_success'));
+    }
+
+    /**
      * Handle an incoming authentication request.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -1000,7 +1131,33 @@ class UserController extends BaseController
                 'updated_at' => now(),
             ]);
 
-            return $this->handleResponse(new ResourcesUser($user), __('notifications.find_user_success'));
+            if ($request->hasHeader('X-ip-address') AND $request->hasHeader('X-user-agent') OR $request->hasHeader('X-ip-address') AND !$request->hasHeader('X-user-agent')) {
+                $session = Session::where('ip_address', $request->header('X-ip-address'))->first();
+
+                if (is_null($session)) {
+                    Session::create([
+                        'id' => Str::random(255),
+                        'ip_address' =>  $request->header('X-ip-address'),
+                        'user_agent' => $request->header('X-user-agent'),
+                        'user_id' => $user->id
+                    ]);
+                }
+            }
+
+            if ($request->hasHeader('X-user-agent')) {
+                $session = Session::where('user_agent', $request->header('X-user-agent'))->first();
+
+                if (is_null($session)) {
+                    Session::create([
+                        'id' => Str::random(255),
+                        'ip_address' =>  $request->header('X-ip-address'),
+                        'user_agent' => $request->header('X-user-agent'),
+                        'user_id' => $user->id
+                    ]);
+                }
+            }
+
+            return $this->handleResponse(new ResourcesUser($user), __('notifications.login_user_success'));
 
         } else {
             $user = User::where('email', $inputs['username'])->orWhere('username', $inputs['username'])->first();
@@ -1026,251 +1183,34 @@ class UserController extends BaseController
                 'updated_at' => now(),
             ]);
 
-            return $this->handleResponse(new ResourcesUser($user), __('notifications.find_user_success'));
-        }
-    }
+            if ($request->hasHeader('X-ip-address') AND $request->hasHeader('X-user-agent') OR $request->hasHeader('X-ip-address') AND !$request->hasHeader('X-user-agent')) {
+                $session = Session::where('ip_address', $request->header('X-ip-address'))->first();
 
-    /**
-     * Ask subscription to an event.
-     *
-     * @param  int $id
-     * @param  int $visitor_id
-     * @param  int $event_id
-     * @return \Illuminate\Http\Response
-     */
-    public function subscribeToEvent($id, $visitor_id, $event_id)
-    {
-        // Groups
-        $susbcription_status_group = Group::where('group_name->fr', 'Etat de la souscription')->first();
-        $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
-        $access_type_group = Group::where('group_name->fr', 'Type d\'accès')->first();
-        $history_type_group = Group::where('group_name->fr', 'Type d\'historique')->first();
-        $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
-        $reaction_on_invitation_group = Group::where('group_name->fr', 'Réaction sur invitation')->first();
-        // Statuses
-        $on_hold_status = Status::where([['status_name->fr', 'En attente'], ['group_id', $susbcription_status_group->id]])->first();
-        $accepted_status = Status::where([['status_name->fr', 'Acceptée'], ['group_id', $susbcription_status_group->id]])->first();
-        $unread_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first();
-        // Types
-        $public_type = Type::where([['type_name->fr', 'Public'], ['group_id' => $access_type_group->id]])->first();
-        $private_type = Type::where([['type_name->fr', 'Privé'], ['group_id' => $access_type_group->id]])->first();
-        $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
-        $invitation_type = Type::where([['type_name->fr', 'Invitation'], ['group_id', $notification_type_group->id]])->first();
-        // Reactions
-        $i_accept_reaction = Reaction::where([['reaction_name->fr', 'J\'y serai'], ['group_id', $reaction_on_invitation_group->id]])->first();
-        // Requests
-        $user = User::find($id);
-        $visitor = User::find($visitor_id);
-        $event = Event::find($event_id);
-
-        if (is_null($user)) {
-            return $this->handleError(__('notifications.find_user_404'));
-        }
-
-        if (is_null($visitor)) {
-            return $this->handleError(__('notifications.find_visitor_404'));
-        }
-
-        if (is_null($event)) {
-            return $this->handleError(__('notifications.find_event_404'));
-        }
-
-        // If it was an average user who asked
-        if ($user->id == $visitor->id) {
-            // If the event is public, accept the user
-            if ($event->type_id == $public_type->id) {
-                $event->users()->attach($user->id, [
-                    'status_id' => $accepted_status->id,
-                    'reaction_id' => $i_accept_reaction->id,
-                ]);
+                if (is_null($session)) {
+                    Session::create([
+                        'id' => Str::random(255),
+                        'ip_address' =>  $request->header('X-ip-address'),
+                        'user_agent' => $request->header('X-user-agent'),
+                        'user_id' => $user->id
+                    ]);
+                }
             }
 
-            // If the event is private, put the user on hold
-            if ($event->type_id == $private_type->id) {
-                $event->users()->attach($user->id, [
-                    'status_id' => $on_hold_status->id,
-                    'reaction_id' => $i_accept_reaction->id,
-                ]);
+            if ($request->hasHeader('X-user-agent')) {
+                $session = Session::where('user_agent', $request->header('X-user-agent'))->first();
+
+                if (is_null($session)) {
+                    Session::create([
+                        'id' => Str::random(255),
+                        'ip_address' =>  $request->header('X-ip-address'),
+                        'user_agent' => $request->header('X-user-agent'),
+                        'user_id' => $user->id
+                    ]);
+                }
             }
 
-            History::create([
-                'type_id' => $activities_history_type->id,
-                'user_id' => $user->id
-            ]);
+            return $this->handleResponse(new ResourcesUser($user), __('notifications.login_user_success'));
         }
-
-        // If it was an event member who asked an average user
-        if ($user->id != $visitor->id) {
-            $event->users()->attach($user->id, ['status_id' => $accepted_status->id]);
-
-            /*
-                HISTORY AND/OR NOTIFICATION MANAGEMENT
-            */
-            Notification::create([
-                'status_id' => $unread_status,
-                'user_id' => $user->id
-            ]);
-
-            History::create([
-                'history_url' => 'events/' . $event->id,
-                'history_content' => [
-                    'af' => 'Jy het vir [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') \'n versoek gestuur om by die « ' . $event->event_title . ' »-geleentheid aan te sluit.',
-                    'de' => 'Sie haben [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') eine Anfrage zur Teilnahme am « ' . $event->event_title . ' »-Event gesendet.',
-                    'ar' => 'لقد أرسلت طلبًا إلى [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') للانضمام إلى حدث « ' . $event->event_title . ' ».',
-                    'zh' => '您已向 [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') 发送加入 « ' . $event->event_title . ' » 活动的请求。',
-                    'en' => 'You have sent [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') a request to join the « ' . $event->event_title . ' » event.',
-                    'es' => 'Le has enviado a [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') una solicitud para unirse al evento « ' . $event->event_title . ' ».',
-                    'fr' => 'Vous avez envoyez à [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') une demande d\'adhésion à l\'événement « ' . $event->event_title . ' ».',
-                    'it' => 'Hai inviato a ' . $user->firstname . ' ' . $user->lastname . ' una richiesta per partecipare all\'evento « ' . $event->event_title . ' ».',
-                    'ja' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') に « ' . $event->event_title . ' » イベントへの参加リクエストを送信しました。',
-                    'nl' => 'Je hebt [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') een verzoek gestuurd om deel te nemen aan het « ' . $event->event_title . ' »-evenement.',
-                    'ru' => 'Вы отправили [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') запрос на участие в мероприятии « ' . $event->event_title . ' ».',
-                    'sw' => 'Umetuma ' . $user->firstname . ' ' . $user->lastname . ' ombi la kujiunga na tukio la « ' . $event->event_title . ' ».',
-                    'tr' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ')\'a « ' . $event->event_title . ' » etkinliğine katılma isteği gönderdiniz.',
-                    'cs' => 'Odeslali jste [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') žádost o připojení k události « ' . $event->event_title . ' ».'
-                ],
-                'color' => 'primary',
-                'icon' => 'bi bi-calendar2-event',
-                'image_url' => $user->profile_photo_path,
-                'type_id' => $activities_history_type->id,
-                'user_id' => $visitor->id
-            ]);
-        }
-
-        return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
-    }
-
-    /**
-     * Ask subscription to a community.
-     *
-     * @param  int $id
-     * @param  int $visitor_id
-     * @param  int $community_id
-     * @param  boolean $notify
-     * @return \Illuminate\Http\Response
-     */
-    public function subscribeToCommunity($id, $visitor_id, $community_id, $notify = false)
-    {
-        $on_hold_status = Status::where('status_name->fr', 'En attente')->first();
-        $accepted_status = Status::where('status_name->fr', 'Admis')->first();
-        $unread_status = Status::where('status_name->fr', 'Non lue')->first();
-        $public_type = Type::where('type_name->fr', 'Public')->first();
-        $private_type = Type::where('type_name->fr', 'Privé')->first();
-        $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
-        $user = User::find($id);
-        $visitor = User::find($visitor_id);
-        $community = Event::find($community_id);
-
-        if (is_null($user)) {
-            return $this->handleError(__('notifications.find_user_404'));
-        }
-
-        if (is_null($visitor)) {
-            return $this->handleError(__('notifications.find_visitor_404'));
-        }
-
-        if (is_null($community)) {
-            return $this->handleError(__('notifications.find_community_404'));
-        }
-
-        // If it was an average user who asked
-        if ($user->id == $visitor->id) {
-            // If the community is public, accept the user
-            if ($community->type_id == $public_type->id) {
-                $community->users()->attach($user->id, ['status_id' => $accepted_status->id]);
-            }
-
-            // If the community is private, put the user on hold
-            if ($community->type_id == $private_type->id) {
-                $community->users()->attach($user->id, ['status_id' => $on_hold_status->id]);
-            }
-
-            History::create([
-                'history_url' => 'communities/' . $community->id,
-                'history_content' => [
-                    'af' => 'Jy het ingeteken op die « ' . $community->community_name . ' »-gemeenskap.',
-                    'de' => 'Sie haben sich bei der « ' . $community->community_name . ' »-Community angemeldet.',
-                    'ar' => 'لقد اشتركت في مجتمع « ' . $community->community_name . ' ».',
-                    'zh' => '您已订阅 « ' . $community->community_name . ' » 社区。',
-                    'en' => 'You have subscribed to the « ' . $community->community_name . ' » community.',
-                    'es' => 'Te has suscrito a la comunidad « ' . $community->community_name . ' ».',
-                    'fr' => 'Vous avez souscrit à la communauté « ' . $community->community_name . ' ».',
-                    'it' => 'Ti sei iscritto alla comunità « ' . $community->community_name . ' ».',
-                    'ja' => '« ' . $community->community_name . ' » コミュニティに登録しました。',
-                    'nl' => 'U bent geabonneerd op de « ' . $community->community_name . ' »-gemeenschap.',
-                    'ru' => 'Вы подписались на сообщество « ' . $community->community_name . ' ».',
-                    'sw' => 'Umejiandikisha kwa jumuiya ya « ' . $community->community_name . ' ».',
-                    'tr' => '« ' . $community->community_name . ' » topluluğuna abone oldunuz.',
-                    'cs' => 'Přihlásili jste se do komunity « ' . $community->community_name . ' ».'
-                ],
-                'color' => 'warning',
-                'icon' => 'bi bi-people',
-                'image_url' => $community->cover_photo_path,
-                'type_id' => $activities_history_type->id,
-                'user_id' => $user->id
-            ]);
-        }
-
-        // If it was an event member who asked an average user
-        if ($user->id != $visitor->id) {
-            $community->users()->attach($user->id, ['status_id' => $accepted_status->id]);
-
-            /*
-                HISTORY AND/OR NOTIFICATION MANAGEMENT
-            */
-            if ($notify == true) {
-                Notification::create([
-                    'notification_url' => 'communities/' . $community->id,
-                    'notification_content' => [
-                        'af' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') het jou na die « ' . $community->community_name . ' »-gemeenskap genooi.',
-                        'de' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') hat Sie in die « ' . $community->community_name . ' »-Community eingeladen.',
-                        'ar' => 'قام [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') بدعوتك إلى مجتمع « ' . $community->community_name . ' ».',
-                        'zh' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') 邀请您加入 « ' . $community->community_name . ' » 社区。',
-                        'en' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') has invited you to the « ' . $community->community_name . ' » community.',
-                        'es' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') te ha invitado a la comunidad « ' . $community->community_name . ' ».',
-                        'fr' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') vous a invité.e à la communauté « ' . $community->community_name . ' ».',
-                        'it' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') ti ha invitato nella comunità « ' . $community->community_name . ' ».',
-                        'ja' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') があなたを « ' . $community->community_name . ' » コミュニティに招待しました。',
-                        'nl' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') heeft je uitgenodigd voor de « ' . $community->community_name . ' »-gemeenschap.',
-                        'ru' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') пригласил вас в сообщество « ' . $community->community_name . ' ».',
-                        'sw' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') amekualika kwenye jumuiya ya « ' . $community->community_name . ' ».',
-                        'tr' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') sizi « ' . $community->community_name . ' » topluluğuna davet etti.',
-                        'cs' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') vás pozval do komunity « ' . $community->community_name . ' ».'
-                    ],
-                    'color' => 'info',
-                    'icon' => 'bi bi-people',
-                    'image_url' => $community->cover_photo_path,
-                    'status_id' => $unread_status,
-                    'user_id' => $user->id
-                ]);
-            }
-            History::create([
-                'history_url' => 'communities/' . $community->id,
-                'history_content' => [
-                    'af' => 'Jy het [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') na die « ' . $community->community_name . ' »-gemeenskap genooi.',
-                    'de' => 'Sie haben [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') in die « ' . $community->community_name . ' »-Community eingeladen.',
-                    'ar' => 'لقد قمت بدعوة [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') إلى مجتمع « ' . $community->community_name . ' ».',
-                    'zh' => '您邀请 [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') 加入 « ' . $community->community_name . ' » 社区。',
-                    'en' => 'You invited [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') to the « ' . $community->community_name . ' » community.',
-                    'es' => 'Invitaste a [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') a la comunidad « ' . $community->community_name . ' ».',
-                    'fr' => 'Vous avez invité [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') à la communauté « ' . $community->community_name . ' ».',
-                    'it' => 'Hai invitato [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') nella comunità « ' . $community->community_name . ' ».',
-                    'ja' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') を « ' . $community->community_name . ' » コミュニティに招待しました。',
-                    'nl' => 'Je hebt [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') uitgenodigd voor de « ' . $community->community_name . ' »-gemeenschap.',
-                    'ru' => 'Вы пригласили [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') в сообщество « ' . $community->community_name . ' ».',
-                    'sw' => 'Ulimwalika [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') kwenye jumuiya ya « ' . $community->community_name . ' ».',
-                    'tr' => '[' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ')\'ı « ' . $community->community_name . ' » topluluğuna davet ettiniz.',
-                    'cs' => 'Pozvali jste [' . $visitor->firstname . ' ' . $visitor->lastname . '](' . $visitor->username . ') do komunity « ' . $community->community_name . ' ».'
-                ],
-                'color' => 'primary',
-                'icon' => 'bi bi-people',
-                'image_url' => $user->profile_photo_path,
-                'type_id' => $activities_history_type->id,
-                'user_id' => $visitor->id
-            ]);
-        }
-
-        return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
     }
 
     /**
@@ -1278,14 +1218,27 @@ class UserController extends BaseController
      *
      * @param  int $id
      * @param  int $concerned_id
-     * @param  boolean $notify
      * @return \Illuminate\Http\Response
      */
-    public function subscribeToMember($id, $concerned_id, $notify = false)
+    public function addConnection($id, $concerned_id)
     {
-        $on_hold_status = Status::where('status_name->fr', 'En attente')->first();
-        $unread_status = Status::where('status_name->fr', 'Non lue')->first();
-        $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
+        // Groups
+        $susbcription_status_group = Group::where('group_name->fr', 'Etat de la souscription')->first();
+        $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
+        $history_status_group = Group::where('group_name->fr', 'Etat de l’historique')->first();
+        $member_type_group = Group::where('group_name->fr', 'Type de membre')->first();
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
+        // Statuses
+        $on_hold_status = Status::where([['status_name->fr', 'En attente'], ['group_id', $susbcription_status_group->id]])->first();
+        $accepted_status = Status::where([['status_name->fr', 'Acceptée'], ['group_id', $susbcription_status_group->id]])->first();
+        $unread_notification_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first();
+        $unread_history_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $history_status_group->id]])->first();
+        // Types
+        $ordinary_member_type = Type::where([['type_name->fr', 'Membre ordinaire'], ['group_id', $member_type_group->id]])->first();
+        $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
+        $connection_request_sent_type = Type::where([['type_name->fr', 'Demande de connexion envoyée'], ['group_id', $notification_type_group->id]])->first();
+        // Users
         $user = User::find($id);
         $concerned = User::find($concerned_id);
 
@@ -1297,88 +1250,223 @@ class UserController extends BaseController
             return $this->handleError(__('notifications.find_concerned_404'));
         }
 
-        Subscription::create([
-            'user_id' => $concerned->id,
-            'subscriber_id' => $user->id,
-            'status_id' => $on_hold_status->id
-        ]);
+        if ($concerned->type_id == $ordinary_member_type->id) {
+            Subscription::create([
+                'user_id' => $concerned->id,
+                'subscriber_id' => $user->id,
+                'status_id' => $accepted_status->id
+            ]);
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            $notification = Notification::create([
+                'type_id' => $connection_request_sent_type->id,
+                'status_id' => $unread_notification_status,
+                'from_user_id' => $user->id,
+                'to_user_id' => $concerned->id
+            ]);
+
+            History::create([
+                'type_id' => $activities_history_type->id,
+                'status_id' => $unread_history_status,
+                'from_user_id' => $user->id,
+                'to_user_id' => $concerned->id,
+                'for_notification_id' => $notification->id
+            ]);
+
+        } else {
+            Subscription::create([
+                'user_id' => $concerned->id,
+                'subscriber_id' => $user->id,
+                'status_id' => $on_hold_status->id
+            ]);
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            $notification = Notification::create([
+                'type_id' => $connection_request_sent_type->id,
+                'status_id' => $unread_notification_status,
+                'from_user_id' => $user->id,
+                'to_user_id' => $concerned->id
+            ]);
+
+            History::create([
+                'type_id' => $activities_history_type->id,
+                'status_id' => $unread_history_status,
+                'from_user_id' => $user->id,
+                'to_user_id' => $concerned->id,
+                'for_notification_id' => $notification->id
+            ]);
+        }
+
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
+    }
+
+    /**
+     * Ask subscription to another member.
+     *
+     * @param  int $id
+     * @param  int $concerned_id
+     * @return \Illuminate\Http\Response
+     */
+    public function invitationRefusal($id, $concerned_id)
+    {
+        // Groups
+        $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
+        $history_status_group = Group::where('group_name->fr', 'Etat de l’historique')->first();
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
+        // Statuses
+        $unread_notification_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first();
+        $unread_history_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $history_status_group->id]])->first();
+        // Types
+        $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
+        $connection_request_rejected_type = Type::where([['type_name->fr', 'Demande de connexion rejetée'], ['group_id', $notification_type_group->id]])->first();
+        // Users
+        $user = User::find($id);
+        $concerned = User::find($concerned_id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        if (is_null($concerned)) {
+            return $this->handleError(__('notifications.find_concerned_404'));
+        }
+
+        $subscription = Subscription::where([['user_id', $user->id], ['subscriber_id', $concerned->id]])->first();
+
+        if (is_null($subscription)) {
+            return $this->handleError(__('notifications.find_subscription_404'));
+        }
+
+        // Delete subscription
+        $subscription->delete();
 
         /*
             HISTORY AND/OR NOTIFICATION MANAGEMENT
         */
-        if ($notify == true) {
-            Notification::create([
-                'notification_url' => 'requests/' . $user->username,
-                'notification_content' => [
-                    'af' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') het vir u \'n verbindingsversoek gestuur.',
-                    'de' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') hat Ihnen eine Verbindungsanfrage gesendet.',
-                    'ar' => 'أرسل لك [' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') طلب اتصال.',
-                    'zh' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ')向您发送了一个连接请求。',
-                    'en' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') sent you a connection request.',
-                    'es' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') le envió una solicitud de conexión.',
-                    'fr' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') vous a envoyé une demande de connexion.',
-                    'it' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') ti ha inviato una richiesta di connessione.',
-                    'ja' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ')は接続リクエストを送信しました。',
-                    'nl' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') heeft u een verbindingsverzoek gestuurd.',
-                    'ru' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') отправил вам запрос на соединение.',
-                    'sw' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') alikutumia ombi la unganisho.',
-                    'tr' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') size bir bağlantı isteği gönderdi.',
-                    'cs' => '[' . $user->firstname . ' ' . $user->lastname . '](' . $user->username . ') vám poslal žádost o připojení.'
-                ],
-                'color' => 'primary',
-                'icon' => 'bi bi-person-plus',
-                'image_url' => $user->profile_photo_path,
-                'status_id' => $unread_status,
-                'user_id' => $concerned->id
-            ]);
-        }
+        $notification = Notification::create([
+            'type_id' => $connection_request_rejected_type->id,
+            'status_id' => $unread_notification_status,
+            'from_user_id' => $user->id,
+            'to_user_id' => $concerned->id
+        ]);
+
         History::create([
-            'history_url' => $concerned->username,
-            'history_content' => [
-                'af' => 'U het \'n verbindingsversoek aan ' . $concerned->firstname . ' ' . $concerned->lastname . ' gestuur.',
-                'de' => 'Sie haben eine Verbindungsanfrage an ' . $concerned->firstname . ' ' . $concerned->lastname . ' gesendet.',
-                'ar' => 'لقد أرسلت طلب اتصال إلى ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'zh' => '您已向' . $concerned->firstname . ' ' . $concerned->lastname . '发送了连接请求。',
-                'en' => 'You have sent a connection request to ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'es' => 'Ha enviado una solicitud de conexión a ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'fr' => 'Vous avez envoyé une demande de connexion à ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'it' => 'Hai inviato una richiesta di connessione a ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'ja' => $concerned->firstname . ' ' . $concerned->lastname . 'に接続リクエストを送信しました。',
-                'nl' => 'U hebt een verbindingsverzoek naar ' . $concerned->firstname . ' ' . $concerned->lastname . ' gestuurd.',
-                'ru' => 'Вы отправили запрос на подключение к ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'sw' => 'Umetuma ombi la unganisho kwa ' . $concerned->firstname . ' ' . $concerned->lastname . '.',
-                'tr' => $concerned->firstname . ' ' . $concerned->lastname . '\'a bir bağlantı isteği gönderdiniz.',
-                'cs' => 'Poslali jste žádost o připojení ' . $concerned->firstname . ' ' . $concerned->lastname . '.'
-            ],
-            'color' => 'warning',
-            'icon' => 'bi bi-person-plus',
-            'image_url' => $concerned->profile_photo_path,
             'type_id' => $activities_history_type->id,
-            'user_id' => $user->id
+            'status_id' => $unread_history_status,
+            'from_user_id' => $user->id,
+            'to_user_id' => $concerned->id,
+            'for_notification_id' => $notification->id
         ]);
 
         return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
     }
 
     /**
-     * Ask subscription to an event.
+     * Send an invitation to join the network
      *
-     * @param  int $id
-     * @param  int $visitor_id
-     * @param  int $status_id
-     * @param  string $entity
-     * @param  int $entity_id
-     * @param  boolean $notify
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function updateSubscriptionStatus($id, $visitor_id, $status_id, $entity, $entity_id, $notify = false)
+    public function sendExternalInvitation(Request $request)
     {
-        $declined_status = Status::where('status_name->fr', 'Refusé')->first();
-        $accepted_status = Status::where('status_name->fr', 'Admis')->first();
-        $unread_status = Status::where('status_name->fr', 'Non lue')->first();
-        $activities_history_type = Type::where('type_name->fr', 'Historique des activités')->first();
-        $user = User::find($id);
-        $visitor = User::find($visitor_id);
+        $object = new stdClass();
+        // Groups
+        $susbcription_status_group = Group::where('group_name->fr', 'Etat de la souscription')->first();
+        $history_status_group = Group::where('group_name->fr', 'Etat de l’historique')->first();
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        // Statuses
+        $on_hold_status = Status::where([['status_name->fr', 'En attente'], ['group_id', $susbcription_status_group->id]])->first();
+        $unread_history_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $history_status_group->id]])->first();
+        // Types
+        $invitations_history_type = Type::where([['type_name->fr', 'Historique des invitations'], ['group_id', $history_type_group->id]])->first();
+        // Users
+        $user = User::find($request->id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        if (isset($request->phone)) {
+            $subscription = Subscription::create([
+                'phone' => $request->phone,
+                'subscriber_id' => $user->id,
+                'status_id' => $on_hold_status->id
+            ]);
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            History::create([
+                'type_id' => $invitations_history_type->id,
+                'status_id' => $unread_history_status->id,
+                'subscription_id' => $subscription->id,
+                'from_user_id' => $user->id
+            ]);
+
+            $object->subscription = new ResourcesSubscription($subscription);
+        }
+
+        if (isset($request->email)) {
+            $subscription = Subscription::create([
+                'email' => $request->email,
+                'subscriber_id' => $user->id,
+                'status_id' => $on_hold_status->id
+            ]);
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            History::create([
+                'type_id' => $invitations_history_type->id,
+                'status_id' => $unread_history_status->id,
+                'subscription_id' => $subscription->id,
+                'from_user_id' => $user->id
+            ]);
+
+            $object->subscription = new ResourcesSubscription($subscription);
+        }
+
+        $object->user = new ResourcesUser($user);
+
+        return $this->handleResponse($object, __('notifications.invitation_sent'));
+    }
+
+    /**
+     * Ask subscription to a community.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function subscribe(Request $request)
+    {
+        // Groups
+        $susbcription_status_group = Group::where('group_name->fr', 'Etat de la souscription')->first();
+        $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
+        $history_status_group = Group::where('group_name->fr', 'Etat de l’historique')->first();
+        $access_type_group = Group::where('group_name->fr', 'Type d’accès')->first();
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
+        $reaction_on_invitation_group = Group::where('group_name->fr', 'Réaction sur invitation')->first();
+        // Statuses
+        $on_hold_status = Status::where([['status_name->fr', 'En attente'], ['group_id', $susbcription_status_group->id]])->first();
+        $accepted_status = Status::where([['status_name->fr', 'Acceptée'], ['group_id', $susbcription_status_group->id]])->first();
+        $unread_notification_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first();
+        $unread_history_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $history_status_group->id]])->first();
+        // Types
+        $public_type = Type::where([['type_name->fr', 'Public'], ['group_id' => $access_type_group->id]])->first();
+        $private_type = Type::where([['type_name->fr', 'Privé'], ['group_id' => $access_type_group->id]])->first();
+        $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
+        $invitation_type = Type::where([['type_name->fr', 'Invitation'], ['group_id', $notification_type_group->id]])->first();
+        // Reactions
+        $i_accept_reaction = Reaction::where([['reaction_name->fr', 'J’y serai'], ['group_id', $reaction_on_invitation_group->id]])->first();
+        // Requests
+        $user = User::find($request->id);
+        $visitor = User::find($request->visitor_id);
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
@@ -1388,74 +1476,524 @@ class UserController extends BaseController
             return $this->handleError(__('notifications.find_visitor_404'));
         }
 
-        if ($entity == 'event') {
-            $event = Event::find($entity_id);
+        if (isset($request->event_id)) {
+            $event = Event::find($request->event_id);
 
             if (is_null($event)) {
                 return $this->handleError(__('notifications.find_event_404'));
             }
 
-            if ($status_id == $accepted_status->id) {
-                $event->users()->updateExistingPivot($user->id, ['status_id' => $accepted_status->id]);
+            // If it's the current user who subscribed
+            if ($user->id == $visitor->id) {
+                // If the event is public, accept the user
+                if ($event->type_id == $public_type->id) {
+                    $event->users()->attach($user->id, [
+                        'status_id' => $accepted_status->id,
+                        'reaction_id' => $i_accept_reaction->id
+                    ]);
+                }
+
+                // If the event is private, put the user on hold
+                if ($event->type_id == $private_type->id) {
+                    $event->users()->attach($user->id, [
+                        'status_id' => $on_hold_status->id,
+                        'reaction_id' => $i_accept_reaction->id
+                    ]);
+                }
+
+                History::create([
+                    'type_id' => $activities_history_type->id,
+                    'status_id' => $unread_history_status,
+                    'from_user_id' => $user->id,
+                    'event_id' => $event->id
+                ]);
+            }
+
+            // If it's a event member who sent an invitation to another member
+            if ($user->id != $visitor->id) {
+                $event->users()->attach($user->id, ['status_id' => $accepted_status->id]);
 
                 /*
                     HISTORY AND/OR NOTIFICATION MANAGEMENT
                 */
-                History::create([
-                    'history_url' => 'events/' . $event->id . '/members',
-                    'history_content' => [
-                        'af' => '',
-                        'de' => '',
-                        'ar' => '',
-                        'zh' => '',
-                        'en' => '',
-                        'es' => '',
-                        'fr' => '',
-                        'it' => '',
-                        'ja' => '',
-                        'nl' => '',
-                        'ru' => '',
-                        'sw' => '',
-                        'tr' => '',
-                        'cs' => ''
-                    ],
-                    'color' => 'danger',
-                    'icon' => 'bi bi-person-dash',
-                    'image_url' => $event->cover_photo_path,
-                    'type_id' => $activities_history_type->id,
-                    'user_id' => $visitor->id
+                $notification = Notification::create([
+                    'type_id' => $invitation_type->id,
+                    'status_id' => $unread_notification_status,
+                    'from_user_id' => $visitor->id,
+                    'to_user_id' => $user->id,
+                    'event_id' => $event->id
                 ]);
 
-                if ($notify == true) {
-                    Notification::create([
-                        'notification_url' => 'events/' . $event->id,
-                        'notification_content' => [
-                            'af' => '',
-                            'de' => '',
-                            'ar' => '',
-                            'zh' => '',
-                            'en' => '',
-                            'es' => '',
-                            'fr' => '',
-                            'it' => '',
-                            'ja' => '',
-                            'nl' => '',
-                            'ru' => '',
-                            'sw' => '',
-                            'tr' => '',
-                            'cs' => ''
-                        ],
-                        'color' => 'info',
-                        'icon' => 'bi bi-calendar2-event',
-                        'image_url' => $event->cover_photo_path,
-                        'status_id' => $unread_status,
-                        'user_id' => $user->id
-                    ]);
-                }
+                History::create([
+                    'type_id' => $activities_history_type->id,
+                    'status_id' => $unread_history_status,
+                    'from_user_id' => $visitor->id,
+                    'to_user_id' => $user->id,
+                    'event_id' => $event->id,
+                    'for_notification_id' => $notification->id
+                ]);
             }
         }
 
-        return $this->handleResponse(new ResourcesUser($user), __('notifications.update_user_success'));
+        if (isset($request->community_id)) {
+            $community = Community::find($request->community_id);
+
+            if (is_null($community)) {
+                return $this->handleError(__('notifications.find_community_404'));
+            }
+
+            // If it's the current user who subscribed
+            if ($user->id == $visitor->id) {
+                // If the community is public, accept the user
+                if ($community->type_id == $public_type->id) {
+                    $community->users()->attach($user->id, [
+                        'status_id' => $accepted_status->id,
+                        'reaction_id' => $i_accept_reaction->id
+                    ]);
+                }
+
+                // If the community is private, put the user on hold
+                if ($community->type_id == $private_type->id) {
+                    $community->users()->attach($user->id, [
+                        'status_id' => $on_hold_status->id,
+                        'reaction_id' => $i_accept_reaction->id
+                    ]);
+                }
+
+                History::create([
+                    'type_id' => $activities_history_type->id,
+                    'status_id' => $unread_history_status,
+                    'from_user_id' => $user->id,
+                    'community_id' => $community->id
+                ]);
+            }
+
+            // If it's a community member who sent an invitation to another member
+            if ($user->id != $visitor->id) {
+                $community->users()->attach($user->id, ['status_id' => $accepted_status->id]);
+
+                /*
+                    HISTORY AND/OR NOTIFICATION MANAGEMENT
+                */
+                $notification = Notification::create([
+                    'type_id' => $invitation_type->id,
+                    'status_id' => $unread_notification_status,
+                    'from_user_id' => $visitor->id,
+                    'to_user_id' => $user->id,
+                    'community_id' => $community->id
+                ]);
+
+                History::create([
+                    'type_id' => $activities_history_type->id,
+                    'status_id' => $unread_history_status,
+                    'from_user_id' => $visitor->id,
+                    'to_user_id' => $user->id,
+                    'community_id' => $community->id,
+                    'for_notification_id' => $notification->id
+                ]);
+            }
+        }
+
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.subscribe_user_success'));
+    }
+
+    /**
+     * Ask subscription to an event.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function unsubscribe(Request $request)
+    {
+        // Groups
+        $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
+        $history_status_group = Group::where('group_name->fr', 'Etat de l’historique')->first();
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
+        // Statuses
+        $unread_notification_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first();
+        $unread_history_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $history_status_group->id]])->first();
+        // Types
+        $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
+        $separation_type = Type::where([['type_name->fr', 'Séparation'], ['group_id', $notification_type_group->id]])->first();
+        $expulsion_type = Type::where([['type_name->fr', 'Expulsion'], ['group_id', $notification_type_group->id]])->first();
+        // Requests
+        $user = User::find($request->id);
+        $visitor = User::find($request->visitor_id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        if (is_null($visitor)) {
+            return $this->handleError(__('notifications.find_visitor_404'));
+        }
+
+        if (isset($request->event_id)) {
+            $event = Event::find($request->event_id);
+
+            if (is_null($event)) {
+                return $this->handleError(__('notifications.event_404'));
+            }
+
+            $event->users()->detach([$user->id]);
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            // If it's the current user who has left
+            if ($user->id == $visitor->id) {
+                $notification = Notification::create([
+                    'type_id' => $separation_type->id,
+                    'status_id' => $unread_notification_status,
+                    'from_user_id' => $visitor->id,
+                    'to_user_id' => $event->user_id,
+                    'event_id' => $event->id
+                ]);
+
+                History::create([
+                    'type_id' => $activities_history_type->id,
+                    'status_id' => $unread_history_status,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $event->user_id,
+                    'event_id' => $event->id,
+                    'for_notification_id' => $notification->id
+                ]);
+            }
+
+            // If it's a event member who has withdrawn the current user
+            if ($user->id != $visitor->id) {
+                $notification = Notification::create([
+                    'type_id' => $expulsion_type->id,
+                    'status_id' => $unread_notification_status,
+                    'from_user_id' => $visitor->id,
+                    'to_user_id' => $user->id,
+                    'event_id' => $event->id
+                ]);
+
+                History::create([
+                    'type_id' => $activities_history_type->id,
+                    'status_id' => $unread_history_status,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $user->id,
+                    'event_id' => $event->id,
+                    'for_notification_id' => $notification->id
+                ]);
+            }
+        }
+
+        if (isset($request->community_id)) {
+            $community = Community::find($request->community_id);
+
+            if (is_null($community)) {
+                return $this->handleError(__('notifications.community_404'));
+            }
+
+            $community->users()->detach([$user->id]);
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            // If it's the current user who has left
+            if ($user->id == $visitor->id) {
+                $notification = Notification::create([
+                    'type_id' => $separation_type->id,
+                    'status_id' => $unread_notification_status,
+                    'from_user_id' => $visitor->id,
+                    'to_user_id' => $community->user_id,
+                    'community_id' => $community->id
+                ]);
+
+                History::create([
+                    'type_id' => $activities_history_type->id,
+                    'status_id' => $unread_history_status,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $community->user_id,
+                    'community_id' => $community->id,
+                    'for_notification_id' => $notification->id
+                ]);
+            }
+
+            // If it's a event member who has withdrawn the current user
+            if ($user->id != $visitor->id) {
+                $notification = Notification::create([
+                    'type_id' => $expulsion_type->id,
+                    'status_id' => $unread_notification_status,
+                    'from_user_id' => $visitor->id,
+                    'to_user_id' => $user->id,
+                    'community_id' => $community->id
+                ]);
+
+                History::create([
+                    'type_id' => $activities_history_type->id,
+                    'status_id' => $unread_history_status,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $user->id,
+                    'community_id' => $community->id,
+                    'for_notification_id' => $notification->id
+                ]);
+            }
+        }
+
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.unsubscribe_user_success'));
+    }
+
+    /**
+     * Ask subscription to an event.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function reactToInvitation(Request $request)
+    {
+        // Groups
+        $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
+        $history_status_group = Group::where('group_name->fr', 'Etat de l’historique')->first();
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
+        $reaction_on_invitation_group = Group::where('group_name->fr', 'Réaction sur invitation')->first();
+        // Statuses
+        $unread_notification_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first();
+        $unread_history_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $history_status_group->id]])->first();
+        // Types
+        $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
+        $acceptation_maybe_type = Type::where([['type_name->fr', 'Acception peut-être d’une invitation'], ['group_id', $notification_type_group->id]])->first();
+        $acceptation_type = Type::where([['type_name->fr', 'Acception d’une invitation'], ['group_id', $notification_type_group->id]])->first();
+        $refusal_type = Type::where([['type_name->fr', 'Refus d’une invitation'], ['group_id', $notification_type_group->id]])->first();
+        // Reactions
+        $maybe_reaction = Reaction::where([['reaction_name->fr', 'Peut-être'], ['group_id', $reaction_on_invitation_group->id]])->first();
+        $i_accept_reaction = Reaction::where([['reaction_name->fr', 'J’y serai'], ['group_id', $reaction_on_invitation_group->id]])->first();
+        $decline_reaction = Reaction::where([['reaction_name->fr', 'Décliner'], ['group_id', $reaction_on_invitation_group->id]])->first();
+        // Requests
+        $user = User::find($request->id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        if (isset($request->event_id)) {
+            $event = Event::find($request->event_id);
+
+            if (is_null($event)) {
+                return $this->handleError(__('notifications.find_event_404'));
+            }
+
+            $event->users()->updateExistingPivot($user->id, ['reaction_id' => $request->reaction_id]);
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            if ($request->reaction_id == $maybe_reaction->id) {
+                $notification = Notification::create([
+                    'type_id' => $acceptation_maybe_type->id,
+                    'status_id' => $unread_notification_status,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $event->user_id,
+                    'event_id' => $event->id
+                ]);
+
+                History::create([
+                    'type_id' => $activities_history_type->id,
+                    'status_id' => $unread_history_status,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $event->user_id,
+                    'event_id' => $event->id,
+                    'for_notification_id' => $notification->id
+                ]);
+            }
+
+            if ($request->reaction_id == $i_accept_reaction->id) {
+                $notification = Notification::create([
+                    'type_id' => $acceptation_type->id,
+                    'status_id' => $unread_notification_status,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $event->user_id,
+                    'event_id' => $event->id
+                ]);
+
+                History::create([
+                    'type_id' => $activities_history_type->id,
+                    'status_id' => $unread_history_status,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $event->user_id,
+                    'event_id' => $event->id,
+                    'for_notification_id' => $notification->id
+                ]);
+            }
+
+            if ($request->reaction_id == $decline_reaction->id) {
+                $notification = Notification::create([
+                    'type_id' => $refusal_type->id,
+                    'status_id' => $unread_notification_status,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $event->user_id,
+                    'event_id' => $event->id
+                ]);
+
+                History::create([
+                    'type_id' => $activities_history_type->id,
+                    'status_id' => $unread_history_status,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $event->user_id,
+                    'event_id' => $event->id,
+                    'for_notification_id' => $notification->id
+                ]);
+            }
+
+            $object = new stdClass();
+            $object->event = new ResourcesEvent($event);
+            $object->user = new ResourcesUser($user);
+    
+            return $this->handleResponse($object, __('notifications.reaction_sent'));
+        }
+
+        if (isset($request->community_id)) {
+            $community = Event::find($request->community_id);
+
+            if (is_null($community)) {
+                return $this->handleError(__('notifications.community_404'));
+            }
+
+            $community->users()->updateExistingPivot($user->id, ['reaction_id' => $request->reaction_id]);
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            if ($request->reaction_id == $i_accept_reaction->id) {
+                $notification = Notification::create([
+                    'type_id' => $acceptation_type->id,
+                    'status_id' => $unread_notification_status,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $community->user_id,
+                    'community_id' => $community->id
+                ]);
+
+                History::create([
+                    'type_id' => $activities_history_type->id,
+                    'status_id' => $unread_history_status,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $community->user_id,
+                    'community_id' => $community->id,
+                    'for_notification_id' => $notification->id
+                ]);
+            }
+
+            if ($request->reaction_id == $decline_reaction->id) {
+                $notification = Notification::create([
+                    'type_id' => $refusal_type->id,
+                    'status_id' => $unread_notification_status,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $community->user_id,
+                    'community_id' => $community->id
+                ]);
+
+                History::create([
+                    'type_id' => $activities_history_type->id,
+                    'status_id' => $unread_history_status,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $community->user_id,
+                    'community_id' => $community->id,
+                    'for_notification_id' => $notification->id
+                ]);
+            }
+
+            $object = new stdClass();
+            $object->community = new ResourcesCommunity($community);
+            $object->user = new ResourcesUser($user);
+
+            return $this->handleResponse($object, __('notifications.reaction_sent'));
+        }
+    }
+
+    /**
+     * Update event/community subscription.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function acceptSubscription(Request $request)
+    {
+        // Groups
+        $susbcription_status_group = Group::where('group_name->fr', 'Etat de la souscription')->first();
+        $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
+        $history_status_group = Group::where('group_name->fr', 'Etat de l’historique')->first();
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
+        // Statuses
+        $accepted_status = Status::where([['status_name->fr', 'Acceptée'], ['group_id', $susbcription_status_group->id]])->first();
+        $unread_notification_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first();
+        $unread_history_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $history_status_group->id]])->first();
+        // Types
+        $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
+        $subscription_accepted_type = Type::where([['type_name->fr', 'Abonnement accepté'], ['group_id', $notification_type_group->id]])->first();
+        // Requests
+        $user = User::find($request->id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        if (isset($request->event_id)) {
+            $event = Event::find($request->event_id);
+
+            if (is_null($event)) {
+                return $this->handleError(__('notifications.find_event_404'));
+            }
+
+            $event->users()->updateExistingPivot($user->id, ['status_id' => $accepted_status->id]);
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            $notification = Notification::create([
+                'type_id' => $subscription_accepted_type->id,
+                'status_id' => $unread_notification_status,
+                'from_user_id' => $event->user_id,
+                'to_user_id' => $user->id,
+                'event_id' => $event->id
+            ]);
+
+            History::create([
+                'type_id' => $activities_history_type->id,
+                'status_id' => $unread_history_status,
+                'from_user_id' => $event->user_id,
+                'to_user_id' => $user->id,
+                'event_id' => $event->id,
+                'for_notification_id' => $notification->id
+            ]);
+        }
+
+        if (isset($request->community_id)) {
+            $community = Community::find($request->community_id);
+
+            if (is_null($community)) {
+                return $this->handleError(__('notifications.find_community_404'));
+            }
+
+            $community->users()->updateExistingPivot($user->id, ['status_id' => $accepted_status->id]);
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            $notification = Notification::create([
+                'type_id' => $subscription_accepted_type->id,
+                'status_id' => $unread_notification_status,
+                'from_user_id' => $community->user_id,
+                'to_user_id' => $user->id,
+                'community_id' => $community->id
+            ]);
+
+            History::create([
+                'type_id' => $activities_history_type->id,
+                'status_id' => $unread_history_status,
+                'from_user_id' => $community->user_id,
+                'to_user_id' => $user->id,
+                'community_id' => $community->id,
+                'for_notification_id' => $notification->id
+            ]);
+        }
+
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.subscribe_user_success'));
     }
 
     /**
@@ -1466,142 +2004,102 @@ class UserController extends BaseController
      * @param  boolean $notify
      * @return \Illuminate\Http\Response
      */
-    public function switchStatus($id, $status_id, $notify = false)
+    public function switchStatus($id, $status_id)
     {
-        $status_activated = Status::where('status_name->fr', 'Activé')->first();
-        $status_disabled = Status::where('status_name->fr', 'Désactivé')->first();
-        $status_blocked = Status::where('status_name->fr', 'Bloqué')->first();
-        $status_deleted = Status::where('status_name->fr', 'Supprimé')->first();
-        $unread_status = Status::where('status_name->fr', 'Non lue')->first();
+        // Groups
+        $member_status_group = Group::where('group_name->fr', 'Etat du membre')->first();
+        $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
+        $history_status_group = Group::where('group_name->fr', 'Etat de l’historique')->first();
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
+        // Statuses
+        $activated_member_status = Status::where([['status_name->fr', 'Activé'], ['group_id', $member_status_group->id]])->first();
+        $disabled_member_status = Status::where([['status_name->fr', 'Désactivé'], ['group_id', $member_status_group->id]])->first();
+        $blocked_member_status = Status::where([['status_name->fr', 'Bloqué'], ['group_id', $member_status_group->id]])->first();
+        $deleted_member_status = Status::where([['status_name->fr', 'Supprimé'], ['group_id', $member_status_group->id]])->first();
+        $unread_notification_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first();
+        $unread_history_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $history_status_group->id]])->first();
+        // Types
+        $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
+        $reactivated_account_type = Type::where([['type_name->fr', 'Compte réactivé'], ['group_id', $notification_type_group->id]])->first();
+        $disabled_account_type = Type::where([['type_name->fr', 'Compte désactivé'], ['group_id', $notification_type_group->id]])->first();
+        $blocked_account_type = Type::where([['type_name->fr', 'Compte bloqué'], ['group_id', $notification_type_group->id]])->first();
+        $deleted_account_type = Type::where([['type_name->fr', 'Compte supprimé'], ['group_id', $notification_type_group->id]])->first();
+        // Requests
         $user = User::find($id);
+        $status = Status::where([['id', $status_id], ['group_id', $member_status_group->id]])->first();
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
         }
 
-        // The user account is activated
-        if ($status_id == $status_activated->id) {
-            // update "status_id" column
-            $user->update([
-                'status_id' => $status_activated->id,
-                'updated_at' => now()
-            ]);
-
-            /*
-                HISTORY AND/OR NOTIFICATION MANAGEMENT
-            */
-            if ($notify == true) {
-                Notification::create([
-                    'notification_url' => 'about/terms_of_use',
-                    'notification_content' => [
-                        'af' => 'Jou rekening is geaktiveer. Lees asseblief ons bepalings voordat jy begin.',
-                        'de' => 'Dein Konto wurde aktiviert. Bitte lesen Sie unsere Bedingungen, bevor Sie beginnen.',
-                        'ar' => 'تم تنشيط حسابك. يرجى قراءة شروطنا قبل أن تبدأ.',
-                        'zh' => '您的帐号已经激活。 请在开始之前阅读我们的条款。',
-                        'en' => 'Your account has been activated. Please read our terms before you start.',
-                        'es' => 'Tu cuenta ha sido activada. Lea nuestros términos antes de comenzar.',
-                        'fr' => 'Votre compte a été activé. Veuillez lire nos conditions avant de commencer.',
-                        'it' => 'Il tuo account è stato attivato. Si prega di leggere i nostri termini prima di iniziare.',
-                        'ja' => 'あなたのアカウントは有効化されました。 始める前に規約をお読みください。',
-                        'nl' => 'Uw account is geactiveerd. Lees onze voorwaarden voordat u begint.',
-                        'ru' => 'Ваша учетная запись активирована. Пожалуйста, прочтите наши условия, прежде чем начать.',
-                        'sw' => 'Akaunti yako imewezeshwa. Tafadhali soma masharti yetu kabla ya kuanza.',
-                        'tr' => 'Hesabınız aktive edildi. Lütfen başlamadan önce şartlarımızı okuyun.',
-                        'cs' => 'Váš účet byl aktivován. Než začnete, přečtěte si prosím naše podmínky.'
-                    ],
-                    'color' => 'success',
-                    'icon' => 'bi bi-shield-lock',
-                    'image_url' => 'assets/img/logo-reverse.png',
-                    'status_id' => $unread_status->id,
-                    'user_id' => $user->id,
-                ]);
-            }
+        if (is_null($status)) {
+            return $this->handleError(__('notifications.find_status_404'));
         }
 
-        // The user account is blocked
-        if ($status_id == $status_blocked->id) {
-            // update "status_id" column
-            $user->update([
-                'status_id' => $status_blocked->id,
-                'updated_at' => now()
+        // update "status_id" column
+        $user->update([
+            'status_id' => $status->id,
+            'updated_at' => now()
+        ]);
+
+        /*
+            HISTORY AND/OR NOTIFICATION MANAGEMENT
+        */
+        // The user account is reactivated
+        if ($status_id == $activated_member_status->id) {
+            $notification = Notification::create([
+                'type_id' => $reactivated_account_type->id,
+                'status_id' => $unread_notification_status,
+                'to_user_id' => $user->id
             ]);
 
-            /*
-                HISTORY AND/OR NOTIFICATION MANAGEMENT
-            */
-            if ($notify == true) {
-                Notification::create([
-                    'notification_url' => 'about/terms_of_use',
-                    'notification_content' => [
-                        'af' => 'Jou rekening is geblokkeer. Dit kan gebeur wanneer jy ons bepalings oortree of jou rekening gekap is.',
-                        'de' => 'Ihr Konto wurde gesperrt. Dies kann passieren, wenn Sie gegen unsere Bedingungen verstoßen oder Ihr Konto gehackt wurde.',
-                        'ar' => 'تم حظر حسابك. يمكن أن يحدث هذا عندما تنتهك شروطنا أو يتم اختراق حسابك.',
-                        'zh' => '您的帐户已被冻结。 当您违反我们的条款或您的帐户被黑客入侵时，可能会发生这种情况。',
-                        'en' => 'Your account has been blocked. This can happen when you violate our terms or your account has been hacked.',
-                        'es' => 'Tu cuenta ha sido bloqueada. Esto puede suceder cuando viola nuestros términos o su cuenta ha sido pirateada.',
-                        'fr' => 'Votre compte a été bloqué. Ceci peut arriver lorsque vous ne respectez pas nos conditions ou votre compte a été piraté.',
-                        'it' => 'Il tuo account è stato bloccato. Ciò può accadere quando violi i nostri termini o il tuo account è stato violato.',
-                        'ja' => 'あなたのアカウントはブロックされました。 これは、利用規約に違反した場合、またはアカウントがハッキングされた場合に発生する可能性があります。',
-                        'nl' => 'Uw account is geblokkeerd. Dit kan gebeuren wanneer u onze voorwaarden schendt of uw account is gehackt.',
-                        'ru' => 'Ваш аккаунт заблокирован. Это может произойти, если вы нарушите наши условия или ваша учетная запись была взломана.',
-                        'sw' => 'Akaunti yako imezuiwa. Hili linaweza kutokea unapokiuka masharti yetu au akaunti yako imedukuliwa.',
-                        'tr' => 'Hesabınız engellendi. Bu, şartlarımızı ihlal ettiğinizde veya hesabınız saldırıya uğradığında meydana gelebilir.',
-                        'cs' => 'Váš účet byl zablokován. To se může stát, když porušíte naše podmínky nebo byl váš účet napaden hackery.'
-                    ],
-                    'color' => 'danger',
-                    'icon' => 'bi bi-lock-fill',
-                    'image_url' => 'assets/img/logo-reverse.png',
-                    'status_id' => $unread_status->id,
-                    'user_id' => $user->id,
-                ]);
-            }
+            History::create([
+                'type_id' => $activities_history_type->id,
+                'status_id' => $unread_history_status,
+                'from_user_id' => $user->id,
+                'for_notification_id' => $notification->id
+            ]);
         }
 
         // The user account is disabled
-        if ($status_id == $status_disabled->id) {
-            // update "status_id" column
-            $user->update([
-                'status_id' => $status_disabled->id,
-                'updated_at' => now()
+        if ($status_id == $disabled_member_status->id) {
+            $notification = Notification::create([
+                'type_id' => $disabled_account_type->id,
+                'status_id' => $unread_notification_status,
+                'to_user_id' => $user->id
             ]);
 
-            /*
-                HISTORY AND/OR NOTIFICATION MANAGEMENT
-            */
-            if ($notify == true) {
-                Notification::create([
-                    'notification_url' => 'settings',
-                    'notification_content' => [
-                        'af' => 'Jy het ons verlaat deur jou rekening te deaktiveer. Ons sien uit daarna om jou weer te sien. Om jou rekening te heraktiveer, klik hier.',
-                        'de' => 'Sie haben uns verlassen, indem Sie Ihr Konto deaktiviert haben. Wir freuen uns auf ein Wiedersehen. Um Ihr Konto erneut zu aktivieren, klicken Sie hier.',
-                        'ar' => 'لقد تركتنا عن طريق إلغاء تنشيط حسابك. اتمنى ان اراك مرة اخرى. لإعادة تنشيط حسابك، انقر هنا.',
-                        'zh' => '您通过停用帐户离开了我们。 我们期待再次见到您。 要重新激活您的帐户，请单击此处。',
-                        'en' => 'You left us by deactivating your account. We look forward to seeing you again. To reactivate your account, click here.',
-                        'es' => 'Nos dejaste desactivando tu cuenta. Esperamos volver a verle de nuevo. Para reactivar su cuenta, haga clic aquí.',
-                        'fr' => 'Vous nous avez quitté en désactivant votre compte. Nous avons hâte de vous revoir. Pour réactiver votre compte, cliquez ici.',
-                        'it' => 'Ci hai lasciato disattivando il tuo account. Non vediamo l\'ora di rivederti. Per riattivare il tuo account, clicca qui.',
-                        'ja' => 'アカウントを無効にして当社から離れました。 またお会いできるのを楽しみにしています。 アカウントを再アクティブ化するには、ここをクリックしてください。',
-                        'nl' => 'U heeft ons verlaten door uw account te deactiveren. Wij kijken ernaar uit u weer te zien. Om uw account opnieuw te activeren, klikt u hier.',
-                        'ru' => 'Вы покинули нас, деактивировав свою учетную запись. Мы с нетерпением ждем встречи с вами снова. Чтобы повторно активировать свою учетную запись, нажмите здесь.',
-                        'sw' => 'Ulituacha kwa kuzima akaunti yako. Tunatazamia kukuona tena. Ili kuwezesha akaunti yako, bofya hapa.',
-                        'tr' => 'Hesabınızı devre dışı bırakarak aramızdan ayrıldınız. Sizi tekrar görmeyi sabırsızlıkla bekliyoruz. Hesabınızı yeniden etkinleştirmek için burayı tıklayın.',
-                        'cs' => 'Odešli jste od nás deaktivací svého účtu. Těšíme se na další shledání. Chcete-li znovu aktivovat svůj účet, klikněte sem.'
-                    ],
-                    'color' => 'danger',
-                    'icon' => 'bi bi-lock-fill',
-                    'image_url' => 'assets/img/logo-reverse.png',
-                    'status_id' => $unread_status->id,
-                    'user_id' => $user->id,
-                ]);
-            }
+            History::create([
+                'type_id' => $activities_history_type->id,
+                'status_id' => $unread_history_status,
+                'from_user_id' => $user->id,
+                'for_notification_id' => $notification->id
+            ]);
+        }
+
+        // The user account is blocked
+        if ($status_id == $blocked_member_status->id) {
+            $notification = Notification::create([
+                'type_id' => $blocked_account_type->id,
+                'status_id' => $unread_notification_status,
+                'to_user_id' => $user->id
+            ]);
         }
 
         // The user account is deleted
-        if ($status_id == $status_deleted->id) {
-            // update "status_id" column
-            $user->update([
-                'status_id' => $status_disabled->id,
-                'updated_at' => now()
+        if ($status_id == $deleted_member_status->id) {
+            $notification = Notification::create([
+                'type_id' => $deleted_account_type->id,
+                'status_id' => $unread_notification_status,
+                'to_user_id' => $user->id
+            ]);
+
+            History::create([
+                'type_id' => $activities_history_type->id,
+                'status_id' => $unread_history_status,
+                'from_user_id' => $user->id,
+                'for_notification_id' => $notification->id
             ]);
         }
 

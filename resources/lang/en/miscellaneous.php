@@ -192,13 +192,13 @@ return [
     // ===== LOGIN PAGE
     'login_title1' => 'Log in',
     'login_title2' => 'Identify yourself',
-    'login_description' => 'Your data is safe with us. So you need to identify yourself to be sure it\'s you.',
+    'login_description' => 'Your data is safe with us. So you need to identify yourself to be sure it’s you.',
     'login_username' => 'Phone number, E-mail or username',
     'remember_me' => 'Stay connected',
     'forgotten_password' => 'Forgotten password?',
     'not_member' => 'Not a member?',
     'signup_with' => 'or sign up with:',
-    'go_register' => 'I don\'t have an account',
+    'go_register' => 'I don’t have an account',
 
     // ===== REGISTER PAGE
     'register_title1' => 'Sign up',
@@ -253,7 +253,7 @@ return [
     ],
     'confirm_password' => [
         'label' => 'Confirm password',
-        'error' => 'Your confirmation doesn\'t match the new password',
+        'error' => 'Your confirmation doesn’t match the new password',
     ],
     'choose_role' => 'Choose a role',
     'go_login' => 'Already have an account',

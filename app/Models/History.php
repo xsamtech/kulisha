@@ -144,6 +144,28 @@ class History extends Model
 
     /**
      * ONE-TO-MANY
+     * One session for several histories
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function session(): BelongsTo
+    {
+        return $this->belongsTo(Session::class);
+    }
+
+    /**
+     * ONE-TO-MANY
+     * One subscription for several histories
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function subscription(): BelongsTo
+    {
+        return $this->belongsTo(Subscription::class);
+    }
+
+    /**
+     * ONE-TO-MANY
      * One for_notification for several histories
      * 
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

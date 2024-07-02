@@ -58,7 +58,7 @@ class User extends Authenticatable
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class);
+        return $this->belongsToMany(Role::class)->orderByPivot('created_at', 'desc')->withTimestamps();
     }
 
     /**
@@ -69,7 +69,7 @@ class User extends Authenticatable
      */
     public function fields(): BelongsToMany
     {
-        return $this->belongsToMany(Field::class);
+        return $this->belongsToMany(Field::class)->orderByPivot('created_at', 'desc')->withTimestamps();
     }
 
     /**
@@ -80,7 +80,7 @@ class User extends Authenticatable
      */
     public function communities(): BelongsToMany
     {
-        return $this->belongsToMany(Community::class)->withTimestamps()->withPivot(['is_admin', 'status_id', 'reaction_id']);
+        return $this->belongsToMany(Community::class)->orderByPivot('created_at', 'desc')->withTimestamps()->withPivot(['is_admin', 'status_id', 'reaction_id']);
     }
 
     /**
@@ -91,7 +91,7 @@ class User extends Authenticatable
      */
     public function events(): BelongsToMany
     {
-        return $this->belongsToMany(Event::class)->withTimestamps()->withPivot(['is_speaker', 'status_id', 'reaction_id']);
+        return $this->belongsToMany(Event::class)->orderByPivot('created_at', 'desc')->withTimestamps()->withPivot(['is_speaker', 'status_id', 'reaction_id']);
     }
 
     /**
@@ -102,7 +102,7 @@ class User extends Authenticatable
      */
     public function posts(): BelongsToMany
     {
-        return $this->belongsToMany(Post::class)->withTimestamps();
+        return $this->belongsToMany(Post::class)->orderByPivot('created_at', 'desc')->withTimestamps();
     }
 
     /**
@@ -113,7 +113,7 @@ class User extends Authenticatable
      */
     public function surveychoices(): BelongsToMany
     {
-        return $this->belongsToMany(Surveychoice::class)->withTimestamps();
+        return $this->belongsToMany(Surveychoice::class)->orderByPivot('created_at', 'desc')->withTimestamps();
     }
 
     /**

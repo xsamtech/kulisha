@@ -22,16 +22,16 @@ return [
     'all_right_reserved' => 'Tous droits réservés',
     'follow_us' => 'Suivez-nous :',
     'call_us' => 'Appelez-nous :',
-    'bank_transaction_description' => 'Transaction bancaire depuis l\'application Kulisha',
+    'bank_transaction_description' => 'Transaction bancaire depuis l’application Kulisha',
     'theme' => 'Mode',
     'description' => 'Description',
     'color' => 'Couleur',
     'icon_font' => 'Icône font',
     'icon_svg' => 'Icône SVG',
-    'image_url' => 'URL de l\'image',
+    'image_url' => 'URL de l’image',
     'your_language' => 'Votre langue',
-    'your_activation_code' => 'Votre code d\'activation : ',
-    'back_home' => 'Retour à l\'accueil',
+    'your_activation_code' => 'Votre code d’activation : ',
+    'back_home' => 'Retour à l’accueil',
     'back_list' => 'Retourner à la liste',
     'back_form' => 'Retourner au formulaire',
     'back_toc' => 'Retourner à la table des matières',
@@ -52,7 +52,7 @@ return [
     'logout' => 'Déconnexion',
     'register_update' => 'Enregistrer les modifications',
     'change_image' => 'Modifier la photo',
-    'crop_before_save' => 'Recadrer l\'image avant de l\'enregistrer',
+    'crop_before_save' => 'Recadrer l’image avant de l’enregistrer',
     'cancel' => 'Annuler',
     'details' => 'Détails',
     'attention_delete' => 'Attention suppression',
@@ -147,7 +147,7 @@ return [
     'a_minute_ago' => 'il y a une minute',
     '30_minutes_ago' => 'il y a 30 minutes',
     'an_hour_ago' => 'il y a une heure',
-    'today' => 'aujourd\'hui',
+    'today' => 'aujourd’hui',
     'yesterday' => 'hier',
     'before_yesterday' => 'avant-hier',
 
@@ -156,8 +156,8 @@ return [
     'semicolon_after_word' => ' ;',
     'the_masculine' => 'le',
     'the_feminine' => 'la',
-    'the_masculine_before_vowel' => 'l\'',
-    'the_feminine_before_vowel' => 'l\'',
+    'the_masculine_before_vowel' => 'l’',
+    'the_feminine_before_vowel' => 'l’',
     'the_plural' => 'les',
     'a_masculine' => 'un',
     'a_feminine' => 'une',
@@ -192,16 +192,16 @@ return [
     // ===== LOGIN PAGE
     'login_title1' => 'Se connecter',
     'login_title2' => 'Identifiez-vous',
-    'login_description' => 'Vos données sont sécurisées avec nous. Alors vous devez vous identifier pour être sûr que c\'est bien vous.',
-    'login_username' => 'N° de téléphone, e-mail ou nom d\'utilisateur',
+    'login_description' => 'Vos données sont sécurisées avec nous. Alors vous devez vous identifier pour être sûr que c’est bien vous.',
+    'login_username' => 'N° de téléphone, e-mail ou nom d’utilisateur',
     'remember_me' => 'Rester connecté',
     'forgotten_password' => 'Mot de passe oublié ?',
     'not_member' => 'Pas encore membre ?',
-    'signup_with' => 'ou s\'inscrire avec :',
-    'go_register' => 'Je n\'ai pas de compte',
+    'signup_with' => 'ou s’inscrire avec :',
+    'go_register' => 'Je n’ai pas de compte',
 
     // ===== REGISTER PAGE
-    'register_title1' => 'S\'inscrire',
+    'register_title1' => 'S’inscrire',
     'register_title2' => 'Cliquez ici pour vous inscrire',
     'register_title3' => 'Ecrivez le code que vous avez reçu',
     'serial_number' => 'N° de série',
@@ -234,7 +234,7 @@ return [
         'placeholder' => 'Ecrire adresse ...',
         'residence' => 'Résidence actuelle',
         'legal' => 'Adresse légale',
-        'type' => 'Type d\'adresse',
+        'type' => 'Type d’adresse',
         'line1' => 'Adresse ligne 1',
         'line2' => 'Adresse ligne 2 (Facultative)',
         'neighborhood' => 'Quartier',
@@ -256,7 +256,7 @@ return [
         'error' => 'Votre confirmation ne correspond pas au mot de passe',
     ],
     'choose_role' => 'Choisir un rôle',
-    'go_login' => 'J\'ai déjà un compte',
+    'go_login' => 'J’ai déjà un compte',
     'api_token' => 'Votre clé pour utiliser les APIs',
     'amount' => 'Montant',
     'currency' => 'Choisir devise',
@@ -272,7 +272,7 @@ return [
         'privacy_policy' => 'Confidentialité',
         'cookies' => 'Cookies',
         'contact' => 'Contact',
-        'login_register' => 's\'identifier ou s\'inscrire',
+        'login_register' => 's’identifier ou s’inscrire',
         'account_settings' => 'Paramètres du compte',
         'messages' => 'Discussions',
         'history' => 'Historique des activités',
@@ -316,7 +316,7 @@ return [
             ],
         ],
         'public' => [
-            'news_feed' => 'File d\'actualité',
+            'news_feed' => 'File d’actualité',
             'orders' => [
                 'title' => 'Commandes',
                 'cart' => [
@@ -360,7 +360,7 @@ return [
     // ===== EVERY ROLES PAGES
     // Account settings
     'account' => [
-        'on_going' => 'Compte en attente d\'activation',
+        'on_going' => 'Compte en attente d’activation',
         'deactivated' => [
             'title' => 'Compte désactivé',
             'link' => 'Désactiver compte',
@@ -369,12 +369,12 @@ return [
         ],
         'locked' => [
             'title' => 'Compte bloqué',
-            'message' => 'Votre compte est bloqué parce que vous ne respectez pas nos conditions d\'utilisation.',
+            'message' => 'Votre compte est bloqué parce que vous ne respectez pas nos conditions d’utilisation.',
             'deadline' => 'Echéance avant le déblocage :'
         ],
         'personal_infos' => [
             'title' => 'Infos personnelles',
-            'change_avatar' => 'Modifier l\'avatar',
+            'change_avatar' => 'Modifier l’avatar',
             'link' => 'Enregistrer mise à jour',
         ],
         'update_password' => [
@@ -384,16 +384,16 @@ return [
             'new_password' => 'Confirmer nouveau mot de passe',
         ],
         'identity_document' => [
-            'title' => 'Pièce d\'identité',
+            'title' => 'Pièce d’identité',
             'choose_type' => [
-                'title' => 'Choisir le type de pièce d\'identité',
-                'identity_card' => 'Carte d\'identité',
-                'voter_card' => 'Carte d\'électeur',
+                'title' => 'Choisir le type de pièce d’identité',
+                'identity_card' => 'Carte d’identité',
+                'voter_card' => 'Carte d’électeur',
                 'passport' => 'Passeport',
                 'driving_license' => 'Permis de conduire',
                 'other' => 'Autre',
             ],
-            'other_descriprion' => 'Décrivez votre pièce d\'identité',
+            'other_descriprion' => 'Décrivez votre pièce d’identité',
             'click_to_change' => 'Cliquer sur la photo pour modifier',
         ],
     ],
@@ -401,7 +401,7 @@ return [
     // ===== ADMIN PAGES
     'admin' => [
         'home' => [
-            'title' => 'Espace de l\'admin'
+            'title' => 'Espace de l’admin'
         ],
 
         // Group
@@ -445,14 +445,14 @@ return [
 
             // Status
             'status' => [
-                'details' => 'Détails sur l\'état',
+                'details' => 'Détails sur l’état',
                 'link' => 'Gérer les états',
                 'add' => 'Ajouter un état',
                 'edit' => 'Editer le état',
                 'search' => 'Rechercher un état',
-                'list' => 'Liste d\'états',
+                'list' => 'Liste d’états',
                 'data' => [
-                    'status_name' => 'Nom de l\'état'
+                    'status_name' => 'Nom de l’état'
                 ],
             ],
 
@@ -499,7 +499,7 @@ return [
 
         // Miscellaneous
         'miscellaneous' => [
-            'link' => 'Gérer d\'autres données',
+            'link' => 'Gérer d’autres données',
             'search' => 'Rechercher parmi les autres données',
 
             // Role

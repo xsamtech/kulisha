@@ -16,16 +16,16 @@ return [
     // ===== ERROR PAGES
     // 400
     '400_title' => 'Mauvaise requête',
-    '400_description' => 'Vérifiez votre requête s\'il vous plait !',
+    '400_description' => 'Vérifiez votre requête s’il vous plait !',
     // 401
     '401_title' => 'Non autorisé',
-    '401_description' => 'Vous n\'avez pas d\'autorisation pour cette requête.',
+    '401_description' => 'Vous n’avez pas d’autorisation pour cette requête.',
     // 403
     '403_title' => 'Espace interdit',
-    '403_description' => 'Cet espace n\'est pas permis.',
+    '403_description' => 'Cet espace n’est pas permis.',
     // 404
     '404_title' => 'Page non trouvée',
-    '404_description' => 'La page que vous cherchez n\'existe pas',
+    '404_description' => 'La page que vous cherchez n’existe pas',
     // 405
     '405_title' => 'Méthode non permise',
     '405_description' => 'Votre requête est envoyée avec une mauvaise méthode.',
@@ -34,42 +34,23 @@ return [
     '419_description' => 'La page a mis longtemps sans activité.',
     // 500
     '500_title' => 'Erreur interne',
-    '500_description' => 'Notre serveur rencontre un problème. Veuillez réessayez après quelques minutes s\'il vous plait !',
+    '500_description' => 'Notre serveur rencontre un problème. Veuillez réessayez après quelques minutes s’il vous plait !',
     // Others
     'expects_json' => 'La requête actuelle attend probablement une réponse JSON.',
 
     // ===== ALERTS
-    'no_record' => 'Il n\'y a aucun enregistrement !',
+    'no_record' => 'Il n’y a aucun enregistrement !',
     'create_error' => 'La création a échoué !',
     'update_error' => 'La modification a échoué !',
     'registered_data' => 'Données enregistrées',
     'required_fields' => 'Veuillez vérifier les champs obligatoires',
     'transaction_waiting' => 'Veuillez valider le message de votre opérateur sur votre téléphone. Ensuite appuyez sur le bouton ci-dessous.',
     'transaction_done' => 'Votre opération est terminée !',
-    'transaction_failed' => 'L\'envoi de votre paiement a échoué',
+    'transaction_failed' => 'L’envoi de votre paiement a échoué',
     'transaction_type_error' => 'Veuillez choisir le type de transaction',
     'new_partner_message' => 'Vous pouvez maintenant vous connecter en tant que partenaire avec votre n° de téléphone. Mot de passe temportaire :',
-    // LegalInfoSubject
-    'find_all_legal_info_subjects_success' => 'Sujets trouvés',
-    'find_legal_info_subject_success' => 'Sujet trouvé',
-    'find_legal_info_subject_404' => 'Sujet non trouvé',
-    'create_legal_info_subject_success' => 'Sujet créé',
-    'update_legal_info_subject_success' => 'Sujet modifié',
-    'delete_legal_info_subject_success' => 'Sujet supprimé',
-    // LegalInfoTitle
-    'find_all_legal_info_titles_success' => 'Titres trouvés',
-    'find_legal_info_title_success' => 'Titre trouvé',
-    'find_legal_info_title_404' => 'Titre non trouvé',
-    'create_legal_info_title_success' => 'Titre créé',
-    'update_legal_info_title_success' => 'Titre modifié',
-    'delete_legal_info_title_success' => 'Titre supprimé',
-    // LegalInfoContent
-    'find_all_legal_info_contents_success' => 'Contenus trouvés',
-    'find_legal_info_content_success' => 'Contenu trouvé',
-    'find_legal_info_content_404' => 'Contenu non trouvé',
-    'create_legal_info_content_success' => 'Contenu créé',
-    'update_legal_info_content_success' => 'Contenu modifié',
-    'delete_legal_info_content_success' => 'Contenu supprimé',
+    'reaction_sent' => 'Réaction envoyée',
+    'invitation_sent' => 'Invitation envoyée',
     // Group
     'find_all_groups_success' => 'Groupes trouvés',
     'find_group_success' => 'Groupe trouvé',
@@ -98,27 +79,6 @@ return [
     'create_country_success' => 'Pays créé',
     'update_country_success' => 'Pays modifié',
     'delete_country_success' => 'Pays supprimé',
-    // Book
-    'find_all_books_success' => 'Livres trouvés',
-    'find_book_success' => 'Livre trouvé',
-    'find_book_404' => 'Livre non trouvé',
-    'create_book_success' => 'Livre créé',
-    'update_book_success' => 'Livre modifié',
-    'delete_book_success' => 'Livre supprimé',
-    // Media
-    'find_all_medias_success' => 'Médias trouvés',
-    'find_media_success' => 'Média trouvé',
-    'find_media_404' => 'Média non trouvé',
-    'create_media_success' => 'Média créé',
-    'update_media_success' => 'Média modifié',
-    'delete_media_success' => 'Média supprimé',
-    // Part
-    'find_all_parts_success' => 'Parties des médias trouvées',
-    'find_part_success' => 'Partie du média trouvée',
-    'find_part_404' => 'Partie du média non trouvée',
-    'create_part_success' => 'Partie du média créée',
-    'update_part_success' => 'Partie du média modifiée',
-    'delete_part_success' => 'Partie du média supprimée',
     // Order
     'find_all_orders_success' => 'Commandes trouvées',
     'find_order_success' => 'Commande trouvée',
@@ -133,13 +93,6 @@ return [
     'create_cart_success' => 'Panier ou Watchlist créé',
     'update_cart_success' => 'Panier ou Watchlist modifié',
     'delete_cart_success' => 'Panier ou Watchlist supprimé',
-    // Pricing
-    'find_all_pricings_success' => 'Tarifications trouvées',
-    'find_pricing_success' => 'Tarification trouvée',
-    'find_pricing_404' => 'Tarification non trouvée',
-    'create_pricing_success' => 'Tarification créée',
-    'update_pricing_success' => 'Tarification modifiée',
-    'delete_pricing_success' => 'Tarification supprimée',
     // Role
     'find_all_roles_success' => 'Rôles trouvés',
     'find_role_success' => 'Rôle trouvé',
@@ -147,10 +100,17 @@ return [
     'create_role_success' => 'Rôle créé',
     'update_role_success' => 'Rôle modifié',
     'delete_role_success' => 'Rôle supprimé',
+    // Visibility
+    'find_all_visibilities_success' => 'Visibilités trouvées',
+    'find_visibility_success' => 'Visibilité trouvée',
+    'find_visibility_404' => 'Visibilité non trouvée',
+    'create_visibility_success' => 'Visibilité créée',
+    'update_visibility_success' => 'Visibilité modifiée',
+    'delete_visibility_success' => 'Visibilité supprimée',
     // User
     'find_all_users_success' => 'Utilisateurs trouvés',
     'find_user_success' => 'Utilisateur trouvé',
-    'find_api_token_success' => 'Jeton d\'API trouvé',
+    'find_api_token_success' => 'Jeton d’API trouvé',
     'find_user_404' => 'Utilisateur non trouvé',
     'find_concerned_404' => 'Concerné non trouvé',
     'find_visitor_404' => 'Visiteur non trouvé',
@@ -161,6 +121,10 @@ return [
     'confirm_password_error' => 'Veuillez confirmer votre mot de passe',
     'confirm_new_password' => 'Veuillez confirmer le nouveau mot de passe',
     'delete_user_success' => 'Utilisateur supprimé',
+    'login_user_success' => 'Vous êtes connecté(e)',
+    'subscribe_user_success' => 'Abonnement envoyé',
+    'subscribe_user_accepted' => 'Abonnement accepté',
+    'unsubscribe_user_success' => 'Désabonnement effectué',
     // PasswordReset
     'find_all_password_resets_success' => 'Réinitialisations des mots de passe trouvées',
     'find_password_reset_success' => 'Réinitialisation de mot de passe trouvée',
@@ -168,7 +132,7 @@ return [
     'create_password_reset_success' => 'Réinitialisation de mot de passe créée',
     'update_password_reset_success' => 'Réinitialisation de mot de passe modifiée',
     'delete_password_reset_success' => 'Réinitialisation de mot de passe supprimée',
-    'unverified_token' => 'Le code OTP n\'est pas encore vérifié',
+    'unverified_token' => 'Le code OTP n’est pas encore vérifié',
     'bad_token' => 'Le code OTP ne correspond pas',
     'token_label' => 'Votre code OTP :',
     // PersonalAccessToken
@@ -196,33 +160,49 @@ return [
     'create_payment_success' => 'Paiement créé',
     'update_payment_success' => 'Paiement modifié',
     'delete_payment_success' => 'Paiement supprimé',
-    // Donation
-    'find_all_donations_success' => 'Donations trouvées',
-    'find_donation_success' => 'Donation trouvée',
-    'find_donation_404' => 'Donation non trouvée',
-    'create_donation_success' => 'Donation créée',
-    'update_donation_success' => 'Donation modifiée',
-    'delete_donation_success' => 'Donation supprimée',
-    // Visibility
-    'find_all_visibilities_success' => 'Visibilités trouvées',
-    'find_visibility_success' => 'Visibilité trouvée',
-    'find_visibility_404' => 'Visibilité non trouvée',
-    'create_visibility_success' => 'Visibilité créée',
-    'update_visibility_success' => 'Visibilité modifiée',
-    'delete_visibility_success' => 'Visibilité supprimée',
+    // Event
+    'find_all_events_success' => 'Evénements trouvés',
+    'find_event_success' => 'Evénement trouvé',
+    'find_event_404' => 'Evénement non trouvé',
+    'create_event_success' => 'Evénement créé',
+    'update_event_success' => 'Evénement modifié',
+    'delete_event_success' => 'Evénement supprimé',
+    // Community
+    'find_all_communities_success' => 'Communautés trouvées',
+    'find_community_success' => 'Communauté trouvée',
+    'find_community_404' => 'Communauté non trouvée',
+    'create_community_success' => 'Communauté créée',
+    'update_community_success' => 'Communauté modifiée',
+    'delete_community_success' => 'Communauté supprimée',
+    // Subscription
+    'find_all_subscriptions_success' => 'Abonnements trouvés',
+    'find_subscription_success' => 'Abonnement trouvé',
+    'find_subscription_404' => 'Abonnement non trouvé',
+    'create_subscription_success' => 'Abonnement créé',
+    'update_subscription_success' => 'Abonnement modifié',
+    'delete_subscription_success' => 'Abonnement supprimé',
 
     // ===== USER HISTORIES
     // Subscriptions
     'connection_request' => 'Vous avez envoyé une demande de connexion à <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
     'accept_connection' => 'Vous avez accepté la demande de connexion de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
+    'reject_connection' => 'Vous avez rejeté la demande de connexion de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
+    'community_subscription' => 'Vous avez souscrit à l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'event_subscription' => 'Vous avez souscrit à la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
     // Invitations
     'community_invitation' => 'Vous avez envoyé à <strong><a href="/users/:to_user_id">:to_user_names</a></strong> une invitation à la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
-    'event_invitation' => 'Vous avez envoyé à <strong><a href="/users/:to_user_id">:to_user_names</a></strong> une invitation à l\'événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
-    'accept_community_invitation' => 'Vous avez accepté l\'invitation de <strong><a href="/users/:to_user_id">:to_user_names</a></strong> à la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
-    'decline_community_invitation' => 'Vous avez rejeté l\'invitation de <strong><a href="/users/:to_user_id">:to_user_names</a></strong> à la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
-    'maybe_event_invitation' => 'Vous serez peut-être à l\'événement <strong><a href="/events/:event_id">:event_title</a></strong> de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
-    'accept_event_invitation' => 'Vous avez accepté l\'invitation de <strong><a href="/users/:to_user_id">:to_user_names</a></strong> à l\'événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
-    'decline_event_invitation' => 'Vous avez rejeté l\'invitation de <strong><a href="/users/:to_user_id">:to_user_names</a></strong> à l\'événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'event_invitation' => 'Vous avez envoyé à <strong><a href="/users/:to_user_id">:to_user_names</a></strong> une invitation à l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'accept_community_invitation' => 'Vous avez accepté l’invitation de <strong><a href="/users/:to_user_id">:to_user_names</a></strong> à la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'decline_community_invitation' => 'Vous avez rejeté l’invitation de <strong><a href="/users/:to_user_id">:to_user_names</a></strong> à la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'accept_event_invitation' => 'Vous avez accepté l’invitation de <strong><a href="/users/:to_user_id">:to_user_names</a></strong> à l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'maybe_event_invitation' => 'Vous serez peut-être à l’événement <strong><a href="/events/:event_id">:event_title</a></strong> pour lequel vous avez reçu l’invitation de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
+    'decline_event_invitation' => 'Vous avez rejeté l’invitation de <strong><a href="/users/:to_user_id">:to_user_names</a></strong> à l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    // Separation
+    'community_separation' => 'Vous avez quitté la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'event_separation' => 'Vous avez quitté l’événement <strong><a href="/events/:event_id" >:event_title</a></strong>.',
+    // Expulsion
+    'community_expulsion' => 'Vous avez retiré <strong><a href="/users/:to_user_id">:to_user_names</a></strong> de la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'event_expulsion' => 'Vous avez retiré <strong><a href="/users/:to_user_id">:to_user_names</a></strong> de l’événement <strong><a href="/events/:event_id" >:event_title</a></strong>.',
     // Reactions
     'post_reaction' => 'Vous avez réagi au :post_type de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
     'message_reaction' => 'Vous avez réagi au message de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
@@ -236,7 +216,7 @@ return [
     'post_shared' => 'Vous avez partagé :the :post_type de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
     'anonymous_question_sent' => 'Vous avez envoyé une question anonyme à <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
     'comment_sent' => 'Vous avez commenté :the :post_type de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
-    'comment_sent_to_event' => 'Vous avez commenté à l\'événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'comment_sent_to_event' => 'Vous avez commenté à l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
     'comment_sent_one_mention' => 'Vous avez mentionné <strong><a href="/users/:to_user_id">:to_user_names</a></strong> dans votre commentaire sur :the :post_type de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
     'comment_sent_two_mentions' => 'Vous avez mentionné <strong><a href="/users/:to_user_id">:to_user_names</a></strong> et une autre personne dans votre commentaire sur :the :post_type de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
     'comment_sent_many_mentions' => 'Vous avez mentionné <strong><a href="/users/:to_user_id">:to_user_names</a></strong> et :mentions_count autres personnes dans votre commentaire sur :the :post_type de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
@@ -247,26 +227,44 @@ return [
     'comment_sent_followers_mention_self_post' => 'Vous avez mentionné toutes vos connexions dans votre commentaire sur votre :post_type.',
     'survey_answered' => 'Vous avez répondu au sondage de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
     // Payment
-    'payment_failed' => 'Vous avez effectué un paiement qui n\'a pas abouti.',
+    'payment_failed' => 'Vous avez effectué un paiement qui n’a pas abouti.',
     'payment_done' => 'Vous avez effectué votre paiement avec succès.',
-    // Miscellaneous
+    // Account created
     'account_created' => 'Vous avez créé votre compte.',
-    'account_deactivated' => 'Vous avez désactivé votre compte.',
+    // Account disabled
+    'account_disabled' => 'Vous avez désactivé votre compte.',
+    // Account reactivated
     'account_reactivated' => 'Vous avez réactivé votre compte.',
+    // Account deleted
+    'account_deleted' => 'Vous avez supprimé votre compte.',
+    // Account type changed
+    'account_type_changed' => 'Vous avez changé votre type de compte.',
 
     // ===== PUBLIC NOTIFICATIONS
     // Subscriptions
+    'one_direct_connection' => 'Vous êtes maintenant connecté(e) à <strong><a href="/users/:from_user_id">:from_user_names</a></strong>.',
+    'two_direct_connections' => 'Vous êtes maintenant connecté(e) à <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne.',
+    'many_direct_connections' => 'Vous êtes maintenant connecté(e) à <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :requests_count autres personnes.',
     'one_connection_request' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> vous a envoyé une demande de connexion.',
     'two_connection_requests' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne vous ont envoyé une demande de connexion.',
     'many_connection_requests' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :requests_count autres personnes vous ont envoyé une demande de connexion.',
     'one_accept_connection' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a accepté votre demande de connexion.',
     'two_accepts_connection' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont accepté votre demande de connexion.',
     'many_accepts_connection' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :responses_count autres personnes ont accepté votre demande de connexion.',
+    'one_reject_connection' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a rejeté votre demande de connexion.',
+    'two_rejects_connection' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont rejeté votre demande de connexion.',
+    'many_rejects_connection' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :responses_count autres personnes ont rejeté votre demande de connexion.',
+    'one_community_subscription_request' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a souscrit à votre communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'two_community_subscription_requests' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont souscrit à votre communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'many_community_subscription_requests' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :requests_count autres personnes ont souscrit à votre communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'one_event_subscription_request' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a souscrit à votre événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'two_event_subscription_requests' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont souscrit à votre événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'many_event_subscription_requests' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :requests_count autres personnes ont souscrit à votre événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
     // Invitations
     'one_community_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> vous a :invited à la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
     'two_communities_invitations' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne vous ont :invited à des communautés.',
     'many_communities_invitations' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :invitations_count autres personnes vous ont :invited à des communautés.',
-    'one_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> vous a :invited à l\'événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'one_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> vous a :invited à l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
     'two_events_invitations' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne vous ont :invited à des événements.',
     'many_events_invitations' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :invitations_count autres personnes vous ont :invited à des événements.',
     'one_accept_community_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a accepté votre invitation à la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
@@ -275,12 +273,12 @@ return [
     'one_maybe_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> sera peut-être à votre événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
     'two_maybes_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne seront peut-être à votre événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
     'many_maybes_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :responses_count autres personnes seront peut-être à votre événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
-    'one_accept_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a accepté votre invitation à l\'événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
-    'two_accepts_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont accepté votre invitation à l\'événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
-    'many_accepts_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :responses_count autres personnes ont accepté votre invitation à l\'événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
-    'one_decline_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a décliné votre invitation à l\'événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
-    'two_declines_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont décliné votre invitation à l\'événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
-    'many_declines_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :responses_count autres personnes ont décliné votre invitation à l\'événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'one_accept_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a accepté votre invitation à l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'two_accepts_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont accepté votre invitation à l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'many_accepts_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :responses_count autres personnes ont accepté votre invitation à l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'one_decline_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a décliné votre invitation à l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'two_declines_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont décliné votre invitation à l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'many_declines_event_invitation' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :responses_count autres personnes ont décliné votre invitation à l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
     // Reactions
     'one_person_cheered_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a applaudi votre :post_type.',
     'two_persons_cheered_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont applaudi votre :post_type.',
@@ -301,9 +299,9 @@ return [
     'one_post_published' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a publié :new :post_type.',
     'two_posts_published' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont publié :new :posts_type.',
     'many_posts_published' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :posts_count autres personnes ont publié :new :posts_type.',
-    'one_post_published_after_some_times' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a publié :new :post_type après quelques temps d\'absence.',
-    'two_posts_published_after_some_times' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont publié :new :posts_type après quelques temps d\'absence.',
-    'many_posts_published_after_some_times' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :posts_count autres personnes ont publié :new :posts_type après quelques temps d\'absence.',
+    'one_post_published_after_some_times' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a publié :new :post_type après quelques temps d’absence.',
+    'two_posts_published_after_some_times' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont publié :new :posts_type après quelques temps d’absence.',
+    'many_posts_published_after_some_times' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :posts_count autres personnes ont publié :new :posts_type après quelques temps d’absence.',
     'one_post_published_in_community' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a publié :new :post_type dans la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
     'two_posts_published_in_community' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont publié :new :posts_type dans la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
     'many_posts_published_in_community' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :posts_count autres personnes ont publié :new :posts_type dans la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
@@ -328,14 +326,27 @@ return [
     'many_mentions_comment_self_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> vous a :mentioned et :mentions_count autres personnes dans son commentaire sur :one_s :post_type.',
     'followers_mention_comment_self_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> vous a :mentioned, vous et toutes ses connexions dans son commentaire sur :one_s :post_type.',
     // Payment
-    'one_payment_done' => 'Vous avez effectué un paiement avec le code <strong>:code</strong>. Veuillez cliquer ici pour les détails sur le paiement.',
-    // Miscellaneous
+    'one_payment_done' => 'Votre paiement a été effectué avec le code <strong>:code</strong>. Veuillez cliquer ici pour les détails sur le paiement.',
+    // Account created
     'welcome' => 'Bienvenue <strong><a href="/users/:to_user_id">:to_user_names</a></strong>. Cliquez ici pour avoir un aperçu complet de votre réseau.',
+    // Account reactivated
     'welcome_back' => 'Bon retour <strong><a href="/users/:to_user_id">:to_user_names</a></strong>. Cliquez ici pour voir les nouveautés de votre réseau.',
+    // Account blocked
+    'your_account_blocked' => 'Votre a été bloqué le <strong>:date</strong> à <strong>:hour</strong>, parce que vous ne respectiez pas nos conditions.',
+    // Account will be blocked
     'will_be_blocked_soon' => 'Nous sommes déjà à la <strong>:nth_personne</strong> qui signale votre <strong>:subject</strong> comme « <strong>:reason</strong> ». Encore <strong>:persons_count</strong> et vous serez bientôt bloqué.',
-    'one_celebration' => 'C\'est l\'anniversaire de <strong><a href="/users/:from_user_id">:from_user_names</a></strong>.',
-    'two_celebrations' => 'C\'est l\'anniversaire de <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne.',
-    'many_celebrations' => 'C\'est l\'anniversaire de <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :celebrations_count autres personnes.',
+    // Account deleted
+    'before_definitive_delete' => 'Votre a été supprimé depuis le <strong>:date</strong> à <strong>:hour</strong>.<br><br>Vous pouvez encore annuler cette action avant 15 jours, au cas où vous changeriez d’avis.<br><br>Après le <strong>:after_date</strong>, votre compte sera supprimé définitivement.',
+    // Member certified
+    'member_certified' => 'Votre compte est maintenant certifié. Désormais, vous aussi, vous êtes en mesure de vendre vos produits ou offrir vos services. Cliquez ici pour voir comment ça marche.',
+    // Member premium
+    'member_premium' => 'Maintenant que vous avez un compte premium, vous êtes en mesure d’utiliser nos services pour davantage faire parler de vous. Cliquez ici pour voir comment ça marche.',
+    // Celebration
+    'one_celebration' => 'C’est l’anniversaire de <strong><a href="/users/:from_user_id">:from_user_names</a></strong>.',
+    'two_celebrations' => 'C’est l’anniversaire de <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne.',
+    'many_celebrations' => 'C’est l’anniversaire de <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :celebrations_count autres personnes.',
+    // Views analytics for profil
     'profil_view_analytics' => 'Votre profil a été consulté :views_count fois :period. Cliquez pour voir les statistiques.',
+    // Views analytics for post
     'post_view_analytics' => 'Votre :post_type a été consulté :views_count fois :period. Cliquez pour voir les statistiques.',
 ];
