@@ -70,20 +70,25 @@ class VisibilityController extends BaseController
             'color' => $request->color,
             'icon_font' => $request->icon_font,
             'icon_svg' => $request->icon_svg,
-            'image_url' => $request->image_url
+            'image_url' => $request->image_url,
+            'group_id' => $request->group_id
         ];
         // Select all visibilities to check unique constraint
         $visibilities = Visibility::all();
 
         // Validate required fields
         if ($inputs['visibility_name'] == null) {
-            return $this->handleError($inputs['visibility_name'], __('validation.required', ['field_name' => __('miscellaneous.admin.group.visibility.data.visibility_name')]), 400);
+            return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['visibility_name'], __('validation.required', ['field_name' => __('miscellaneous.admin.group.visibility.data.visibility_name')]), 400);
+        }
+
+        if (!is_numeric($inputs['group_id']) OR trim($inputs['group_id']) == null) {
+            return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['group_id'], __('miscellaneous.admin.group.choose_group'), 400);
         }
 
         // Check if visibility name already exists
         foreach ($visibilities as $another_visibility):
             if ($another_visibility->visibility_name == $inputs['visibility_name']) {
-                return $this->handleError($inputs['visibility_name'], __('validation.custom.name.exists'), 400);
+                return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['visibility_name'], __('validation.custom.name.exists'), 400);
             }
         endforeach;
 
@@ -166,7 +171,7 @@ class VisibilityController extends BaseController
             foreach ($visibilities as $another_visibility):
                 if ($current_visibility->visibility_name != $inputs['visibility_name']) {
                     if ($another_visibility->visibility_name == $inputs['visibility_name']) {
-                        return $this->handleError($inputs['visibility_name'], __('validation.custom.name.exists'), 400);
+                        return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['visibility_name'], __('validation.custom.name.exists'), 400);
                     }
                 }
             endforeach;

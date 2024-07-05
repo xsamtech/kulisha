@@ -109,7 +109,7 @@ return [
     'prohibited_unless' => 'This field is prohibited unless :other is in :values.',
     'prohibits' => 'This field prohibits :other from being present.',
     'regex' => 'The :attribute format is invalid.',
-    'required' => 'The field :field_name is required.',
+    'required' => 'The field « :field_name » is required.',
     'required_if' => 'This field is required when :other is :value.',
     'required_unless' => 'This field is required unless :other is in :values.',
     'required_with' => 'This field is required when :values is present.',
@@ -179,6 +179,10 @@ return [
         ],
         'title' => [
             'exists' => 'This title already exists'
+        ],
+        'type' => [
+            'required' => 'The type must be defined',
+            'exists' => 'This type already exists'
         ],
         'subtitle' => [
             'exists' => 'This subtitle already exists'

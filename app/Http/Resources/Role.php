@@ -22,7 +22,11 @@ class Role extends JsonResource
         return [
             'id' => $this->id,
             'role_name' => $this->role_name,
+            'role_name_fr' => $this->getTranslation('role_name', 'fr'),
+            'role_name_en' => $this->getTranslation('role_name', 'en'),
             'role_description' => $this->role_description,
+            'role_description' => $this->getTranslation('role_description', 'fr'),
+            'role_description' => $this->getTranslation('role_description', 'en'),
             'color' => $this->color,
             'icon_font' => $this->icon_font,
             'icon_svg' => $this->icon_svg,

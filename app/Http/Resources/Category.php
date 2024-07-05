@@ -22,7 +22,11 @@ class Category extends JsonResource
         return [
             'id' => $this->id,
             'category_name' => $this->category_name,
+            'category_name_fr' => $this->getTranslation('category_name', 'fr'),
+            'category_name_en' => $this->getTranslation('category_name', 'en'),
             'category_description' => $this->category_description,
+            'category_description' => $this->getTranslation('category_description', 'fr'),
+            'category_description' => $this->getTranslation('category_description', 'en'),
             'color' => $this->color,
             'icon_font' => $this->icon_font,
             'icon_svg' => $this->icon_svg,

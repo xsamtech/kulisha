@@ -100,8 +100,9 @@
                 <div class="container">
                     <!-- Logo START -->
                     <a class="navbar-brand" href="{{ route('home') }}">
-                        <img class="light-mode-item navbar-brand-item" src="{{ asset('assets/img/brand.png') }}" alt="Kulisha">
-                        <img class="dark-mode-item navbar-brand-item" src="{{ asset('assets/img/brand-reverse.png') }}" alt="Kulisha">
+                        <img class="navbar-brand-item" src="{{ asset('assets/img/logo-text.png') }}" alt="Kulisha">
+                        {{-- <img class="light-mode-item navbar-brand-item" src="{{ asset('assets/img/brand.png') }}" alt="Kulisha">
+                        <img class="dark-mode-item navbar-brand-item" src="{{ asset('assets/img/brand-reverse.png') }}" alt="Kulisha"> --}}
                     </a>
                     <!-- Logo END -->
 
@@ -129,10 +130,10 @@
 
                             <!-- Orders -->
                             <li class="nav-item dropdown">
+                                <a class="nav-link{{ Route::is('cart.home') ? ' active' : '' }}" href="{{ route('cart.home') }}" title="@lang('miscellaneous.menu.public.orders.title')" data-bs-toggle="tooltip" data-bs-placement="bottom">
 {{-- @if (!request()->route()->named('cart.home'))
                                     <div class="badge-notif badge-notif-bottom"></div>
 @endif --}}
-                                <a class="nav-link{{ Route::is('cart.home') ? ' active' : '' }}" href="{{ route('cart.home') }}" title="@lang('miscellaneous.menu.public.orders.title')" data-bs-toggle="tooltip" data-bs-placement="bottom">
                                     <i class="bi {{ Route::is('cart.home') ? 'bi-basket3-fill' : 'bi-basket3' }}"></i> <span class="nav-text">@lang('miscellaneous.menu.public.orders.title')</span>
                                 </a>
                             </li>
@@ -174,6 +175,12 @@
                                     <div class="badge-notif badge-notif-bottom"></div>
 @endif
                                     <i class="bi {{ Route::is('message.home') ? 'bi-chat-quote-fill' : 'bi-chat-quote' }}"></i> <span class="nav-text">@lang('miscellaneous.menu.messages')</span>
+                                </a>
+                            </li>
+
+                            <li class="nav-item ms-2 opacity-0 d-md-inline-block d-none">
+                                <a class="nav-link">
+                                    <i class="bi bi-three-dots-vertical"></i> <span class="nav-text"></span>
                                 </a>
                             </li>
                         </ul>

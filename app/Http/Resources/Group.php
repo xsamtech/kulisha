@@ -22,10 +22,11 @@ class Group extends JsonResource
         return [
             'id' => $this->id,
             'group_name' => $this->group_name,
+            'group_name_fr' => $this->getTranslation('group_name', 'fr'),
+            'group_name_en' => $this->getTranslation('group_name', 'en'),
             'group_description' => $this->group_description,
-            'statuses' => Status::collection($this->statuses),
-            'types' => Type::collection($this->types),
-            'reactions' => Reaction::collection($this->reactions),
+            'group_description_fr' => $this->getTranslation('group_description', 'fr'),
+            'group_description_en' => $this->getTranslation('group_description', 'en'),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s')
         ];

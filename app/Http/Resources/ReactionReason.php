@@ -22,6 +22,8 @@ class ReactionReason extends JsonResource
         return [
             'id' => $this->id,
             'reason_content' => $this->reason_content,
+            'reason_content_fr' => $this->getTranslation('reason_content', 'fr'),
+            'reason_content_en' => $this->getTranslation('reason_content', 'en'),
             'report_count' => $this->report_count,
             'number_of_days' => $this->number_of_days,
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),

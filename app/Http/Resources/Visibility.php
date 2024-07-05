@@ -22,7 +22,11 @@ class Visibility extends JsonResource
         return [
             'id' => $this->id,
             'visibility_name' => $this->visibility_name,
+            'visibility_name_fr' => $this->getTranslation('visibility_name', 'fr'),
+            'visibility_name_en' => $this->getTranslation('visibility_name', 'en'),
             'visibility_description' => $this->visibility_description,
+            'visibility_description_fr' => $this->getTranslation('visibility_description', 'fr'),
+            'visibility_description_en' => $this->getTranslation('visibility_description', 'en'),
             'color' => $this->color,
             'icon_font' => $this->icon_font,
             'icon_svg' => $this->icon_svg,

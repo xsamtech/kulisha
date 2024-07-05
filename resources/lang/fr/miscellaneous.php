@@ -24,6 +24,7 @@ return [
     'call_us' => 'Appelez-nous :',
     'bank_transaction_description' => 'Transaction bancaire depuis l’application Kulisha',
     'theme' => 'Mode',
+    'found_value' => 'Valeur trouvée :',
     'description' => 'Description',
     'color' => 'Couleur',
     'icon_font' => 'Icône font',
@@ -673,6 +674,18 @@ return [
 
         // Communities
         'communities' => [
+            // Data
+            'data' => [
+                'community_name' => [
+                    'label' => 'Nom de la communité',
+                    'error' => 'Vous devez donner un nom à votre communauté',
+                ],
+                'community_description' => [
+                    'label' => 'Description',
+                    'placeholder' => 'Decrivez votre communauté'
+                ]
+            ],
+
             // Yours
             'yours' => [
             ],
@@ -688,6 +701,26 @@ return [
 
         // events
         'events' => [
+            // Data
+            'data' => [
+                'event_title' => [
+                    'label' => 'Titre de l’événement',
+                    'error' => 'Vous devez donner un nom à votre événement',
+                ],
+                'event_description' => [
+                    'label' => 'Description',
+                    'placeholder' => 'Decrivez votre événement'
+                ],
+                'date_start' =>  [
+                    'label' => 'Date/Heure de début',
+                    'error' => 'Veuillez donner la date/heure de début'
+                ],
+                'date_end' => [
+                    'label' => 'Date/Heure de fin',
+                    'error' => 'Veuillez donner la date/heure de fin'
+                ]
+            ],
+
             // Yours
             'yours' => [
             ],

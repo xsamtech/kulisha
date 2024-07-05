@@ -78,17 +78,17 @@ class StatusController extends BaseController
 
         // Validate required fields
         if ($inputs['status_name'] == null) {
-            return $this->handleError($inputs['status_name'], __('validation.required', ['field_name' => __('miscellaneous.admin.group.status.data.status_name')]), 400);
+            return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['status_name'], __('validation.required', ['field_name' => __('miscellaneous.admin.group.status.data.status_name')]), 400);
         }
 
-        if (trim($inputs['group_id']) == null) {
-            return $this->handleError($inputs['group_id'], __('miscellaneous.admin.group.choose_group'), 400);
+        if (!is_numeric($inputs['group_id']) OR trim($inputs['group_id']) == null) {
+            return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['group_id'], __('miscellaneous.admin.group.choose_group'), 400);
         }
 
         // Check if status name already exists
         foreach ($statuses as $another_status):
             if ($another_status->status_name == $inputs['status_name']) {
-                return $this->handleError($inputs['status_name'], __('validation.custom.name.exists'), 400);
+                return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['status_name'], __('validation.custom.name.exists'), 400);
             }
         endforeach;
 
@@ -172,7 +172,7 @@ class StatusController extends BaseController
             foreach ($statuses as $another_status):
                 if ($current_status->status_name != $inputs['status_name']) {
                     if ($another_status->status_name == $inputs['status_name']) {
-                        return $this->handleError($inputs['status_name'], __('validation.custom.name.exists'), 400);
+                        return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['status_name'], __('validation.custom.name.exists'), 400);
                     }
                 }
             endforeach;

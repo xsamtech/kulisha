@@ -72,13 +72,13 @@ class GroupController extends BaseController
 
         // Validate required fields
         if ($inputs['group_name'] == null) {
-            return $this->handleError($inputs['group_name'], __('validation.required', ['field_name' => __('miscellaneous.admin.group.data.group_name')]), 400);
+            return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['group_name'], __('validation.required', ['field_name' => __('miscellaneous.admin.group.data.group_name')]), 400);
         }
 
         // Check if group name already exists
         foreach ($groups as $another_group):
             if ($another_group->group_name == $inputs['group_name']) {
-                return $this->handleError($inputs['group_name'], __('validation.custom.name.exists'), 400);
+                return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['group_name'], __('validation.custom.name.exists'), 400);
             }
         endforeach;
 
@@ -157,7 +157,7 @@ class GroupController extends BaseController
             foreach ($groups as $another_group):
                 if ($current_group->group_name != $inputs['group_name']) {
                     if ($another_group->group_name == $inputs['group_name']) {
-                        return $this->handleError($inputs['group_name'], __('validation.custom.name.exists'), 400);
+                        return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['group_name'], __('validation.custom.name.exists'), 400);
                     }
                 }
             endforeach;

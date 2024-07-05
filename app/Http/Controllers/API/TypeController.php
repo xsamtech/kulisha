@@ -78,17 +78,17 @@ class TypeController extends BaseController
 
         // Validate required fields
         if ($inputs['type_name'] == null) {
-            return $this->handleError($inputs['type_name'], __('validation.required', ['field_name' => __('miscellaneous.admin.group.type.data.type_name')]), 400);
+            return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['type_name'], __('validation.required', ['field_name' => __('miscellaneous.admin.group.type.data.type_name')]), 400);
         }
 
-        if (trim($inputs['group_id']) == null) {
-            return $this->handleError($inputs['group_id'], __('miscellaneous.admin.group.choose_group'), 400);
+        if (!is_numeric($inputs['group_id']) OR trim($inputs['group_id']) == null) {
+            return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['group_id'], __('miscellaneous.admin.group.choose_group'), 400);
         }
 
         // Check if type name already exists
         foreach ($types as $another_type):
             if ($another_type->type_name == $inputs['type_name']) {
-                return $this->handleError($inputs['type_name'], __('validation.custom.name.exists'), 400);
+                return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['type_name'], __('validation.custom.name.exists'), 400);
             }
         endforeach;
 
@@ -172,7 +172,7 @@ class TypeController extends BaseController
             foreach ($types as $another_type):
                 if ($current_type->type_name != $inputs['type_name']) {
                     if ($another_type->type_name == $inputs['type_name']) {
-                        return $this->handleError($inputs['type_name'], __('validation.custom.name.exists'), 400);
+                        return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['type_name'], __('validation.custom.name.exists'), 400);
                     }
                 }
             endforeach;

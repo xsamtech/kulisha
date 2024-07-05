@@ -72,6 +72,13 @@ return [
     'create_type_success' => 'Type créé',
     'update_type_success' => 'Type modifié',
     'delete_type_success' => 'Type supprimé',
+    // Category
+    'find_all_categories_success' => 'Catégories trouvées',
+    'find_category_success' => 'Catégorie trouvée',
+    'find_category_404' => 'Catégorie non trouvée',
+    'create_category_success' => 'Catégorie créée',
+    'update_category_success' => 'Catégorie modifiée',
+    'delete_category_success' => 'Catégorie supprimée',
     // Country
     'find_all_countries_success' => 'Pays trouvés',
     'find_country_success' => 'Pays trouvé',
@@ -107,6 +114,20 @@ return [
     'create_visibility_success' => 'Visibilité créée',
     'update_visibility_success' => 'Visibilité modifiée',
     'delete_visibility_success' => 'Visibilité supprimée',
+    // CoverageArea
+    'find_all_coverage_areas_success' => 'Zones de couverture trouvées',
+    'find_coverage_area_success' => 'Zone de couverture trouvée',
+    'find_coverage_area_404' => 'Zone de couverture non trouvée',
+    'create_coverage_area_success' => 'Zone de couverture créée',
+    'update_coverage_area_success' => 'Zone de couverture modifiée',
+    'delete_coverage_area_success' => 'Zone de couverture supprimée',
+    // Budget
+    'find_all_budgets_success' => 'Budgets trouvés',
+    'find_budget_success' => 'Budget trouvé',
+    'find_budget_404' => 'Budget non trouvé',
+    'create_budget_success' => 'Budget créé',
+    'update_budget_success' => 'Budget modifié',
+    'delete_budget_success' => 'Budget supprimé',
     // User
     'find_all_users_success' => 'Utilisateurs trouvés',
     'find_user_success' => 'Utilisateur trouvé',
@@ -160,6 +181,14 @@ return [
     'create_payment_success' => 'Paiement créé',
     'update_payment_success' => 'Paiement modifié',
     'delete_payment_success' => 'Paiement supprimé',
+    // Post
+    'find_all_posts_success' => 'Posts trouvés',
+    'find_post_success' => 'Post trouvé',
+    'find_post_404' => 'Post non trouvé',
+    'create_post_success' => 'Post créé',
+    'update_post_success' => 'Post modifié',
+    'delete_post_success' => 'Post supprimé',
+    'register_post_success' => 'Post enregistré pour voir plus tard',
     // Event
     'find_all_events_success' => 'Evénements trouvés',
     'find_event_success' => 'Evénement trouvé',
@@ -206,7 +235,7 @@ return [
     // Reactions
     'post_reaction' => 'Vous avez réagi au :post_type de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
     'message_reaction' => 'Vous avez réagi au message de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
-    // Posts & Comments
+    // Posts, Comments, Communities & Events
     'post_published' => 'Vous avez publié :new :post_type.',
     'post_published_in_community' => 'Vous avez publié :new :post_type dans la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
     'post_published_one_mention' => 'Vous avez mentionné <strong><a href="/users/:to_user_id">:to_user_names</a></strong> dans :new :post_type.',
@@ -226,19 +255,18 @@ return [
     'comment_sent_many_mentions_self_post' => 'Vous avez mentionné <strong><a href="/users/:to_user_id">:to_user_names</a></strong> et :mentions_count autres personnes dans votre commentaire sur votre :post_type.',
     'comment_sent_followers_mention_self_post' => 'Vous avez mentionné toutes vos connexions dans votre commentaire sur votre :post_type.',
     'survey_answered' => 'Vous avez répondu au sondage de <strong><a href="/users/:to_user_id">:to_user_names</a></strong>.',
+    'community_published' => 'Vous avez créé une communauté appelée <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'event_published' => 'Vous avez créé un événement intitulée <strong><a href="/events/:event_id">:event_title</a></strong>.',
     // Payment
     'payment_failed' => 'Vous avez effectué un paiement qui n’a pas abouti.',
     'payment_done' => 'Vous avez effectué votre paiement avec succès.',
-    // Account created
+    // Account
     'account_created' => 'Vous avez créé votre compte.',
-    // Account disabled
     'account_disabled' => 'Vous avez désactivé votre compte.',
-    // Account reactivated
     'account_reactivated' => 'Vous avez réactivé votre compte.',
-    // Account deleted
     'account_deleted' => 'Vous avez supprimé votre compte.',
-    // Account type changed
     'account_type_changed' => 'Vous avez changé votre type de compte.',
+    'account_visibility_changed' => 'Vous avez changé votre visibilité.',
 
     // ===== PUBLIC NOTIFICATIONS
     // Subscriptions
@@ -295,7 +323,7 @@ return [
     'one_person_reacted_message' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a réagi à votre message.',
     'two_persons_reacted_message' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont réagi à votre message.',
     'many_persons_reacted_message' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :reactions_count autres personnes ont réagi à votre message.',
-    // Posts & Comments
+    // Posts, Comments, Communities & Events
     'one_post_published' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a publié :new :post_type.',
     'two_posts_published' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont publié :new :posts_type.',
     'many_posts_published' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :posts_count autres personnes ont publié :new :posts_type.',
@@ -325,28 +353,40 @@ return [
     'two_mentions_comment_self_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> vous a :mentioned et une autre personne dans son commentaire sur :one_s :post_type.',
     'many_mentions_comment_self_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> vous a :mentioned et :mentions_count autres personnes dans son commentaire sur :one_s :post_type.',
     'followers_mention_comment_self_post' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> vous a :mentioned, vous et toutes ses connexions dans son commentaire sur :one_s :post_type.',
+    'one_community_published' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a publié une communauté appelée <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'two_communities_published' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont publié des communautés.',
+    'many_communities_published' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :communities_count autres ont publié des communautés.',
+    'one_event_published' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a publié un événement intitulé <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'two_events_published' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont publié des événements.',
+    'many_events_published' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :events_count autres ont publié des événements.',
     // Payment
     'one_payment_done' => 'Votre paiement a été effectué avec le code <strong>:code</strong>. Veuillez cliquer ici pour les détails sur le paiement.',
-    // Account created
+    // Account
     'welcome' => 'Bienvenue <strong><a href="/users/:to_user_id">:to_user_names</a></strong>. Cliquez ici pour avoir un aperçu complet de votre réseau.',
-    // Account reactivated
     'welcome_back' => 'Bon retour <strong><a href="/users/:to_user_id">:to_user_names</a></strong>. Cliquez ici pour voir les nouveautés de votre réseau.',
-    // Account blocked
     'your_account_blocked' => 'Votre a été bloqué le <strong>:date</strong> à <strong>:hour</strong>, parce que vous ne respectiez pas nos conditions.',
-    // Account will be blocked
     'will_be_blocked_soon' => 'Nous sommes déjà à la <strong>:nth_personne</strong> qui signale votre <strong>:subject</strong> comme « <strong>:reason</strong> ». Encore <strong>:persons_count</strong> et vous serez bientôt bloqué.',
-    // Account deleted
     'before_definitive_delete' => 'Votre a été supprimé depuis le <strong>:date</strong> à <strong>:hour</strong>.<br><br>Vous pouvez encore annuler cette action avant 15 jours, au cas où vous changeriez d’avis.<br><br>Après le <strong>:after_date</strong>, votre compte sera supprimé définitivement.',
-    // Member certified
     'member_certified' => 'Votre compte est maintenant certifié. Désormais, vous aussi, vous êtes en mesure de vendre vos produits ou offrir vos services. Cliquez ici pour voir comment ça marche.',
-    // Member premium
     'member_premium' => 'Maintenant que vous avez un compte premium, vous êtes en mesure d’utiliser nos services pour davantage faire parler de vous. Cliquez ici pour voir comment ça marche.',
-    // Celebration
-    'one_celebration' => 'C’est l’anniversaire de <strong><a href="/users/:from_user_id">:from_user_names</a></strong>.',
-    'two_celebrations' => 'C’est l’anniversaire de <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne.',
-    'many_celebrations' => 'C’est l’anniversaire de <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :celebrations_count autres personnes.',
+    // Profile search
+    'one_profile_search' => 'Votre profil a été consulté par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> :period. Cliquez ici pour voir les statistiques.',
+    'two_profile_searchs' => 'Votre profil a été consulté par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne :period. Cliquez ici pour voir les statistiques.',
+    'many_profile_searchs' => 'Votre profil a été consulté par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :searchs_count autres personnes :period. Cliquez ici pour voir les statistiques.',
+    // Community search
+    'one_community_search' => 'Votre communauté a été consultée par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> :period. Cliquez ici pour voir les statistiques.',
+    'two_community_searchs' => 'Votre communauté a été consultée par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne :period. Cliquez ici pour voir les statistiques.',
+    'many_community_searchs' => 'Votre communauté a été consultée par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :searchs_count autres personnes :period. Cliquez ici pour voir les statistiques.',
+    // Event search
+    'one_event_search' => 'Votre événement a été consulté par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> :period. Cliquez ici pour voir les statistiques.',
+    'two_event_searchs' => 'Votre événement a été consulté par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne :period. Cliquez ici pour voir les statistiques.',
+    'many_event_searchs' => 'Votre événement a été consulté par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :searchs_count autres personnes :period. Cliquez ici pour voir les statistiques.',
     // Views analytics for profil
     'profil_view_analytics' => 'Votre profil a été consulté :views_count fois :period. Cliquez pour voir les statistiques.',
     // Views analytics for post
     'post_view_analytics' => 'Votre :post_type a été consulté :views_count fois :period. Cliquez pour voir les statistiques.',
+    // Celebration
+    'one_celebration' => 'C’est l’anniversaire de <strong><a href="/users/:from_user_id">:from_user_names</a></strong>.',
+    'two_celebrations' => 'C’est l’anniversaire de <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne.',
+    'many_celebrations' => 'C’est l’anniversaire de <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :celebrations_count autres personnes.',
 ];

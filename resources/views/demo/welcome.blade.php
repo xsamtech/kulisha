@@ -5,7 +5,7 @@
                 <!-- Sidenav START -->
                 <div class="col-lg-3 mt-0">
                     <!-- Advanced filter responsive toggler START -->
-                    <div class="d-flex align-items-center d-lg-none">
+                    <div class="d-flex align-items-center d-lg-none mb-3">
                         <button class="border-0 bg-transparent" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSideNavbar" aria-controls="offcanvasSideNavbar">
                             <span class="btn btn-primary"><i class="fa-solid fa-sliders-h"></i></span>
                             <span class="h6 mb-0 fw-bold d-lg-none ms-2">@lang('miscellaneous.menu.public.profile.title')</span>
