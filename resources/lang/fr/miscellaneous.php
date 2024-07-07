@@ -268,6 +268,7 @@ return [
     'menu' => [
         'home' => 'Accueil',
         'dashboard' => 'Tableau de bord',
+        'discover' => 'Découvrir',
         'about' => 'A propos',
         'terms_of_use' => 'Conditions',
         'privacy_policy' => 'Confidentialité',
@@ -644,6 +645,10 @@ return [
             // At the moment
             'at_the_moment' => [
             ],
+        ],
+
+        // Discover
+        'discover' => [
         ],
 
         // Orders

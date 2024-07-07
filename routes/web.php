@@ -26,6 +26,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/language/{locale}', [HomeController::class, 'changeLanguage'])->name('change_language');
 Route::get('/notifications', [HomeController::class, 'notification'])->name('notification.home');
 Route::get('/notifications/{entity}', [HomeController::class, 'notificationEntity'])->name('notification.entity');
+Route::get('/discover', [HomeController::class, 'discover'])->name('discover.home');
 Route::get('/stories', [HomeController::class, 'story'])->name('story.home');
 Route::get('/stories/{id}', [HomeController::class, 'storyDatas'])->whereNumber('id')->name('story.datas');
 Route::get('/trends', [HomeController::class, 'trend'])->name('trend.home');

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @author Xanders
  * @see https://team.xsamtech.com/xanderssamoth
@@ -56,17 +57,18 @@ if (!function_exists('transformMentionHashtag')) {
 // Get all hashtags from text
 if (!function_exists('getHashtags')) {
     function getHashtags($subject)
-    { 
-        $hashtags= false; 
+    {
+        $hashtags = false;
 
-        preg_match_all("/\#(\w+)/u", $subject, $matches); 
+        // preg_match_all("/\#(\w+)/u", $subject, $matches);
+        preg_match_all('/#(\w+)/u', $subject, $matches);
 
         if ($matches) {
             $matches[0] = str_replace('#', '', $matches[0]); //replace #
             $hashtags = implode(' ,', $matches[0]);
         }
 
-        return explode(" ,", $hashtags);
+        return explode(' ,', $hashtags);
     }
 }
 
@@ -115,7 +117,7 @@ if (!function_exists('deleteExplodedArrayItem')) {
         $explodes = explode($separator, $subject);
         $clean_inventory = array();
 
-        foreach($explodes as $explode) {
+        foreach ($explodes as $explode) {
             if (!isset($clean_inventory[$explode])) {
                 $clean_inventory[$explode] = 0;
             }

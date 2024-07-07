@@ -128,6 +128,16 @@
                                 </a>
                             </li>
 
+                            <!-- Discover -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link{{ Route::is('discover.home') ? ' active' : '' }}" href="{{ route('discover.home') }}" title="@lang('miscellaneous.menu.discover')" data-bs-toggle="tooltip" data-bs-placement="bottom">
+{{-- @if (!request()->route()->named('cart.home'))
+                                    <div class="badge-notif badge-notif-bottom"></div>
+@endif --}}
+                                    <i class="bi {{ Route::is('discover.home') ? 'bi-compass-fill' : 'bi-compass' }}"></i> <span class="nav-text">@lang('miscellaneous.menu.discover')</span>
+                                </a>
+                            </li>
+
                             <!-- Orders -->
                             <li class="nav-item dropdown">
                                 <a class="nav-link{{ Route::is('cart.home') ? ' active' : '' }}" href="{{ route('cart.home') }}" title="@lang('miscellaneous.menu.public.orders.title')" data-bs-toggle="tooltip" data-bs-placement="bottom">
@@ -178,7 +188,7 @@
                                 </a>
                             </li>
 
-                            <li class="nav-item ms-2 opacity-0 d-md-inline-block d-none">
+                            <li class="nav-item ms-3 opacity-0 d-md-inline-block d-none">
                                 <a class="nav-link">
                                     <i class="bi bi-three-dots-vertical"></i> <span class="nav-text"></span>
                                 </a>

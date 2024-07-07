@@ -268,6 +268,7 @@ return [
     'menu' => [
         'home' => 'Home',
         'dashboard' => 'Dashboard',
+        'discover' => 'Discover',
         'about' => 'About',
         'terms_of_use' => 'Terms',
         'privacy_policy' => 'Privacy',
@@ -644,6 +645,10 @@ return [
             // At the moment
             'at_the_moment' => [
             ],
+        ],
+
+        // Discover
+        'discover' => [
         ],
 
         // Orders
