@@ -221,6 +221,19 @@ class CommunityController extends BaseController
      */
     public function update(Request $request, Community $community)
     {
+        // Groups
+        $susbcription_status_group = Group::where('group_name->fr', 'Etat de la souscription')->first();
+        $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
+        $history_status_group = Group::where('group_name->fr', 'Etat de l’historique')->first();
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
+        // Statuses
+        $accepted_status = Status::where([['status_name->fr', 'Acceptée'], ['group_id', $susbcription_status_group->id]])->first();
+        $unread_notification_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first();
+        $unread_history_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $history_status_group->id]])->first();
+        // Types
+        $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
+        $community_name_updated_type = Type::where([['type_name->fr', 'Nom de communauté modifié'], ['group_id', $notification_type_group->id]])->first();
         // Get inputs
         $inputs = [
             'id' => $request->id,
@@ -246,8 +259,14 @@ class CommunityController extends BaseController
 
             $community->update([
                 'community_name' => $inputs['community_name'],
+                'former_community_name' => $current_community->community_name,
                 'updated_at' => now()
             ]);
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            
         }
 
         if ($inputs['community_description'] != null) {
@@ -504,18 +523,18 @@ class CommunityController extends BaseController
             'updated_at' => now()
         ]);
 
-        // The user account is disabled
+        // The community is deleted
         if ($status->id == $deleted_status->id) {
-            // Find all subscribers of the event owner
-            $subscribers = Subscription::where([['user_id', $community->user_id], ['status_id', $accepted_status->id]])->get();
+            // Find all members of the community
+            $community_members = $community->users()->wherePivot('is_admin', 0)->wherePivot('status_id', $accepted_status->id)->get();
 
-            if ($subscribers != null) {
-                foreach ($subscribers as $subscriber):
+            if ($community_members != null) {
+                foreach ($community_members as $member):
                     Notification::create([
                         'type_id' => $deleted_community_type->id,
                         'status_id' => $unread_notification_status->id,
                         'from_user_id' => $community->user_id,
-                        'to_user_id' => $subscriber->id
+                        'to_user_id' => $member->id
                     ]);
                 endforeach;
             }

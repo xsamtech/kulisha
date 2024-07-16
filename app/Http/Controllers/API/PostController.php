@@ -6,11 +6,13 @@ use App\Models\Post;
 use Illuminate\Http\Request;
 use App\Http\Resources\Post as ResourcesPost;
 use App\Models\Group;
+use App\Models\Hashtag;
 use App\Models\History;
 use App\Models\Notification;
 use App\Models\Status;
 use App\Models\Subscription;
 use App\Models\Type;
+use App\Models\User;
 use App\Models\Visibility;
 
 /**
@@ -55,6 +57,7 @@ class PostController extends BaseController
         $unread_history_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $history_status_group->id]])->first();
         // Types
         $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
+        $mention_type = Type::where([['type_name->fr', 'Mention'], ['group_id', $notification_type_group->id]])->first();
         $new_post_type = Type::where([['type_name->fr', 'Nouveau post'], ['group_id', $notification_type_group->id]])->first();
         // Visibility
         $everybody_visibility = Visibility::where([['visibility_name->fr', 'Tout le monde'], ['group_id', $posts_visibility_group->id]])->first();
@@ -79,14 +82,37 @@ class PostController extends BaseController
         ];
 
         $post = Post::create($inputs);
+        // Hashtags management
+        $hashtags = getHashtags($post->post_content);
 
-        // +++++++++++++++++
-        // (!)(!)(!) TODO : Create hashtags if exist
-        // +++++++++++++++++
+        if (count($hashtags) > 0) {
+            foreach ($hashtags as $keyword):
+                $hashtag = Hashtag::create(['keyword' => $keyword]);
+
+                $hashtag->posts()->attach([$post]);
+            endforeach;
+        }
 
         /*
             HISTORY AND/OR NOTIFICATION MANAGEMENT
         */
+        // Mentions management
+        $mentions = getMentions($post->post_content);
+
+        if (count($mentions) > 0) {
+            foreach ($mentions as $mention):
+                $mentioned = User::where('username', $mention)->first();
+
+                $notification = Notification::create([
+                    'type_id' => $mention_type->id,
+                    'status_id' => $unread_notification_status->id,
+                    'from_user_id' => $post->user_id,
+                    'to_user_id' => $mentioned->id,
+                    'post_id' => $post->id
+                ]);
+            endforeach;
+        }
+
         // The post is public
         // Find all subscribers of the event owner
         $subscribers = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();

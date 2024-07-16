@@ -73,7 +73,7 @@ class CoverageAreaController extends BaseController
             'percentage' => $request->percentage
         ];
         // Select all areas to check unique constraint
-        $areas = CoverageArea::all();
+        $coverage_areas = CoverageArea::all();
 
         // Validate required fields
         if ($inputs['area_name'] == null) {
@@ -81,15 +81,15 @@ class CoverageAreaController extends BaseController
         }
 
         // Check if area name already exists
-        foreach ($areas as $another_area):
+        foreach ($coverage_areas as $another_area):
             if ($another_area->area_name == $inputs['area_name']) {
                 return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['area_name'], __('validation.custom.name.exists'), 400);
             }
         endforeach;
 
-        $area = CoverageArea::create($inputs);
+        $coverage_area = CoverageArea::create($inputs);
 
-        return $this->handleResponse(new ResourcesCoverageArea($area), __('notifications.create_area_success'));
+        return $this->handleResponse(new ResourcesCoverageArea($coverage_area), __('notifications.create_coverage_area_success'));
     }
 
     /**

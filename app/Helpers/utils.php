@@ -60,7 +60,6 @@ if (!function_exists('getHashtags')) {
     {
         $hashtags = false;
 
-        // preg_match_all("/\#(\w+)/u", $subject, $matches);
         preg_match_all('/#(\w+)/u', $subject, $matches);
 
         if ($matches) {
@@ -68,7 +67,24 @@ if (!function_exists('getHashtags')) {
             $hashtags = implode(' ,', $matches[0]);
         }
 
-        return explode(' ,', $hashtags);
+        return trim(explode(' ,', $hashtags)[0]) != null ? explode(' ,', $hashtags) : [];
+    }
+}
+
+// Get all mentions from text
+if (!function_exists('getMentions')) {
+    function getMentions($subject)
+    {
+        $mentions = false;
+
+        preg_match_all('/@(\w+)/u', $subject, $matches);
+
+        if ($matches) {
+            $matches[0] = str_replace('@', '', $matches[0]); //replace @
+            $mentions = implode(' ,', $matches[0]);
+        }
+
+        return trim(explode(' ,', $mentions)[0]) != null ? explode(' ,', $mentions) : [];
     }
 }
 

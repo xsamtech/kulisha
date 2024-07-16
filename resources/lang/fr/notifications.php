@@ -267,6 +267,22 @@ return [
     'account_deleted' => 'Vous avez supprimé votre compte.',
     'account_type_changed' => 'Vous avez changé votre type de compte.',
     'account_visibility_changed' => 'Vous avez changé votre visibilité.',
+    // Communities
+    'community_updated' => 'Vous avez mis à jour la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'one_community_creation' => 'Vous avez créé la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'two_communities_creations' => 'Vous avez créé la communauté <strong><a href="/communities/:community_id">:community_name</a></strong> et une autre.',
+    'many_communities_creations' => 'Vous avez créé la communauté <strong><a href="/communities/:community_id">:community_name</a></strong> et :creation_count autres.',
+    'one_community_deletion' => 'Vous avez supprimé la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'two_communities_deletions' => 'Vous avez supprimé la communauté <strong><a href="/communities/:community_id">:community_name</a></strong> et une autre.',
+    'many_communities_deletions' => 'Vous avez supprimé la communauté <strong><a href="/communities/:community_id">:community_name</a></strong> et :creation_count autres.',
+    // Events
+    'event_updated' => 'Vous avez mis à jour l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'one_event_creation' => 'Vous avez créé l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'two_events_creations' => 'Vous avez créé l’événement <strong><a href="/events/:event_id">:event_title</a></strong> et un autre.',
+    'many_events_creations' => 'Vous avez créé l’événement <strong><a href="/events/:event_id">:event_title</a></strong> et :creation_count autres.',
+    'one_event_deletion' => 'Vous avez supprimé l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'two_events_deletions' => 'Vous avez supprimé l’événement <strong><a href="/events/:event_id">:event_title</a></strong> et un autre.',
+    'many_events_deletions' => 'Vous avez supprimé l’événement <strong><a href="/events/:event_id">:event_title</a></strong> et :creation_count autres.',
 
     // ===== PUBLIC NOTIFICATIONS
     // Subscriptions
@@ -366,21 +382,35 @@ return [
     'welcome_back' => 'Bon retour <strong><a href="/users/:to_user_id">:to_user_names</a></strong>. Cliquez ici pour voir les nouveautés de votre réseau.',
     'your_account_blocked' => 'Votre a été bloqué le <strong>:date</strong> à <strong>:hour</strong>, parce que vous ne respectiez pas nos conditions.',
     'will_be_blocked_soon' => 'Nous sommes déjà à la <strong>:nth_personne</strong> qui signale votre <strong>:subject</strong> comme « <strong>:reason</strong> ». Encore <strong>:persons_count</strong> et vous serez bientôt bloqué.',
-    'before_definitive_delete' => 'Votre a été supprimé depuis le <strong>:date</strong> à <strong>:hour</strong>.<br><br>Vous pouvez encore annuler cette action avant 15 jours, au cas où vous changeriez d’avis.<br><br>Après le <strong>:after_date</strong>, votre compte sera supprimé définitivement.',
+    'before_definitive_delete' => 'Votre compte a été supprimé depuis le <strong>:date</strong> à <strong>:hour</strong>.<br><br>Vous pouvez encore annuler cette action avant 15 jours, au cas où vous changeriez d’avis.<br><br>Après le <strong>:after_date</strong>, votre compte sera supprimé définitivement.',
     'member_certified' => 'Votre compte est maintenant certifié. Désormais, vous aussi, vous êtes en mesure de vendre vos produits ou offrir vos services. Cliquez ici pour voir comment ça marche.',
     'member_premium' => 'Maintenant que vous avez un compte premium, vous êtes en mesure d’utiliser nos services pour davantage faire parler de vous. Cliquez ici pour voir comment ça marche.',
     // Profile search
     'one_profile_search' => 'Votre profil a été consulté par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> :period. Cliquez ici pour voir les statistiques.',
     'two_profile_searchs' => 'Votre profil a été consulté par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne :period. Cliquez ici pour voir les statistiques.',
     'many_profile_searchs' => 'Votre profil a été consulté par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :searchs_count autres personnes :period. Cliquez ici pour voir les statistiques.',
-    // Community search
+    // Communities
+    'community_name_changed' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a changé le nom de la communauté <strong><a href="/communities/:community_id">:former_community_name</a></strong> en <strong><a href="/communities/:community_id">:community_name</a></strong>.',
     'one_community_search' => 'Votre communauté a été consultée par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> :period. Cliquez ici pour voir les statistiques.',
     'two_community_searchs' => 'Votre communauté a été consultée par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne :period. Cliquez ici pour voir les statistiques.',
     'many_community_searchs' => 'Votre communauté a été consultée par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :searchs_count autres personnes :period. Cliquez ici pour voir les statistiques.',
-    // Event search
+    'one_person_creates_community' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a créé la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'two_persons_create_communities' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont créé des communautés.',
+    'many_persons_create_communities' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :communities_count autres personnes ont créé des communautés.',
+    'one_person_deletes_community' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a supprimé la communauté <strong><a href="/communities/:community_id">:community_name</a></strong>.',
+    'two_persons_delete_communities' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont supprimé leurs communautés.',
+    'many_persons_delete_communities' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :communities_count autres personnes ont supprimé leurs communautés.',
+    // Events
+    'event_title_changed' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a changé le titre de l’événement <strong><a href="/events/:event_id">:former_event_title</a></strong> en <strong><a href="/events/:event_id">:event_title</a></strong>.',
     'one_event_search' => 'Votre événement a été consulté par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> :period. Cliquez ici pour voir les statistiques.',
     'two_event_searchs' => 'Votre événement a été consulté par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne :period. Cliquez ici pour voir les statistiques.',
     'many_event_searchs' => 'Votre événement a été consulté par <strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :searchs_count autres personnes :period. Cliquez ici pour voir les statistiques.',
+    'one_person_creates_event' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a créé l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'two_persons_create_events' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont créé des événements.',
+    'many_persons_create_events' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :events_count autres personnes ont créé des événements.',
+    'one_person_deletes_event' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a supprimé l’événement <strong><a href="/events/:event_id">:event_title</a></strong>.',
+    'two_persons_delete_events' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont supprimé leurs événements.',
+    'many_persons_delete_events' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :events_count autres personnes ont supprimé leurs événements.',
     // Views analytics for profil
     'profil_view_analytics' => 'Votre profil a été consulté :views_count fois :period. Cliquez pour voir les statistiques.',
     // Views analytics for post

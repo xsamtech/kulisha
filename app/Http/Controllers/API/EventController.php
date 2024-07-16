@@ -163,6 +163,9 @@ class EventController extends BaseController
                     'updated_at' => now()
                 ]);
 
+                /*
+                    HISTORY AND/OR NOTIFICATION MANAGEMENT
+                */
                 // Find all subscribers of the event owner
                 $subscribers = Subscription::where([['user_id', $event->user_id], ['status_id', $accepted_status->id]])->get();
 
@@ -188,6 +191,9 @@ class EventController extends BaseController
                     'updated_at' => now()
                 ]);
 
+                /*
+                    HISTORY AND/OR NOTIFICATION MANAGEMENT
+                */
                 // Find all subscribers of the event owner
                 $subscribers = Subscription::where([['user_id', $event->user_id], ['status_id', $accepted_status->id]])->get();
 
@@ -320,6 +326,7 @@ class EventController extends BaseController
 
             $event->update([
                 'event_title' => $inputs['event_title'],
+                'former_event_title' => $current_event->event_title,
                 'updated_at' => now()
             ]);
         }
