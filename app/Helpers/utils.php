@@ -96,6 +96,14 @@ if (!function_exists('inArrayR')) {
     }
 }
 
+// Check if a value exists into an multidimensional array
+if (!function_exists('getArrayKeys')) {
+    function getArrayKeys($haystack, $ref)
+    {
+        return collect($haystack)->pluck($ref)->toArray();
+    }
+}
+
 // Month fully readable
 if (!function_exists('explicitMonth')) {
     function explicitMonth($month)

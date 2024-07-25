@@ -81,26 +81,35 @@ class CommunityController extends BaseController
         // The community is public
         if ($community->type_id == $public_type->id) {
             // Find all subscribers of the community owner
-            $subscribers = Subscription::where([['user_id', $community->user_id], ['status_id', $accepted_status->id]])->get();
+            $subscriptions = Subscription::where([['user_id', $community->user_id], ['status_id', $accepted_status->id]])->get();
 
-            if ($subscribers != null) {
-                foreach ($subscribers as $subscriber):
+            if ($subscriptions != null) {
+                foreach ($subscriptions as $subscription):
                     Notification::create([
                         'type_id' => $new_community_type->id,
                         'status_id' => $unread_notification_status->id,
                         'from_user_id' => $community->user_id,
-                        'to_user_id' => $subscriber->id
+                        'to_user_id' => $subscription->subscriber_id,
+                        'community_id' => $community->id
                     ]);
                 endforeach;
+
+            } else {
+                Notification::create([
+                    'type_id' => $new_community_type->id,
+                    'status_id' => $unread_notification_status->id,
+                    'from_user_id' => $community->user_id,
+                    'community_id' => $community->id
+                ]);
             }
 
-            $notification = Notification::where([['type_id', $new_community_type->id], ['from_user_id', $community->user_id]])->first();
+            $notification = Notification::where([['type_id', $new_community_type->id], ['from_user_id', $community->user_id], ['community_id', $community->id]])->first();
 
             History::create([
                 'type_id' => $activities_history_type->id,
                 'status_id' => $unread_history_status->id,
                 'from_user_id' => $community->user_id,
-                'for_notification_id' => is_null($notification) ? null : $notification->id
+                'for_notification_id' => $notification->id
             ]);
         }
 
@@ -169,6 +178,7 @@ class CommunityController extends BaseController
                 History::create([
                     'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
                     'from_user_id' => $new_session->user_id,
+                    'to_user_id' => $community->user_id,
                     'community_id' => $community->id,
                     'session_id' => $new_session->id
                 ]);
@@ -177,6 +187,7 @@ class CommunityController extends BaseController
                 History::create([
                     'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
                     'from_user_id' => $session->user_id,
+                    'to_user_id' => $community->user_id,
                     'community_id' => $community->id,
                     'session_id' => $session->id
                 ]);
@@ -195,6 +206,7 @@ class CommunityController extends BaseController
 
                 History::create([
                     'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
+                    'to_user_id' => $community->user_id,
                     'community_id' => $community->id,
                     'session_id' => $new_session->id
                 ]);
@@ -203,6 +215,7 @@ class CommunityController extends BaseController
                 History::create([
                     'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
                     'from_user_id' => is_null($session->user_id) ? null : $session->user_id,
+                    'to_user_id' => $community->user_id,
                     'community_id' => $community->id,
                     'session_id' => $session->id
                 ]);
@@ -246,7 +259,7 @@ class CommunityController extends BaseController
         // Select specific community to check unique constraint
         $current_community = Community::find($inputs['id']);
 
-        if (is_null($community)) {
+        if (is_null($current_community)) {
             return $this->handleError(__('notifications.find_community_404'));
         }
 
@@ -266,7 +279,37 @@ class CommunityController extends BaseController
             /*
                 HISTORY AND/OR NOTIFICATION MANAGEMENT
             */
-            
+            // Find all subscribers of the community owner
+            $subscriptions = Subscription::where([['user_id', $current_community->user_id], ['status_id', $accepted_status->id]])->get();
+
+            if ($subscriptions != null) {
+                foreach ($subscriptions as $subscription):
+                    Notification::create([
+                        'type_id' => $community_name_updated_type->id,
+                        'status_id' => $unread_notification_status->id,
+                        'from_user_id' => $current_community->user_id,
+                        'to_user_id' => $subscription->subscriber_id,
+                        'community_id' => $current_community->id
+                    ]);
+                endforeach;
+
+            } else {
+                Notification::create([
+                    'type_id' => $community_name_updated_type->id,
+                    'status_id' => $unread_notification_status->id,
+                    'from_user_id' => $current_community->user_id,
+                    'community_id' => $current_community->id
+                ]);
+            }
+
+            $notification = Notification::where([['type_id', $community_name_updated_type->id], ['from_user_id', $current_community->user_id], ['community_id', $current_community->id]])->first();
+
+            History::create([
+                'type_id' => $activities_history_type->id,
+                'status_id' => $unread_history_status->id,
+                'from_user_id' => $current_community->user_id,
+                'for_notification_id' => $notification->id
+            ]);
         }
 
         if ($inputs['community_description'] != null) {
@@ -526,7 +569,7 @@ class CommunityController extends BaseController
         // The community is deleted
         if ($status->id == $deleted_status->id) {
             // Find all members of the community
-            $community_members = $community->users()->wherePivot('is_admin', 0)->wherePivot('status_id', $accepted_status->id)->get();
+            $community_members = $community->users()->wherePivot('status_id', $accepted_status->id)->get();
 
             if ($community_members != null) {
                 foreach ($community_members as $member):
@@ -534,18 +577,27 @@ class CommunityController extends BaseController
                         'type_id' => $deleted_community_type->id,
                         'status_id' => $unread_notification_status->id,
                         'from_user_id' => $community->user_id,
-                        'to_user_id' => $member->id
+                        'to_user_id' => $member->id,
+                        'community_id' => $community->id
                     ]);
                 endforeach;
+
+            } else {
+                Notification::create([
+                    'type_id' => $deleted_community_type->id,
+                    'status_id' => $unread_notification_status->id,
+                    'from_user_id' => $community->user_id,
+                    'community_id' => $community->id
+                ]);
             }
 
-            $notification = Notification::where([['type_id', $deleted_community_type->id], ['from_user_id', $community->user_id]])->first();
+            $notification = Notification::where([['type_id', $deleted_community_type->id], ['from_user_id', $community->user_id], ['community_id', $community->id]])->first();
 
             History::create([
                 'type_id' => $activities_history_type->id,
                 'status_id' => $unread_history_status->id,
-                'from_user_id' => $community->id,
-                'for_notification_id' => is_null($notification) ? null : $notification->id
+                'from_user_id' => $community->user_id,
+                'for_notification_id' => $notification->id
             ]);
         }
 

@@ -164,6 +164,17 @@ class Post extends Model
 
     /**
      * MANY-TO-ONE
+     * Several restrictions for a post
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function restrictions(): HasMany
+    {
+        return $this->hasMany(Restriction::class);
+    }
+
+    /**
+     * MANY-TO-ONE
      * Several keywords for a post
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasMany

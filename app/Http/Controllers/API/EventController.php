@@ -96,17 +96,24 @@ class EventController extends BaseController
         // The event is public
         if ($event->type_id == $public_type->id) {
             // Find all subscribers of the event owner
-            $subscribers = Subscription::where([['user_id', $event->user_id], ['status_id', $accepted_status->id]])->get();
+            $subscriptions = Subscription::where([['user_id', $event->user_id], ['status_id', $accepted_status->id]])->get();
 
-            if ($subscribers != null) {
-                foreach ($subscribers as $subscriber):
+            if ($subscriptions != null) {
+                foreach ($subscriptions as $subscription):
                     Notification::create([
                         'type_id' => $new_event_type->id,
                         'status_id' => $unread_notification_status->id,
                         'from_user_id' => $event->user_id,
-                        'to_user_id' => $subscriber->id
+                        'to_user_id' => $subscription->subscriber_id
                     ]);
                 endforeach;
+
+            } else {
+                Notification::create([
+                    'type_id' => $new_event_type->id,
+                    'status_id' => $unread_notification_status->id,
+                    'from_user_id' => $event->user_id,
+                ]);
             }
 
             $notification = Notification::where([['type_id', $new_event_type->id], ['from_user_id', $event->user_id]])->first();
@@ -115,7 +122,7 @@ class EventController extends BaseController
                 'type_id' => $activities_history_type->id,
                 'status_id' => $unread_history_status->id,
                 'from_user_id' => $event->user_id,
-                'for_notification_id' => is_null($notification) ? null : $notification->id
+                'for_notification_id' => $notification->id
             ]);
         }
 
@@ -146,8 +153,8 @@ class EventController extends BaseController
         $search_history_type = Type::where([['type_name->fr', 'Historique des recherches'], ['group_id', $history_type_group->id]])->first();
         $consultation_history_type = Type::where([['type_name->fr', 'Historique des consultations'], ['group_id', $history_type_group->id]])->first();
         $searched_event_type = Type::where([['type_name->fr', 'Evénement recherché'], ['group_id', $notification_type_group->id]])->first();
-        $started_community_type = Type::where([['type_name->fr', 'Evénement commencé'], ['group_id', $notification_type_group->id]])->first();
-        $ended_community_type = Type::where([['type_name->fr', 'Evénement terminé'], ['group_id', $notification_type_group->id]])->first();
+        $started_event_type = Type::where([['type_name->fr', 'Evénement commencé'], ['group_id', $notification_type_group->id]])->first();
+        $ended_event_type = Type::where([['type_name->fr', 'Evénement terminé'], ['group_id', $notification_type_group->id]])->first();
         // Request
         $event = Event::find($id);
 
@@ -167,15 +174,15 @@ class EventController extends BaseController
                     HISTORY AND/OR NOTIFICATION MANAGEMENT
                 */
                 // Find all subscribers of the event owner
-                $subscribers = Subscription::where([['user_id', $event->user_id], ['status_id', $accepted_status->id]])->get();
+                $subscriptions = Subscription::where([['user_id', $event->user_id], ['status_id', $accepted_status->id]])->get();
 
-                if ($subscribers != null) {
-                    foreach ($subscribers as $subscriber):
+                if ($subscriptions != null) {
+                    foreach ($subscriptions as $subscription):
                         Notification::create([
-                            'type_id' => $started_community_type->id,
+                            'type_id' => $started_event_type->id,
                             'status_id' => $unread_notification_status->id,
                             'from_user_id' => $event->user_id,
-                            'to_user_id' => $subscriber->id,
+                            'to_user_id' => $subscription->subscriber_id,
                             'event_id' => $event->id
                         ]);
                     endforeach;
@@ -195,15 +202,15 @@ class EventController extends BaseController
                     HISTORY AND/OR NOTIFICATION MANAGEMENT
                 */
                 // Find all subscribers of the event owner
-                $subscribers = Subscription::where([['user_id', $event->user_id], ['status_id', $accepted_status->id]])->get();
+                $subscriptions = Subscription::where([['user_id', $event->user_id], ['status_id', $accepted_status->id]])->get();
 
-                if ($subscribers != null) {
-                    foreach ($subscribers as $subscriber):
+                if ($subscriptions != null) {
+                    foreach ($subscriptions as $subscription):
                         Notification::create([
-                            'type_id' => $ended_community_type->id,
+                            'type_id' => $ended_event_type->id,
                             'status_id' => $unread_notification_status->id,
                             'from_user_id' => $event->user_id,
-                            'to_user_id' => $subscriber->id,
+                            'to_user_id' => $subscription->subscriber_id,
                             'event_id' => $event->id
                         ]);
                     endforeach;
@@ -247,6 +254,7 @@ class EventController extends BaseController
                 History::create([
                     'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
                     'from_user_id' => $new_session->user_id,
+                    'to_user_id' => $event->user_id,
                     'event_id' => $event->id,
                     'session_id' => $new_session->id
                 ]);
@@ -255,6 +263,7 @@ class EventController extends BaseController
                 History::create([
                     'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
                     'from_user_id' => $session->user_id,
+                    'to_user_id' => $event->user_id,
                     'event_id' => $event->id,
                     'session_id' => $session->id
                 ]);
@@ -273,6 +282,7 @@ class EventController extends BaseController
 
                 History::create([
                     'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
+                    'to_user_id' => $event->user_id,
                     'event_id' => $event->id,
                     'session_id' => $new_session->id
                 ]);
@@ -281,6 +291,7 @@ class EventController extends BaseController
                 History::create([
                     'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
                     'from_user_id' => is_null($session->user_id) ? null : $session->user_id,
+                    'to_user_id' => $event->user_id,
                     'event_id' => $event->id,
                     'session_id' => $session->id
                 ]);
@@ -299,6 +310,19 @@ class EventController extends BaseController
      */
     public function update(Request $request, Event $event)
     {
+        // Groups
+        $susbcription_status_group = Group::where('group_name->fr', 'Etat de la souscription')->first();
+        $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
+        $history_status_group = Group::where('group_name->fr', 'Etat de l’historique')->first();
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
+        // Statuses
+        $accepted_status = Status::where([['status_name->fr', 'Acceptée'], ['group_id', $susbcription_status_group->id]])->first();
+        $unread_notification_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first();
+        $unread_history_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $history_status_group->id]])->first();
+        // Types
+        $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
+        $event_title_updated_type = Type::where([['type_name->fr', 'Titre d’événement modifié'], ['group_id', $notification_type_group->id]])->first();
         // Get inputs
         $inputs = [
             'id' => $request->id,
@@ -313,7 +337,7 @@ class EventController extends BaseController
         // Select specific event to check unique constraint
         $current_event = Event::find($inputs['id']);
 
-        if (is_null($event)) {
+        if (is_null($current_event)) {
             return $this->handleError(__('notifications.find_event_404'));
         }
 
@@ -329,6 +353,41 @@ class EventController extends BaseController
                 'former_event_title' => $current_event->event_title,
                 'updated_at' => now()
             ]);
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            // Find all subscribers of the event owner
+            $subscriptions = Subscription::where([['user_id', $current_event->user_id], ['status_id', $accepted_status->id]])->get();
+
+            if ($subscriptions != null) {
+                foreach ($subscriptions as $subscription):
+                    Notification::create([
+                        'type_id' => $event_title_updated_type->id,
+                        'status_id' => $unread_notification_status->id,
+                        'from_user_id' => $current_event->user_id,
+                        'to_user_id' => $subscription->subscriber_id,
+                        'event_id' => $current_event->id
+                    ]);
+                endforeach;
+
+            } else {
+                Notification::create([
+                    'type_id' => $event_title_updated_type->id,
+                    'status_id' => $unread_notification_status->id,
+                    'from_user_id' => $current_event->user_id,
+                    'event_id' => $current_event->id
+                ]);
+            }
+
+            $notification = Notification::where([['type_id', $event_title_updated_type->id], ['from_user_id', $current_event->user_id], ['event_id', $event->id]])->first();
+
+            History::create([
+                'type_id' => $activities_history_type->id,
+                'status_id' => $unread_history_status->id,
+                'from_user_id' => $current_event->user_id,
+                'for_notification_id' => $notification->id
+            ]);
         }
 
         if ($inputs['event_description'] != null) {
@@ -339,6 +398,12 @@ class EventController extends BaseController
         }
 
         if ($inputs['start_at'] != null) {
+            if ($current_event->start_at != $inputs['start_at']) {
+                if (trim($inputs['start_at']) == null) {
+                    return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['start_at'], __('miscellaneous.public.events.data.date_start.error'), 400);
+                }
+            }
+
             $event->update([
                 'start_at' => $inputs['start_at'],
                 'updated_at' => now()
@@ -346,6 +411,12 @@ class EventController extends BaseController
         }
 
         if ($inputs['end_at'] != null) {
+            if ($current_event->end_at != $inputs['end_at']) {
+                if (trim($inputs['end_at']) == null) {
+                    return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['end_at'], __('miscellaneous.public.events.data.date_end.error'), 400);
+                }
+            }
+
             $event->update([
                 'end_at' => $inputs['end_at'],
                 'updated_at' => now()
