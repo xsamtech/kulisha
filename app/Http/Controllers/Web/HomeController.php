@@ -44,36 +44,12 @@ class HomeController extends Controller
      */
     public function index()
     {
-        $subscribers = [
-            0 => ['id' => 1, 'firstname' => 'Clark', 'lastname' => 'Kent'],
-            1 => ['id' => 2, 'firstname' => 'Lois', 'lastname' => 'Lane'],
-            2 => ['id' => 3, 'firstname' => 'Bruce', 'lastname' => 'Wayne'],
-            3 => ['id' => 4, 'firstname' => 'Barry', 'lastname' => 'Allen'],
-            4 => ['id' => 5, 'firstname' => 'Diana', 'lastname' => 'Prince']
-        ];
-        $restrictions = [
-            0 => ['user_id' => 2, 'firstname' => 'Lois', 'lastname' => 'Lane'],
-            1 => ['user_id' => 5, 'firstname' => 'Diana', 'lastname' => 'Prince']
-        ];
-        $members_ids = array_diff(getArrayKeys($subscribers, 'id'), getArrayKeys($restrictions, 'user_id'));
+        if (Session::has('user_demo')) {
+            return view('demo.welcome');
 
-        foreach ($members_ids as $member_id):
-            print_r($member_id . '<hr><br>');
-        endforeach;
-
-        // $array1 = ['un', 'quatre', 'deux', 'trois'];
-        // $array2 = ['neuf', 'un', 'huit', 'deux', 'trois', 'cinq', 'six', 'sept', 'quatre', 'dix'];
-
-        // $array3 = count($array1) > count($array2) ? array_diff($array1, $array2) : array_diff($array2, $array1);
-
-        // dd($array3);
-
-        // if (Session::has('user_demo')) {
-        //     return view('demo.welcome');
-
-        // } else {
-        //     return redirect()->route('login');
-        // }
+        } else {
+            return redirect()->route('login');
+        }
     }
 
 }
