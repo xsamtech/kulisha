@@ -45,7 +45,7 @@ class UserController extends BaseController
      */
     public function index()
     {
-        $users = User::orderByDesc('created_at')->paginate(10);
+        $users = User::orderByDesc('created_at')->paginate(50);
         $count_users = User::count();
 
         return $this->handleResponse(ResourcesUser::collection($users), __('notifications.find_all_users_success'), $users->lastPage(), $count_users);
@@ -889,10 +889,8 @@ class UserController extends BaseController
     {
         $user->delete();
 
-        $users = User::orderByDesc('created_at')->get();
-
-        return $this->handleResponse(ResourcesUser::collection($users), __('notifications.delete_user_success'));
-
+        $users = User::orderByDesc('created_at')->paginate(50);
+        $count_users = User::count();
         $password_reset = PasswordResetToken::where('email', $user->email)->orWhere('phone', $user->phone)->first();
         $personal_access_tokens = PersonalAccessToken::where('tokenable_id', $user->id)->get();
         $notifications = Notification::where('from_user_id', $user->id)->orWhere('to_user_id', $user->id)->get();
@@ -924,9 +922,7 @@ class UserController extends BaseController
             Storage::deleteDirectory($directory);
         }
 
-        $users = User::orderByDesc('created_at')->get();
-
-        return $this->handleResponse(ResourcesUser::collection($users), __('notifications.delete_user_success'));
+        return $this->handleResponse(ResourcesUser::collection($users), __('notifications.delete_user_success'), $users->lastPage(), $count_users);
     }
 
     // ==================================== CUSTOM METHODS ====================================
@@ -2639,7 +2635,6 @@ class UserController extends BaseController
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int $id
-     * @param  string $locale
      * @return \Illuminate\Http\Response
      */
     public function uploadFile(Request $request, $id)

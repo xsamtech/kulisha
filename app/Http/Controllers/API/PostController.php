@@ -2,21 +2,24 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Models\Post;
-use App\Models\Type;
-use App\Models\User;
+use App\Models\File;
 use App\Models\Group;
-use App\Models\Status;
 use App\Models\Hashtag;
 use App\Models\History;
-use App\Models\Session;
-use App\Models\Visibility;
-use Illuminate\Support\Str;
 use App\Models\Notification;
-use App\Models\Subscription;
-use Illuminate\Http\Request;
-use App\Http\Resources\Post as ResourcesPost;
+use App\Models\Post;
 use App\Models\Restriction;
+use App\Models\Session;
+use App\Models\Status;
+use App\Models\Subscription;
+use App\Models\Type;
+use App\Models\User;
+use App\Models\Visibility;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Resources\Post as ResourcesPost;
+use App\Http\Resources\Session as ResourcesSession;
 
 /**
  * @author Xanders
@@ -31,7 +34,7 @@ class PostController extends BaseController
      */
     public function index()
     {
-        $posts = Post::orderByDesc('created_at')->paginate(10);
+        $posts = Post::orderByDesc('created_at')->paginate(50);
         $count_posts = Post::count();
 
         return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.find_all_posts_success'), $posts->lastPage(), $count_posts);
@@ -80,6 +83,7 @@ class PostController extends BaseController
             'post_content' => $request->post_content,
             'shared_post_id' => $request->shared_post_id,
             'price' => $request->price,
+            'currency' => $request->currency,
             'quantity' => $request->quantity,
             'answered_for' => $request->answered_for,
             'type_id' => $request->type_id,
@@ -130,7 +134,7 @@ class PostController extends BaseController
         }
 
         // If it's a comment, check if it's a anonymous question or an answer for a post
-        if ($post->type_id = $comment_type->id) {
+        if ($post->type_id == $comment_type->id) {
             $parent_post = Post::find($post->answered_for);
 
             if (is_null($parent_post)) {
@@ -179,20 +183,18 @@ class PostController extends BaseController
             if ($post->shared_post_id != null) {
                 // If the post is for everybody
                 if ($post->visibility_id == $everybody_visibility->id) {
-                    // Find all subscribers of the event owner
+                    // Find all subscribers of the post owner
                     $subscriptions = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
 
                     if ($subscriptions != null) {
                         foreach ($subscriptions as $subscription):
-                            if ($post->type_id != $comment_type->id) {
-                                Notification::create([
-                                    'type_id' => $shared_post_type->id,
-                                    'status_id' => $unread_notification_status->id,
-                                    'from_user_id' => $post->user_id,
-                                    'to_user_id' => $subscription->subscriber_id,
-                                    'post_id' => $post->id
-                                ]);
-                            }
+                            Notification::create([
+                                'type_id' => $shared_post_type->id,
+                                'status_id' => $unread_notification_status->id,
+                                'from_user_id' => $post->user_id,
+                                'to_user_id' => $subscription->subscriber_id,
+                                'post_id' => $post->id
+                            ]);
                         endforeach;
 
                     } else {
@@ -273,20 +275,18 @@ class PostController extends BaseController
             } else if ($post->post_url != null) {
                 // If the post is for everybody
                 if ($post->visibility_id == $everybody_visibility->id) {
-                    // Find all subscribers of the event owner
+                    // Find all subscribers of the post owner
                     $subscriptions = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
 
                     if ($subscriptions != null) {
                         foreach ($subscriptions as $subscription):
-                            if ($post->type_id != $comment_type->id) {
-                                Notification::create([
-                                    'type_id' => $new_link_type->id,
-                                    'status_id' => $unread_notification_status->id,
-                                    'from_user_id' => $post->user_id,
-                                    'to_user_id' => $subscription->subscriber_id,
-                                    'post_id' => $post->id
-                                ]);
-                            }
+                            Notification::create([
+                                'type_id' => $new_link_type->id,
+                                'status_id' => $unread_notification_status->id,
+                                'from_user_id' => $post->user_id,
+                                'to_user_id' => $subscription->subscriber_id,
+                                'post_id' => $post->id
+                            ]);
                         endforeach;
 
                     } else {
@@ -367,20 +367,18 @@ class PostController extends BaseController
             } else {
                 // If the post is for everybody
                 if ($post->visibility_id == $everybody_visibility->id) {
-                    // Find all subscribers of the event owner
+                    // Find all subscribers of the post owner
                     $subscriptions = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
 
                     if ($subscriptions != null) {
                         foreach ($subscriptions as $subscription):
-                            if ($post->type_id != $comment_type->id) {
-                                Notification::create([
-                                    'type_id' => $new_post_type->id,
-                                    'status_id' => $unread_notification_status->id,
-                                    'from_user_id' => $post->user_id,
-                                    'to_user_id' => $subscription->subscriber_id,
-                                    'post_id' => $post->id
-                                ]);
-                            }
+                            Notification::create([
+                                'type_id' => $new_post_type->id,
+                                'status_id' => $unread_notification_status->id,
+                                'from_user_id' => $post->user_id,
+                                'to_user_id' => $subscription->subscriber_id,
+                                'post_id' => $post->id
+                            ]);
                         endforeach;
 
                     } else {
@@ -568,6 +566,7 @@ class PostController extends BaseController
         $unread_history_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $history_status_group->id]])->first();
         // Types
         $post_updated_type = Type::where([['type_name->fr', 'Post modifié'], ['group_id', $notification_type_group->id]])->first();
+        $post_price_updated_type = Type::where([['type_name->fr', 'Prix du post modifié'], ['group_id', $notification_type_group->id]])->first();
         $mention_type = Type::where([['type_name->fr', 'Mention'], ['group_id', $notification_type_group->id]])->first();
         $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
         // Get inputs
@@ -578,6 +577,7 @@ class PostController extends BaseController
             'post_content' => $request->post_content,
             'shared_post_id' => $request->shared_post_id,
             'price' => $request->price,
+            'currency' => $request->currency,
             'quantity' => $request->quantity,
             'answered_for' => $request->answered_for,
             'type_id' => $request->type_id,
@@ -620,7 +620,7 @@ class PostController extends BaseController
             if (count($hashtags) > 0) {
                 foreach ($hashtags as $keyword):
                     $hashtag = Hashtag::create(['keyword' => $keyword]);
-    
+
                     $hashtag->posts()->attach([$post]);
                 endforeach;
             }
@@ -661,6 +661,46 @@ class PostController extends BaseController
         if ($inputs['price'] != null) {
             $post->update([
                 'price' => $inputs['price'],
+                'updated_at' => now(),
+            ]);
+
+            // Find all subscribers of the post owner
+            $subscriptions = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
+
+            if ($subscriptions != null) {
+                foreach ($subscriptions as $subscription):
+                    Notification::create([
+                        'type_id' => $post_price_updated_type->id,
+                        'status_id' => $unread_notification_status->id,
+                        'from_user_id' => $post->user_id,
+                        'to_user_id' => $subscription->subscriber_id,
+                        'post_id' => $post->id
+                    ]);
+                endforeach;
+
+            } else {
+                Notification::create([
+                    'type_id' => $post_price_updated_type->id,
+                    'status_id' => $unread_notification_status->id,
+                    'from_user_id' => $post->user_id,
+                    'post_id' => $post->id
+                ]);
+            }
+
+            $notification = Notification::where([['type_id', $post_price_updated_type->id], ['from_user_id', $post->user_id], ['post_id', $post->id]])->first();
+
+            History::create([
+                'type_id' => $activities_history_type->id,
+                'status_id' => $unread_history_status->id,
+                'from_user_id' => $post->user_id,
+                'post_id' => $post->id,
+                'for_notification_id' => $notification->id
+            ]);
+        }
+
+        if ($inputs['currency'] != null) {
+            $post->update([
+                'currency' => $inputs['currency'],
                 'updated_at' => now(),
             ]);
         }
@@ -743,7 +783,7 @@ class PostController extends BaseController
         }
 
         // The post is public
-        // Find all subscribers of the event owner
+        // Find all subscribers of the post owner
         $subscriptions = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
 
         if ($subscriptions != null) {
@@ -773,9 +813,219 @@ class PostController extends BaseController
 
     /**
      * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\Post  $post
+     * @return \Illuminate\Http\Response
      */
     public function destroy(Post $post)
     {
-        //
+        $post->delete();
+
+        $posts = Post::orderByDesc('created_at')->paginate(50);
+        $count_posts = Post::count();
+        $notifications = Notification::where('post_id', $post->id)->get();
+        $histories = History::where('post_id', $post->id)->get();
+        $image_directory = $_SERVER['DOCUMENT_ROOT'] . '/public/storage/images/posts/' . $post->id;
+        $document_directory = $_SERVER['DOCUMENT_ROOT'] . '/public/storage/documents/posts/' . $post->id;
+        $audio_directory = $_SERVER['DOCUMENT_ROOT'] . '/public/storage/audios/posts/' . $post->id;
+
+        $post->delete();
+
+        if (!is_null($notifications)) {
+            foreach ($notifications as $notification):
+                $notification->delete();
+            endforeach;
+        }
+
+        if (!is_null($histories)) {
+            foreach ($histories as $history):
+                $history->delete();
+            endforeach;
+        }
+
+        if (Storage::exists($image_directory)) {
+            Storage::deleteDirectory($image_directory);
+        }
+
+        if (Storage::exists($document_directory)) {
+            Storage::deleteDirectory($document_directory);
+        }
+
+        if (Storage::exists($audio_directory)) {
+            Storage::deleteDirectory($audio_directory);
+        }
+
+        return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.delete_post_success'), $posts->lastPage(), $count_posts);
+    }
+
+    // ==================================== CUSTOM METHODS ====================================
+    /**
+     * Search a member
+     *
+     * @param  string $data
+     * @param  int $visitor_id
+     * @return \Illuminate\Http\Response
+     */
+    public function search($data, $visitor_id = null)
+    {
+        // Groups
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        $post_type_group = Group::where('group_name->fr', 'Type de post')->first();
+        // Types
+        $product_type = Type::where([['type_name->fr', 'Produit'], ['group_id', $post_type_group->id]])->first();
+        $service_type = Type::where([['type_name->fr', 'Service'], ['group_id', $post_type_group->id]])->first();
+        $article_type = Type::where([['type_name->fr', 'Article'], ['group_id', $post_type_group->id]])->first();
+        $search_history_type = Type::where([['type_name->fr', 'Historique des recherches'], ['group_id', $history_type_group->id]])->first();
+        // Search request
+        $posts = Post::where([['post_title', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
+                            $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
+                        }])->orWhere([['post_content', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
+                            $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
+                        }])->paginate(12);
+        $count_posts = Post::where([['post_title', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
+                            $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
+                        }])->orWhere([['post_content', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
+                            $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
+                        }])->count();
+
+        if (is_null($posts)) {
+            return $this->handleResponse([], __('miscellaneous.empty_list'));
+        }
+
+        /*
+            HISTORY AND/OR NOTIFICATION MANAGEMENT
+        */
+        if ($visitor_id != null) {
+            $visitor = User::find($visitor_id);
+
+            if (!is_null($visitor)) {
+                History::create([
+                    'search_content' => $data,
+                    'type_id' => $search_history_type->id,
+                    'from_user_id' => $visitor->id,
+                ]);
+            }
+        }
+
+        return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.find_all_posts_success'), $posts->lastPage(), $count_posts);
+    }
+
+    /**
+     * Find all post views.
+     *
+     * @param  int  $post_id
+     * @return \Illuminate\Http\Response
+     */
+    public function allViews($post_id)
+    {
+        $post = Post::find($post_id);
+
+        if (is_null($post)) {
+            return $this->handleError(__('notifications.find_post_404'));
+        }
+
+        $sessions = $post->sessions;
+        $count_all = count($post->sessions);
+
+        return $this->handleResponse(ResourcesSession::collection($sessions), __('notifications.find_all_sessions_success'), null, $count_all);
+    }
+
+    /**
+     * Find post views for a period.
+     *
+     * @param  int  $post_id
+     * @return \Illuminate\Http\Response
+     */
+    public function periodViews($post_id)
+    {
+        $post = Post::find($post_id);
+
+        if (is_null($post)) {
+            return $this->handleError(__('notifications.find_post_404'));
+        }
+
+        $sessions = $post->sessions;
+        $count_all = count($post->sessions);
+
+        return $this->handleResponse(ResourcesSession::collection($sessions), __('notifications.find_all_sessions_success'), null, $count_all);
+    }
+
+    /**
+     * Upload post files in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function uploadFile(Request $request, $id)
+    {
+        if (!isset($request->file_type_id)) {
+            return $this->handleError(__('miscellaneous.found_value') . ' ' . $request->file_type_id, __('validation.custom.type.required'), 400);
+        }
+
+        // Group
+        $file_type_group = Group::where('group_name->fr', 'Type de fichier')->first();
+        // File type
+        $type = Type::where([['id', $request->file_type_id], ['group_id', $file_type_group->id]])->first();
+        // Current post
+        $post = Post::find($id);
+
+        if (is_null($type)) {
+            return $this->handleError(__('notifications.find_type_404'));
+        }
+
+        if (is_null($post)) {
+            return $this->handleError(__('notifications.find_post_404'));
+        }
+
+        if ($request->hasFile('file_url')) {
+            if ($type->getTranslation('type_name', 'fr') == 'Document') {
+                $file_url = 'documents/posts/' . $post->id . '/' . Str::random(50) . '.' . $request->file('file_url')->extension();
+
+                // Upload file
+                $dir_result = Storage::url(Storage::disk('public')->put($file_url, $request->file('file_url')));
+
+                File::create([
+                    'file_name' => trim($request->file_name) != null ? $request->file_name : null,
+                    'file_url' => $dir_result,
+                    'type_id' => $type->id,
+                    'post_id' => $post->id
+                ]);
+
+                return $this->handleResponse(new ResourcesPost($post), __('notifications.update_post_success'));
+            }
+
+            if ($type->getTranslation('type_name', 'fr') == 'Image') {
+                $file_url = 'images/posts/' . $post->id . '/' . Str::random(50) . '.' . $request->file('file_url')->extension();
+
+                // Upload file
+                $dir_result = Storage::url(Storage::disk('public')->put($file_url, $request->file('file_url')));
+
+                File::create([
+                    'file_name' => trim($request->file_name) != null ? $request->file_name : null,
+                    'file_url' => $dir_result,
+                    'type_id' => $type->id,
+                    'post_id' => $post->id
+                ]);
+
+                return $this->handleResponse(new ResourcesPost($post), __('notifications.update_post_success'));
+            }
+
+            if ($type->getTranslation('type_name', 'fr') == 'Audio') {
+                $file_url = 'audios/posts/' . $post->id . '/' . Str::random(50) . '.' . $request->file('file_url')->extension();
+
+                // Upload file
+                $dir_result = Storage::url(Storage::disk('public')->put($file_url, $request->file('file_url')));
+
+                File::create([
+                    'file_name' => trim($request->file_name) != null ? $request->file_name : null,
+                    'file_url' => $dir_result,
+                    'type_id' => $type->id,
+                    'post_id' => $post->id
+                ]);
+
+                return $this->handleResponse(new ResourcesPost($post), __('notifications.update_post_success'));
+            }
+        }
     }
 }

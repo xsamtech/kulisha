@@ -26,6 +26,7 @@ class Post extends JsonResource
             'post_content' => $this->post_content,
             'shared_post_id' => $this->shared_post_id,
             'price' => $this->price,
+            'currency' => $this->currency,
             'quantity' => $this->quantity,
             'answered_for' => $this->answered_for,
             'status' => Status::make($this->status),

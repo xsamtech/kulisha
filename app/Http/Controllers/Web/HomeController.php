@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\ApiClientManager;
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -44,12 +45,28 @@ class HomeController extends Controller
      */
     public function index()
     {
-        if (Session::has('user_demo')) {
-            return view('demo.welcome');
+        $weekMap = [
+            0 => 'SUNDAY',
+            1 => 'MONDAY',
+            2 => 'TUESDAY',
+            3 => 'WEDNESDAY',
+            4 => 'THURSDAY',
+            5 => 'FRIDAY',
+            6 => 'SATURDAY',
+        ];
+        // $dayOfTheWeek = Carbon::now()->dayOfWeek;
+        // $weekday = $weekMap[$dayOfTheWeek];
 
-        } else {
-            return redirect()->route('login');
-        }
+        $endOfWeek = Carbon::now()->endOfWeek(Carbon::SATURDAY)->toDateString();
+
+        dd($endOfWeek);
+
+        // if (Session::has('user_demo')) {
+        //     return view('demo.welcome');
+
+        // } else {
+        //     return redirect()->route('login');
+        // }
     }
 
 }
