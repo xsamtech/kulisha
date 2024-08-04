@@ -196,6 +196,13 @@ return [
     'update_post_success' => 'Post updated',
     'delete_post_success' => 'Post deleted',
     'register_for_later_post_success' => 'Post registered to see later',
+    // Hashtag
+    'find_all_hashtags_success' => 'Hashtags found',
+    'find_hashtag_success' => 'Hashtag found',
+    'find_hashtag_404' => 'Hashtag not found',
+    'create_hashtag_success' => 'Hashtag created',
+    'update_hashtag_success' => 'Hashtag updated',
+    'delete_hashtag_success' => 'Hashtag deleted',
     // Event
     'find_all_events_success' => 'Events found',
     'find_event_success' => 'Event found',
@@ -217,6 +224,27 @@ return [
     'create_subscription_success' => 'Subscription created',
     'update_subscription_success' => 'Subscription updated',
     'delete_subscription_success' => 'Subscription deleted',
+    // Reaction
+    'find_all_reactions_success' => 'Reactions found',
+    'find_reaction_success' => 'Reaction found',
+    'find_reaction_404' => 'Reaction not found',
+    'create_reaction_success' => 'Reaction created',
+    'update_reaction_success' => 'Reaction updated',
+    'delete_reaction_success' => 'Reaction deleted',
+    // ReactionReason
+    'find_all_reactions_reasons_success' => 'Reactions reasons found',
+    'find_reaction_reason_success' => 'Reaction reason found',
+    'find_reaction_reason_404' => 'Reaction reason not found',
+    'create_reaction_reason_success' => 'Reaction reason created',
+    'update_reaction_reason_success' => 'Reaction reason updated',
+    'delete_reaction_reason_success' => 'Reaction reason deleted',
+    // SentReaction
+    'find_all_sent_reactions_success' => 'Sending reactions found',
+    'find_sent_reaction_success' => 'Sending reaction found',
+    'find_sent_reaction_404' => 'Sending reaction not found',
+    'create_sent_reaction_success' => 'Sending reaction created',
+    'update_sent_reaction_success' => 'Sending reaction updated',
+    'delete_sent_reaction_success' => 'Sending reaction deleted',
 
     // ===== USER HISTORIES
     // Subscriptions

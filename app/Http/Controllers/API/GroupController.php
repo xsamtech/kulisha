@@ -175,8 +175,6 @@ class GroupController extends BaseController
             ]);
         }
 
-        $group->update($inputs);
-
         return $this->handleResponse(new ResourcesGroup($group), __('notifications.update_group_success'));
     }
 

@@ -196,6 +196,13 @@ return [
     'update_post_success' => 'Post modifié',
     'delete_post_success' => 'Post supprimé',
     'register_for_later_post_success' => 'Post enregistré pour voir plus tard',
+    // Hashtag
+    'find_all_hashtags_success' => 'Hashtags trouvés',
+    'find_hashtag_success' => 'Hashtag trouvé',
+    'find_hashtag_404' => 'Hashtag non trouvé',
+    'create_hashtag_success' => 'Hashtag créé',
+    'update_hashtag_success' => 'Hashtag modifié',
+    'delete_hashtag_success' => 'Hashtag supprimé',
     // Event
     'find_all_events_success' => 'Evénements trouvés',
     'find_event_success' => 'Evénement trouvé',
@@ -217,6 +224,27 @@ return [
     'create_subscription_success' => 'Abonnement créé',
     'update_subscription_success' => 'Abonnement modifié',
     'delete_subscription_success' => 'Abonnement supprimé',
+    // Reaction
+    'find_all_reactions_success' => 'Réactions trouvées',
+    'find_reaction_success' => 'Réaction trouvée',
+    'find_reaction_404' => 'Réaction non trouvée',
+    'create_reaction_success' => 'Réaction créée',
+    'update_reaction_success' => 'Réaction modifiée',
+    'delete_reaction_success' => 'Réaction supprimée',
+    // ReactionReason
+    'find_all_reactions_reasons_success' => 'Motifs des réactions trouvés',
+    'find_reaction_reason_success' => 'Motif de réaction trouvé',
+    'find_reaction_reason_404' => 'Motif de réaction non trouvé',
+    'create_reaction_reason_success' => 'Motif de réaction créé',
+    'update_reaction_reason_success' => 'Motif de réaction modifié',
+    'delete_reaction_reason_success' => 'Motif de réaction supprimé',
+    // SentReaction
+    'find_all_sent_reactions_success' => 'Envois des réactions trouvés',
+    'find_sent_reaction_success' => 'Envoi de réaction trouvé',
+    'find_sent_reaction_404' => 'Envoi de réaction non trouvé',
+    'create_sent_reaction_success' => 'Envoi de réaction créé',
+    'update_sent_reaction_success' => 'Envoi de réaction modifié',
+    'delete_sent_reaction_success' => 'Envoi de réaction supprimé',
 
     // ===== USER HISTORIES
     // Subscriptions

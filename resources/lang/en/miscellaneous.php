@@ -632,6 +632,7 @@ return [
 
             // Trends
             'trends' => [
+                'keyword' => 'Keyword',
             ],
 
             // Suggestions

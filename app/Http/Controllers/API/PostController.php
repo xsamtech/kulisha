@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\API;
 
 use stdClass;
-use Carbon\Carbon;
 use App\Models\File;
 use App\Models\Group;
 use App\Models\Hashtag;
 use App\Models\History;
 use App\Models\Notification;
 use App\Models\Post;
+use App\Models\Reaction;
 use App\Models\Restriction;
+use App\Models\SentReaction;
 use App\Models\Session;
 use App\Models\Status;
 use App\Models\Subscription;
@@ -21,9 +22,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Resources\History as ResourcesHistory;
 use App\Http\Resources\Post as ResourcesPost;
 use App\Http\Resources\Session as ResourcesSession;
-use App\Http\Resources\History as ResourcesHistory;
+use App\Http\Resources\SentReaction as ResourcesSentReaction;
+use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
 
 /**
@@ -112,9 +115,28 @@ class PostController extends BaseController
 
         if (count($hashtags) > 0) {
             foreach ($hashtags as $keyword):
-                $hashtag = Hashtag::create(['keyword' => $keyword]);
+                $existing_hashtag = Hashtag::where('keyword', $keyword)->first();
 
-                $hashtag->posts()->attach([$post]);
+                if ($existing_hashtag != null) {
+                    if (count($existing_hashtag->posts) == 0) {
+                        $existing_hashtag->posts()->attach([$post->id]);
+                    }
+
+                    if (count($existing_hashtag->posts) > 0) {
+                        $existing_hashtag->posts()->syncWithoutDetaching([$post->id]);
+                    }
+
+                } else {
+                    $hashtag = Hashtag::create(['keyword' => $keyword]);
+
+                    if (count($hashtag->posts) == 0) {
+                        $hashtag->posts()->attach([$post->id]);
+                    }
+
+                    if (count($hashtag->posts) > 0) {
+                        $hashtag->posts()->syncWithoutDetaching([$post->id]);
+                    }
+                }
             endforeach;
         }
 
@@ -936,12 +958,71 @@ class PostController extends BaseController
     }
 
     /**
+     * Find all post reactions.
+     *
+     * @param  int  $post_id
+     * @return \Illuminate\Http\Response
+     */
+    public function reactions($post_id)
+    {
+        // Groups
+        $post_type_group = Group::where('group_name->fr', 'Type de post')->first();
+        $reaction_on_post_group = Group::where('group_name->fr', 'Réaction sur post')->first();
+        $reaction_on_comment_group = Group::where('group_name->fr', 'Réaction sur commentaire')->first();
+        // Types
+        $comment_type = Type::where([['type_name->fr', 'Commentaire'], ['group_id', $post_type_group->id]])->first();
+        // Reactions
+        $bravo_reaction = Reaction::where([['reaction_name->fr', 'Bravo'], ['group_id', $reaction_on_post_group->id]])->first();
+        $i_like_post_reaction = Reaction::where([['reaction_name->fr', 'J’aime'], ['group_id', $reaction_on_post_group->id]])->first();
+        $i_support_reaction = Reaction::where([['reaction_name->fr', 'Je soutiens'], ['group_id', $reaction_on_post_group->id]])->first();
+        $interesting_reaction = Reaction::where([['reaction_name->fr', 'Intéressant'], ['group_id', $reaction_on_post_group->id]])->first();
+        $i_like_comment_reaction = Reaction::where([['reaction_name->fr', 'J’aime'], ['group_id', $reaction_on_comment_group->id]])->first();
+        // Request
+        $post = Post::find($post_id);
+
+        if (is_null($post)) {
+            return $this->handleError(__('notifications.find_post_404'));
+        }
+
+        // If the post is a comment, find all LIKEs
+        if ($post->type_id == $comment_type->id) {
+            $likes = SentReaction::where([['to_post_id', $post->id], ['reaction_id', $i_like_comment_reaction->id]])->get();
+            $count_all = SentReaction::where([['to_post_id', $post->id], ['reaction_id', $i_like_comment_reaction->id]])->count();
+
+            $object = new stdClass();
+            $object->i_like = ResourcesSentReaction::collection($likes);
+
+            return $this->handleResponse($object, __('notifications.find_all_sent_reactions_success'), null, $count_all);
+
+        // Otherwise, find all kinds of reactions
+        } else {
+            // All reactions
+            $all_reactions = SentReaction::where('to_post_id', $post->id)->get();
+            $count_all = SentReaction::where('to_post_id', $post->id)->get();
+            // Specific kinds of reactions
+            $bravos = SentReaction::where([['to_post_id', $post->id], ['reaction_id', $bravo_reaction->id]])->get();
+            $likes = SentReaction::where([['to_post_id', $post->id], ['reaction_id', $i_like_post_reaction->id]])->get();
+            $supports = SentReaction::where([['to_post_id', $post->id], ['reaction_id', $i_support_reaction->id]])->get();
+            $interests = SentReaction::where([['to_post_id', $post->id], ['reaction_id', $interesting_reaction->id]])->get();
+
+            $object = new stdClass();
+            $object->all_reactions = ResourcesSentReaction::collection($all_reactions);
+            $object->bravo = ResourcesSentReaction::collection($bravos);
+            $object->i_like = ResourcesSentReaction::collection($likes);
+            $object->i_support = ResourcesSentReaction::collection($supports);
+            $object->interesting = ResourcesSentReaction::collection($interests);
+
+            return $this->handleResponse($object, __('notifications.find_all_sent_reactions_success'), null, $count_all);
+        }
+    }
+
+    /**
      * Find all post views.
      *
      * @param  int  $post_id
      * @return \Illuminate\Http\Response
      */
-    public function allViews($post_id)
+    public function views($post_id)
     {
         // Groups
         $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
@@ -971,13 +1052,13 @@ class PostController extends BaseController
     }
 
     /**
-     * Find post views for a period.
+     * Find post views for a period (weekly, monthly, quarterly, half_yearly, yearly).
      *
      * @param  int  $post_id
      * @param  string  $period
-     * @param  int  $day
-     * @param  int  $month
      * @param  int  $year
+     * @param  int  $month
+     * @param  int  $day
      * @return \Illuminate\Http\Response
      */
     public function periodViews($post_id, $period, $year = null, $month = null, $day = null)
@@ -1445,6 +1526,18 @@ class PostController extends BaseController
 
             return $this->handleResponse($object, __('notifications.find_all_post_views_success'));
         }
+    }
+
+    /**
+     * Boost post.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function boost(Request $request, $id)
+    {
+        # code...
     }
 
     /**

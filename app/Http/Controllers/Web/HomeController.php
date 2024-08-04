@@ -47,62 +47,11 @@ class HomeController extends Controller
      */
     public function index()
     {
-        $year = 2024;
-        $portion = 2;
+        if (Session::has('user_demo')) {
+            return view('demo.welcome');
 
-        $dates = getHalfYearDates($year, $portion);
-
-        dd($dates);
-
-        // $weekMap = [
-        //     'zero' => 'SUNDAY',
-        //     'one' => 'MONDAY',
-        //     'two' => 'TUESDAY',
-        //     'three' => 'WEDNESDAY',
-        //     'four' => 'THURSDAY',
-        //     'five' => 'FRIDAY',
-        //     'six' => 'SATURDAY',
-        // ];
-        // $object = new stdClass();
-
-        // foreach ($weekMap as $key => $week) {
-        //     $object->$key = $week;
-        // }
-
-        // dd($object);
-        // dd(Carbon::DECEMBER);
-
-        // $weekMap = [
-        //     0 => 'SUNDAY',
-        //     1 => 'MONDAY',
-        //     2 => 'TUESDAY',
-        //     3 => 'WEDNESDAY',
-        //     4 => 'THURSDAY',
-        //     5 => 'FRIDAY',
-        //     6 => 'SATURDAY',
-        // ];
-        // $dayOfTheWeek = Carbon::now()->dayOfWeek;
-        // $weekday = $weekMap[$dayOfTheWeek];
-
-        // $endOfWeek = Carbon::now()->endOfWeek(Carbon::SATURDAY)->toDateString();
-
-        // dd($endOfWeek);
-
-        // $year = date('Y');
-        // $month = date('m');
-        // $day = date('d');
-        // $date = Carbon::parse($year . '-' . $month . '-' . $day);
-        // $weekNumber = $date->weekNumberInMonth;
-        // $dates = getStartAndEndOfWeekInMonth($year, $month, $weekNumber);
-
-        // dd($dates);
-
-        // if (Session::has('user_demo')) {
-        //     return view('demo.welcome');
-
-        // } else {
-        //     return redirect()->route('login');
-        // }
+        } else {
+            return redirect()->route('login');
+        }
     }
-
 }
