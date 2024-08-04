@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\API;
 
+use stdClass;
+use Carbon\Carbon;
 use App\Models\File;
 use App\Models\Group;
 use App\Models\Hashtag;
@@ -17,9 +19,12 @@ use App\Models\User;
 use App\Models\Visibility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\Post as ResourcesPost;
 use App\Http\Resources\Session as ResourcesSession;
+use App\Http\Resources\History as ResourcesHistory;
+use Carbon\Exceptions\InvalidFormatException;
 
 /**
  * @author Xanders
@@ -484,7 +489,7 @@ class PostController extends BaseController
         /*
             HISTORY AND/OR NOTIFICATION MANAGEMENT
         */
-        if ($request->hasHeader('X-user-id') and $request->hasHeader('X-ip-address') or $request->hasHeader('X-user-id') and !$request->hasHeader('X-ip-address')) {
+        if ($request->hasHeader('X-user-id') AND $request->hasHeader('X-ip-address') OR $request->hasHeader('X-user-id') AND !$request->hasHeader('X-ip-address')) {
             $session = Session::where('user_id', $request->header('X-user-id'))->first();
 
             if (is_null($session)) {
@@ -503,6 +508,8 @@ class PostController extends BaseController
                     'session_id' => $new_session->id
                 ]);
 
+                $new_session->posts()->attach([$post->id]);
+
             } else {
                 History::create([
                     'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
@@ -511,10 +518,18 @@ class PostController extends BaseController
                     'post_id' => $post->id,
                     'session_id' => $session->id
                 ]);
+
+                if (count($session->posts) == 0) {
+                    $session->posts()->attach([$post->id]);
+                }
+
+                if (count($session->posts) > 0) {
+                    $session->posts()->syncWithoutDetaching([$post->id]);
+                }
             }
         }
 
-        if ($request->hasHeader('X-ip-address')) {
+        if (!$request->hasHeader('X-user-id') AND $request->hasHeader('X-ip-address')) {
             $session = Session::where('ip_address', $request->header('X-ip-address'))->first();
 
             if (is_null($session)) {
@@ -531,6 +546,8 @@ class PostController extends BaseController
                     'session_id' => $new_session->id
                 ]);
 
+                $new_session->posts()->syncWithPivotValues([$post->id], ['is_visitor' => 1]);
+
             } else {
                 History::create([
                     'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
@@ -539,6 +556,14 @@ class PostController extends BaseController
                     'post_id' => $post->id,
                     'session_id' => $session->id
                 ]);
+
+                if (count($session->posts) == 0) {
+                    $session->posts()->syncWithPivotValues([$post->id], ['is_visitor' => 1]);
+                }
+
+                if (count($session->posts) > 0) {
+                    $session->posts()->syncWithoutDetaching([$post->id => ['is_visitor' => 1]]);
+                }
             }
         }
 
@@ -918,36 +943,508 @@ class PostController extends BaseController
      */
     public function allViews($post_id)
     {
+        // Groups
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        // Types
+        $consultation_history_type = !empty($history_type_group) ? Type::where([['type_name->fr', 'Historique des consultations'], ['group_id', $history_type_group->id]])->first() : Type::where('type_name->fr', 'Historique des consultations')->first();
+        // Request
         $post = Post::find($post_id);
 
         if (is_null($post)) {
             return $this->handleError(__('notifications.find_post_404'));
         }
 
-        $sessions = $post->sessions;
-        $count_all = count($post->sessions);
+        // Members
+        $members = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->paginate(50);
+        $members_count = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->count();
+        // Non-identified visitors
+        $visitors = Session::whereHas('posts', function($query) { $query->where('post_session.is_visitor', 1); })->get();
+        $visitors_count = Session::whereHas('posts', function($query) { $query->where('post_session.is_visitor', 1); })->count();
+        $count_all = $members_count + $visitors_count;
 
-        return $this->handleResponse(ResourcesSession::collection($sessions), __('notifications.find_all_sessions_success'), null, $count_all);
+        // Main object
+        $object = new stdClass();
+        $object->members = ResourcesHistory::collection($members);
+        $object->visitors = ResourcesSession::collection($visitors);
+
+        return $this->handleResponse($object, __('notifications.find_all_post_views_success'), $members->lastPage(), $count_all);
     }
 
     /**
      * Find post views for a period.
      *
      * @param  int  $post_id
+     * @param  string  $period
+     * @param  int  $day
+     * @param  int  $month
+     * @param  int  $year
      * @return \Illuminate\Http\Response
      */
-    public function periodViews($post_id)
+    public function periodViews($post_id, $period, $year = null, $month = null, $day = null)
     {
+        // Groups
+        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        // Types
+        $consultation_history_type = !empty($history_type_group) ? Type::where([['type_name->fr', 'Historique des consultations'], ['group_id', $history_type_group->id]])->first() : Type::where('type_name->fr', 'Historique des consultations')->first();
+        // Request
         $post = Post::find($post_id);
 
         if (is_null($post)) {
             return $this->handleError(__('notifications.find_post_404'));
         }
 
-        $sessions = $post->sessions;
-        $count_all = count($post->sessions);
+        if ($period == 'weekly') {
+            if (is_null(trim($year)) OR is_null(trim($month)) OR is_null(trim($day))) {
+                return $this->handleError(null, __('validation.custom.year_month_day.required'), 400);
+            }
 
-        return $this->handleResponse(ResourcesSession::collection($sessions), __('notifications.find_all_sessions_success'), null, $count_all);
+            try {
+                $date = Carbon::parse($year . '-' . $month . '-' . $day);
+
+                if (date_timestamp_get($date) > date_timestamp_get(now())) {
+                    return $this->handleError($date, __('notifications.current_day_error'), 400);
+                }
+
+                // Get the start and end of the week by the given date
+                $week_number = $date->weekNumberInMonth; // Get week number from the parsed date
+                $week_start_end_in_month = getStartAndEndOfWeekInMonth($year, $month, $week_number);
+                // Start of the week
+                $week_start = $week_start_end_in_month['start'];
+                // End of the week
+                $week_end = $week_start_end_in_month['end'];
+                // Members
+                $members = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereBetween('created_at', [$week_start, $week_end])->get();
+                $members_sunday = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereBetween('created_at', [$week_start, $week_end])->where(DB::raw('DAYOFWEEK(created_at)'), Carbon::SUNDAY)->get();
+                $members_monday = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereBetween('created_at', [$week_start, $week_end])->where(DB::raw('DAYOFWEEK(created_at)'), Carbon::MONDAY)->get();
+                $members_tuesday = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereBetween('created_at', [$week_start, $week_end])->where(DB::raw('DAYOFWEEK(created_at)'), Carbon::TUESDAY)->get();
+                $members_wednesday = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereBetween('created_at', [$week_start, $week_end])->where(DB::raw('DAYOFWEEK(created_at)'), Carbon::WEDNESDAY)->get();
+                $members_thursday = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereBetween('created_at', [$week_start, $week_end])->where(DB::raw('DAYOFWEEK(created_at)'), Carbon::THURSDAY)->get();
+                $members_friday = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereBetween('created_at', [$week_start, $week_end])->where(DB::raw('DAYOFWEEK(created_at)'), Carbon::FRIDAY)->get();
+                $members_saturday = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereBetween('created_at', [$week_start, $week_end])->where(DB::raw('DAYOFWEEK(created_at)'), Carbon::SATURDAY)->get();
+                // Non-identified visitors
+                $visitors = Session::whereHas('posts', function($query) use ($week_start, $week_end) { $query->whereBetween('post_session.created_at', [$week_start, $week_end])->where('post_session.is_visitor', 1); })->get();
+                $visitors_sunday = Session::whereHas('posts', function($query) use ($week_start, $week_end) { $query->whereBetween('post_session.created_at', [$week_start, $week_end])->where('post_session.is_visitor', 1)->where(DB::raw('DAYOFWEEK(post_session.created_at)'), Carbon::SUNDAY); })->get();
+                $visitors_monday = Session::whereHas('posts', function($query) use ($week_start, $week_end) { $query->whereBetween('post_session.created_at', [$week_start, $week_end])->where('post_session.is_visitor', 1)->where(DB::raw('DAYOFWEEK(post_session.created_at)'), Carbon::MONDAY); })->get();
+                $visitors_tuesday = Session::whereHas('posts', function($query) use ($week_start, $week_end) { $query->whereBetween('post_session.created_at', [$week_start, $week_end])->where('post_session.is_visitor', 1)->where(DB::raw('DAYOFWEEK(post_session.created_at)'), Carbon::TUESDAY); })->get();
+                $visitors_wednesday = Session::whereHas('posts', function($query) use ($week_start, $week_end) { $query->whereBetween('post_session.created_at', [$week_start, $week_end])->where('post_session.is_visitor', 1)->where(DB::raw('DAYOFWEEK(post_session.created_at)'), Carbon::WEDNESDAY); })->get();
+                $visitors_thursday = Session::whereHas('posts', function($query) use ($week_start, $week_end) { $query->whereBetween('post_session.created_at', [$week_start, $week_end])->where('post_session.is_visitor', 1)->where(DB::raw('DAYOFWEEK(post_session.created_at)'), Carbon::THURSDAY); })->get();
+                $visitors_friday = Session::whereHas('posts', function($query) use ($week_start, $week_end) { $query->whereBetween('post_session.created_at', [$week_start, $week_end])->where('post_session.is_visitor', 1)->where(DB::raw('DAYOFWEEK(post_session.created_at)'), Carbon::FRIDAY); })->get();
+                $visitors_saturday = Session::whereHas('posts', function($query) use ($week_start, $week_end) { $query->whereBetween('post_session.created_at', [$week_start, $week_end])->where('post_session.is_visitor', 1)->where(DB::raw('DAYOFWEEK(post_session.created_at)'), Carbon::SATURDAY); })->get();
+                // OBJECTS
+                // Members days object
+                $object_members_days = new stdClass();
+                $object_members_days->sunday = ResourcesHistory::collection($members_sunday);
+                $object_members_days->monday = ResourcesHistory::collection($members_monday);
+                $object_members_days->tuesday = ResourcesHistory::collection($members_tuesday);
+                $object_members_days->wednesday = ResourcesHistory::collection($members_wednesday);
+                $object_members_days->thursday = ResourcesHistory::collection($members_thursday);
+                $object_members_days->friday = ResourcesHistory::collection($members_friday);
+                $object_members_days->saturday = ResourcesHistory::collection($members_saturday);
+                // Visitors days object
+                $object_visitors_days = new stdClass();
+                $object_visitors_days->sunday = ResourcesHistory::collection($visitors_sunday);
+                $object_visitors_days->monday = ResourcesHistory::collection($visitors_monday);
+                $object_visitors_days->tuesday = ResourcesHistory::collection($visitors_tuesday);
+                $object_visitors_days->wednesday = ResourcesHistory::collection($visitors_wednesday);
+                $object_visitors_days->thursday = ResourcesHistory::collection($visitors_thursday);
+                $object_visitors_days->friday = ResourcesHistory::collection($visitors_friday);
+                $object_visitors_days->saturday = ResourcesHistory::collection($visitors_saturday);
+                // Main object
+                $object = new stdClass();
+                $object->members = ResourcesHistory::collection($members);
+                $object->members_days = $object_members_days;
+                $object->visitors = ResourcesSession::collection($visitors);
+                $object->visitors_days = $object_visitors_days;
+
+                return $this->handleResponse($object, __('notifications.find_all_post_views_success'));
+
+            } catch (InvalidFormatException $e) {
+                return $this->handleError(__('miscellaneous.year_singular') . __('miscellaneous.colon_after_word') . ' ' . $year . ', ' . __('miscellaneous.month_singular') . __('miscellaneous.colon_after_word') . ' ' . $month . ', ' . __('miscellaneous.day_singular') . __('miscellaneous.colon_after_word') . ' ' . $day, __('validation.custom.year_month_day.incorrect'), 400);
+            }
+        }
+
+        if ($period == 'monthly') {
+            if (is_null(trim($year)) OR is_null(trim($month))) {
+                return $this->handleError(null, __('validation.custom.year_month.required'), 400);
+            }
+
+            try {
+                $given_date = Carbon::parse($year . '-' . $month);
+                $current_date = Carbon::now();
+
+                if (date_timestamp_get($given_date) > date_timestamp_get($current_date)) {
+                    return $this->handleError($year . '-' . $month, __('notifications.current_month_error'), 400);
+                }
+
+                // Members
+                $members = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', $month)->get();
+                // Non-identified visitors
+                $visitors = Session::whereHas('posts', function($query) use ($year, $month) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', $month)->where('post_session.is_visitor', 1); })->get();
+                // Weeks of given month
+                $weeks = getWeeksOfMonth($year, $month);
+                // OBJECTS
+                // Members weeks object
+                $object_members_weeks = new stdClass();
+                // Non-identified visitors weeks object
+                $object_visitors_weeks = new stdClass();
+                // Main object
+                $object = new stdClass();
+
+                // Members for all weeks
+                foreach ($weeks as $key => $week) {
+                    $members_week = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereBetween('created_at', [$week['start'], $week['end']])->get();
+
+                    $object_members_weeks->$key = ResourcesHistory::collection($members_week);
+                }
+
+                // Non-identified visitors for all weeks
+                foreach ($weeks as $key => $week) {
+                    $visitors_week = Session::whereHas('posts', function($query) use ($week) { $query->whereBetween('post_session.created_at', [$week['start'], $week['end']])->where('post_session.is_visitor', 1); })->get();
+
+                    $object_visitors_weeks->$key = ResourcesSession::collection($visitors_week);
+                }
+
+                $object->members = ResourcesHistory::collection($members);
+                $object->members_weeks = $object_members_weeks;
+                $object->visitors = ResourcesSession::collection($visitors);
+                $object->visitors_weeks = $object_visitors_weeks;
+
+                return $this->handleResponse($object, __('notifications.find_all_post_views_success'));
+
+            } catch (InvalidFormatException $e) {
+                return $this->handleError(__('miscellaneous.year_singular') . __('miscellaneous.colon_after_word') . ' ' . $year . ', ' . __('miscellaneous.month_singular') . __('miscellaneous.colon_after_word') . ' ' . $month, __('validation.custom.year_month.incorrect'), 400);
+            }
+        }
+
+        if ($period == 'quarterly') {
+            if (is_null(trim($year))) {
+                return $this->handleError($year, __('validation.custom.year.required'), 400);
+            }
+
+            if ($year > Carbon::now()->year) {
+                return $this->handleError($year, __('notifications.current_year_error'), 400);
+            }
+
+            if (Carbon::now()->month <= Carbon::MARCH) {
+                // Get the 1st quarter dates
+                $quarter = 1;
+                $dates = getQuarterDates($year, $quarter);
+                // Members
+                $members = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereBetween('created_at', [$dates['start'], $dates['end']])->get();
+                $members_january = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::JANUARY)->get();
+                $members_february = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::FEBRUARY)->get();
+                $members_march = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::MARCH)->get();
+                // Non-identified visitors
+                $visitors = Session::whereHas('posts', function($query) use ($dates) { $query->whereBetween('post_session.created_at', [$dates['start'], $dates['end']])->where('post_session.is_visitor', 1); })->get();
+                $visitors_january = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::JANUARY)->where('post_session.is_visitor', 1); })->get();
+                $visitors_february = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::FEBRUARY)->where('post_session.is_visitor', 1); })->get();
+                $visitors_march = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::MARCH)->where('post_session.is_visitor', 1); })->get();
+                // OBJECTS
+                // Members months object
+                $object_members_months = new stdClass();
+                $object_members_months->january = ResourcesHistory::collection($members_january);
+                $object_members_months->february = ResourcesHistory::collection($members_february);
+                $object_members_months->march = ResourcesHistory::collection($members_march);
+                // Visitors months object
+                $object_visitors_months = new stdClass();
+                $object_visitors_months->january = ResourcesHistory::collection($visitors_january);
+                $object_visitors_months->february = ResourcesHistory::collection($visitors_february);
+                $object_visitors_months->march = ResourcesHistory::collection($visitors_march);
+                // Main object
+                $object = new stdClass();
+                $object->members = ResourcesHistory::collection($members);
+                $object->members_months = $object_members_months;
+                $object->visitors = ResourcesSession::collection($visitors);
+                $object->visitors_months = $object_visitors_months;
+
+                return $this->handleResponse($object, __('notifications.find_all_post_views_success'));
+            }
+
+            if (Carbon::now()->month > Carbon::MARCH AND Carbon::now()->month <= Carbon::JUNE) {
+                // Get the 2nd quarter dates
+                $quarter = 2;
+                $dates = getQuarterDates($year, $quarter);
+                // Members
+                $members = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereBetween('created_at', [$dates['start'], $dates['end']])->get();
+                $members_april = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::APRIL)->get();
+                $members_may = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::MAY)->get();
+                $members_june = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::JUNE)->get();
+                // Non-identified visitors
+                $visitors = Session::whereHas('posts', function($query) use ($dates) { $query->whereBetween('post_session.created_at', [$dates['start'], $dates['end']])->where('post_session.is_visitor', 1); })->get();
+                $visitors_april = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::APRIL)->where('post_session.is_visitor', 1); })->get();
+                $visitors_may = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::MAY)->where('post_session.is_visitor', 1); })->get();
+                $visitors_june = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::JUNE)->where('post_session.is_visitor', 1); })->get();
+                // OBJECTS
+                // Members months object
+                $object_members_months = new stdClass();
+                $object_members_months->april = ResourcesHistory::collection($members_april);
+                $object_members_months->may = ResourcesHistory::collection($members_may);
+                $object_members_months->june = ResourcesHistory::collection($members_june);
+                // Visitors months object
+                $object_visitors_months = new stdClass();
+                $object_visitors_months->april = ResourcesHistory::collection($visitors_april);
+                $object_visitors_months->may = ResourcesHistory::collection($visitors_may);
+                $object_visitors_months->june = ResourcesHistory::collection($visitors_june);
+                // Main object
+                $object = new stdClass();
+                $object->members = ResourcesHistory::collection($members);
+                $object->members_months = $object_members_months;
+                $object->visitors = ResourcesSession::collection($visitors);
+                $object->visitors_months = $object_visitors_months;
+
+                return $this->handleResponse($object, __('notifications.find_all_post_views_success'));
+            }
+
+            if (Carbon::now()->month > Carbon::JUNE AND Carbon::now()->month <= Carbon::SEPTEMBER) {
+                // Get the 3rd quarter dates
+                $quarter = 3;
+                $dates = getQuarterDates($year, $quarter);
+                // Members
+                $members = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereBetween('created_at', [$dates['start'], $dates['end']])->get();
+                $members_july = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::JULY)->get();
+                $members_august = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::AUGUST)->get();
+                $members_september = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::SEPTEMBER)->get();
+                // Non-identified visitors
+                $visitors = Session::whereHas('posts', function($query) use ($dates) { $query->whereBetween('post_session.created_at', [$dates['start'], $dates['end']])->where('post_session.is_visitor', 1); })->get();
+                $visitors_july = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::JULY)->where('post_session.is_visitor', 1); })->get();
+                $visitors_august = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::AUGUST)->where('post_session.is_visitor', 1); })->get();
+                $visitors_september = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::SEPTEMBER)->where('post_session.is_visitor', 1); })->get();
+                // OBJECTS
+                // Members months object
+                $object_members_months = new stdClass();
+                $object_members_months->july = ResourcesHistory::collection($members_july);
+                $object_members_months->august = ResourcesHistory::collection($members_august);
+                $object_members_months->september = ResourcesHistory::collection($members_september);
+                // Visitors months object
+                $object_visitors_months = new stdClass();
+                $object_visitors_months->july = ResourcesHistory::collection($visitors_july);
+                $object_visitors_months->august = ResourcesHistory::collection($visitors_august);
+                $object_visitors_months->september = ResourcesHistory::collection($visitors_september);
+                // Main object
+                $object = new stdClass();
+                $object->members = ResourcesHistory::collection($members);
+                $object->members_months = $object_members_months;
+                $object->visitors = ResourcesSession::collection($visitors);
+                $object->visitors_months = $object_visitors_months;
+
+                return $this->handleResponse($object, __('notifications.find_all_post_views_success'));
+            }
+
+            if (Carbon::now()->month > Carbon::SEPTEMBER AND Carbon::now()->month <= Carbon::DECEMBER) {
+                // Get the 4th quarter dates
+                $quarter = 4;
+                $dates = getQuarterDates($year, $quarter);
+                // Members
+                $members = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereBetween('created_at', [$dates['start'], $dates['end']])->get();
+                $members_october = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::OCTOBER)->get();
+                $members_november = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::NOVEMBER)->get();
+                $members_december = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::DECEMBER)->get();
+                // Non-identified visitors
+                $visitors = Session::whereHas('posts', function($query) use ($dates) { $query->whereBetween('post_session.created_at', [$dates['start'], $dates['end']])->where('post_session.is_visitor', 1); })->get();
+                $visitors_october = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::OCTOBER)->where('post_session.is_visitor', 1); })->get();
+                $visitors_november = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::NOVEMBER)->where('post_session.is_visitor', 1); })->get();
+                $visitors_december = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::DECEMBER)->where('post_session.is_visitor', 1); })->get();
+                // OBJECTS
+                // Members months object
+                $object_members_months = new stdClass();
+                $object_members_months->october = ResourcesHistory::collection($members_october);
+                $object_members_months->november = ResourcesHistory::collection($members_november);
+                $object_members_months->december = ResourcesHistory::collection($members_december);
+                // Visitors months object
+                $object_visitors_months = new stdClass();
+                $object_visitors_months->october = ResourcesHistory::collection($visitors_october);
+                $object_visitors_months->november = ResourcesHistory::collection($visitors_november);
+                $object_visitors_months->december = ResourcesHistory::collection($visitors_december);
+                // Main object
+                $object = new stdClass();
+                $object->members = ResourcesHistory::collection($members);
+                $object->members_months = $object_members_months;
+                $object->visitors = ResourcesSession::collection($visitors);
+                $object->visitors_months = $object_visitors_months;
+
+                return $this->handleResponse($object, __('notifications.find_all_post_views_success'));
+            }
+        }
+
+        if ($period == 'half_yearly') {
+            if (is_null(trim($year))) {
+                return $this->handleError($year, __('validation.custom.year.required'), 400);
+            }
+
+            if ($year > Carbon::now()->year) {
+                return $this->handleError($year, __('notifications.current_year_error'), 400);
+            }
+
+            if (Carbon::now()->month <= Carbon::JUNE) {
+                // Get the 1st half-year dates
+                $portion = 1;
+                $dates = getHalfYearDates($year, $portion);
+                // Members
+                $members = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereBetween('created_at', [$dates['start'], $dates['end']])->get();
+                $members_january = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::JANUARY)->get();
+                $members_february = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::FEBRUARY)->get();
+                $members_march = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::MARCH)->get();
+                $members_april = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::APRIL)->get();
+                $members_may = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::MAY)->get();
+                $members_june = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::JUNE)->get();
+                // Non-identified visitors
+                $visitors = Session::whereHas('posts', function($query) use ($dates) { $query->whereBetween('post_session.created_at', [$dates['start'], $dates['end']])->where('post_session.is_visitor', 1); })->get();
+                $visitors_january = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::JANUARY)->where('post_session.is_visitor', 1); })->get();
+                $visitors_february = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::FEBRUARY)->where('post_session.is_visitor', 1); })->get();
+                $visitors_march = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::MARCH)->where('post_session.is_visitor', 1); })->get();
+                $visitors_april = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::APRIL)->where('post_session.is_visitor', 1); })->get();
+                $visitors_may = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::MAY)->where('post_session.is_visitor', 1); })->get();
+                $visitors_june = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::JUNE)->where('post_session.is_visitor', 1); })->get();
+                // OBJECTS
+                // Members months object
+                $object_members_months = new stdClass();
+                $object_members_months->january = ResourcesHistory::collection($members_january);
+                $object_members_months->february = ResourcesHistory::collection($members_february);
+                $object_members_months->march = ResourcesHistory::collection($members_march);
+                $object_members_months->april = ResourcesHistory::collection($members_april);
+                $object_members_months->may = ResourcesHistory::collection($members_may);
+                $object_members_months->june = ResourcesHistory::collection($members_june);
+                // Visitors months object
+                $object_visitors_months = new stdClass();
+                $object_visitors_months->january = ResourcesHistory::collection($visitors_january);
+                $object_visitors_months->february = ResourcesHistory::collection($visitors_february);
+                $object_visitors_months->march = ResourcesHistory::collection($visitors_march);
+                $object_visitors_months->april = ResourcesHistory::collection($visitors_april);
+                $object_visitors_months->may = ResourcesHistory::collection($visitors_may);
+                $object_visitors_months->june = ResourcesHistory::collection($visitors_june);
+                // Main object
+                $object = new stdClass();
+                $object->members = ResourcesHistory::collection($members);
+                $object->members_months = $object_members_months;
+                $object->visitors = ResourcesSession::collection($visitors);
+                $object->visitors_months = $object_visitors_months;
+
+                return $this->handleResponse($object, __('notifications.find_all_post_views_success'));
+            }
+
+            if (Carbon::now()->month > Carbon::JULY AND Carbon::now()->month <= Carbon::DECEMBER) {
+                // Get the 2nd half-year dates
+                $portion = 2;
+                $dates = getHalfYearDates($year, $portion);
+                // Members
+                $members = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereBetween('created_at', [$dates['start'], $dates['end']])->get();
+                $members_july = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::JULY)->get();
+                $members_august = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::AUGUST)->get();
+                $members_september = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::SEPTEMBER)->get();
+                $members_october = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::OCTOBER)->get();
+                $members_november = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::NOVEMBER)->get();
+                $members_december = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::DECEMBER)->get();
+                // Non-identified visitors
+                $visitors = Session::whereHas('posts', function($query) use ($dates) { $query->whereBetween('post_session.created_at', [$dates['start'], $dates['end']])->where('post_session.is_visitor', 1); })->get();
+                $visitors_july = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::JULY)->where('post_session.is_visitor', 1); })->get();
+                $visitors_august = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::AUGUST)->where('post_session.is_visitor', 1); })->get();
+                $visitors_september = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::SEPTEMBER)->where('post_session.is_visitor', 1); })->get();
+                $visitors_october = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::OCTOBER)->where('post_session.is_visitor', 1); })->get();
+                $visitors_november = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::NOVEMBER)->where('post_session.is_visitor', 1); })->get();
+                $visitors_december = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::DECEMBER)->where('post_session.is_visitor', 1); })->get();
+                // OBJECTS
+                // Members months object
+                $object_members_months = new stdClass();
+                $object_members_months->july = ResourcesHistory::collection($members_july);
+                $object_members_months->august = ResourcesHistory::collection($members_august);
+                $object_members_months->september = ResourcesHistory::collection($members_september);
+                $object_members_months->october = ResourcesHistory::collection($members_october);
+                $object_members_months->november = ResourcesHistory::collection($members_november);
+                $object_members_months->december = ResourcesHistory::collection($members_december);
+                // Visitors months object
+                $object_visitors_months = new stdClass();
+                $object_visitors_months->july = ResourcesHistory::collection($visitors_july);
+                $object_visitors_months->august = ResourcesHistory::collection($visitors_august);
+                $object_visitors_months->september = ResourcesHistory::collection($visitors_september);
+                $object_visitors_months->october = ResourcesHistory::collection($visitors_october);
+                $object_visitors_months->november = ResourcesHistory::collection($visitors_november);
+                $object_visitors_months->december = ResourcesHistory::collection($visitors_december);
+                // Main object
+                $object = new stdClass();
+                $object->members = ResourcesHistory::collection($members);
+                $object->members_months = $object_members_months;
+                $object->visitors = ResourcesSession::collection($visitors);
+                $object->visitors_months = $object_visitors_months;
+
+                return $this->handleResponse($object, __('notifications.find_all_post_views_success'));
+            }
+        }
+
+        if ($period == 'yearly') {
+            if (is_null(trim($year))) {
+                return $this->handleError($year, __('validation.custom.year.required'), 400);
+            }
+
+            if ($year > Carbon::now()->year) {
+                return $this->handleError($year, __('notifications.current_year_error'), 400);
+            }
+
+            // Members
+            $members = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->get();
+            $members_january = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::JANUARY)->get();
+            $members_february = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::FEBRUARY)->get();
+            $members_march = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::MARCH)->get();
+            $members_april = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::APRIL)->get();
+            $members_may = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::MAY)->get();
+            $members_june = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::JUNE)->get();
+            $members_july = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::JULY)->get();
+            $members_august = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::AUGUST)->get();
+            $members_september = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::SEPTEMBER)->get();
+            $members_october = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::OCTOBER)->get();
+            $members_november = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::NOVEMBER)->get();
+            $members_december = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->whereYear('created_at', '=', $year)->whereMonth('created_at', '=', Carbon::DECEMBER)->get();
+            // Non-identified visitors
+            $visitors = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->where('post_session.is_visitor', 1); })->get();
+            $visitors_january = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::JANUARY)->where('post_session.is_visitor', 1); })->get();
+            $visitors_february = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::FEBRUARY)->where('post_session.is_visitor', 1); })->get();
+            $visitors_march = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::MARCH)->where('post_session.is_visitor', 1); })->get();
+            $visitors_april = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::APRIL)->where('post_session.is_visitor', 1); })->get();
+            $visitors_may = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::MAY)->where('post_session.is_visitor', 1); })->get();
+            $visitors_june = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::JUNE)->where('post_session.is_visitor', 1); })->get();
+            $visitors_july = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::JULY)->where('post_session.is_visitor', 1); })->get();
+            $visitors_august = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::AUGUST)->where('post_session.is_visitor', 1); })->get();
+            $visitors_september = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::SEPTEMBER)->where('post_session.is_visitor', 1); })->get();
+            $visitors_october = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::OCTOBER)->where('post_session.is_visitor', 1); })->get();
+            $visitors_november = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::NOVEMBER)->where('post_session.is_visitor', 1); })->get();
+            $visitors_december = Session::whereHas('posts', function($query) use ($year) { $query->whereYear('post_session.created_at', '=', $year)->whereMonth('post_session.created_at', '=', Carbon::DECEMBER)->where('post_session.is_visitor', 1); })->get();
+            // OBJECTS
+            // Members months object
+            $object_members_months = new stdClass();
+            $object_members_months->january = ResourcesHistory::collection($members_january);
+            $object_members_months->february = ResourcesHistory::collection($members_february);
+            $object_members_months->march = ResourcesHistory::collection($members_march);
+            $object_members_months->april = ResourcesHistory::collection($members_april);
+            $object_members_months->may = ResourcesHistory::collection($members_may);
+            $object_members_months->june = ResourcesHistory::collection($members_june);
+            $object_members_months->july = ResourcesHistory::collection($members_july);
+            $object_members_months->august = ResourcesHistory::collection($members_august);
+            $object_members_months->september = ResourcesHistory::collection($members_september);
+            $object_members_months->october = ResourcesHistory::collection($members_october);
+            $object_members_months->november = ResourcesHistory::collection($members_november);
+            $object_members_months->december = ResourcesHistory::collection($members_december);
+            // Visitors months object
+            $object_visitors_months = new stdClass();
+            $object_visitors_months->january = ResourcesHistory::collection($visitors_january);
+            $object_visitors_months->february = ResourcesHistory::collection($visitors_february);
+            $object_visitors_months->march = ResourcesHistory::collection($visitors_march);
+            $object_visitors_months->april = ResourcesHistory::collection($visitors_april);
+            $object_visitors_months->may = ResourcesHistory::collection($visitors_may);
+            $object_visitors_months->june = ResourcesHistory::collection($visitors_june);
+            $object_visitors_months->july = ResourcesHistory::collection($visitors_july);
+            $object_visitors_months->august = ResourcesHistory::collection($visitors_august);
+            $object_visitors_months->september = ResourcesHistory::collection($visitors_september);
+            $object_visitors_months->october = ResourcesHistory::collection($visitors_october);
+            $object_visitors_months->november = ResourcesHistory::collection($visitors_november);
+            $object_visitors_months->december = ResourcesHistory::collection($visitors_december);
+            // Main object
+            $object = new stdClass();
+            $object->members = ResourcesHistory::collection($members);
+            $object->members_months = $object_members_months;
+            $object->visitors = ResourcesSession::collection($visitors);
+            $object->visitors_months = $object_visitors_months;
+
+            return $this->handleResponse($object, __('notifications.find_all_post_views_success'));
+        }
     }
 
     /**

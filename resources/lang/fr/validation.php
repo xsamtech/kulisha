@@ -188,13 +188,27 @@ return [
             'exists' => 'Ce sous-titre existe déjà'
         ],
         'description' => [
-            'exists' => 'This description already exists'
+            'exists' => 'Cette description existe déjà'
         ],
         'deadline' => [
             'exists' => 'Cette échéance existe déjà'
         ],
         'owner' => [
             'required' => 'A quelle entité ça appartient ?'
+        ],
+        'year_month_day' => [
+            'incorrect' => 'Veuillez donnez une année, un mois et un jour corrects',
+            'required' => 'Le jour, le mois et l’année doivent être définis',
+        ],
+        'year_month' => [
+            'incorrect' => 'Veuillez donnez une année et un mois corrects',
+            'required' => 'Le mois et l’année doivent être définis',
+        ],
+        'year' => [
+            'required' => 'L’année doit être définie',
+        ],
+        'month' => [
+            'required' => 'Le mois doit être défini',
         ],
     ],
 

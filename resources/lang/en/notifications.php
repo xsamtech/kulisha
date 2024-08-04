@@ -51,6 +51,9 @@ return [
     'new_partner_message' => 'You can now log in as a partner with your phone number. Temporary password:',
     'reaction_sent' => 'Reaction sent',
     'invitation_sent' => 'Invitation sent',
+    'current_day_error' => 'This day has not yet arrived!',
+    'current_month_error' => 'This month has not yet arrived!',
+    'current_year_error' => 'This year has not yet arrived!',
     // Group
     'find_all_groups_success' => 'Groups found',
     'find_group_success' => 'Group found',
@@ -130,6 +133,7 @@ return [
     'delete_budget_success' => 'Budget deleted',
     // User
     'find_all_users_success' => 'Users found',
+    'find_all_profile_views_success' => 'Profile views found',
     'find_user_success' => 'User found',
     'find_api_token_success' => 'API token found',
     'find_user_404' => 'User not found',
@@ -183,6 +187,7 @@ return [
     'delete_payment_success' => 'Payment deleted',
     // Post
     'find_all_posts_success' => 'Posts found',
+    'find_all_post_views_success' => 'Post views found',
     'find_post_success' => 'Post found',
     'find_post_404' => 'Post not found',
     'find_post_parent_404' => 'Which post did you comment on?',
@@ -190,7 +195,7 @@ return [
     'create_post_success' => 'Post created',
     'update_post_success' => 'Post updated',
     'delete_post_success' => 'Post deleted',
-    'register_post_success' => 'Post registered to see later',
+    'register_for_later_post_success' => 'Post registered to see later',
     // Event
     'find_all_events_success' => 'Events found',
     'find_event_success' => 'Event found',

@@ -34,7 +34,7 @@ class Session extends Model
      */
     public function posts(): BelongsToMany
     {
-        return $this->belongsToMany(Post::class)->orderByPivot('created_at', 'desc')->withTimestamps();
+        return $this->belongsToMany(Post::class)->orderByPivot('created_at', 'desc')->withPivot('is_visitor')->withTimestamps();
     }
 
     /**

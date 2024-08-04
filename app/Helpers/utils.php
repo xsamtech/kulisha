@@ -134,6 +134,146 @@ if (!function_exists('explicitDate')) {
     }
 }
 
+// All days of specific week in month
+if (!function_exists('getStartAndEndOfWeekInMonth')) {
+    function getStartAndEndOfWeekInMonth($year, $month, $weekNumber)
+    {
+        // Creates a DateTime object for the first day of the month
+        $startOfMonth = new DateTime("$year-$month-01");
+
+        // Find the first monday of the month
+        $startOfMonth->modify('monday this week');
+        if ($startOfMonth->format('n') != $month) {
+            $startOfMonth->modify('next monday');
+        }
+
+        // Calculate the start of the specific week
+        $startOfWeek = clone $startOfMonth;
+
+        $startOfWeek->modify('+' . ($weekNumber - 1) . ' weeks');
+
+        // Calculate the end of the specific week
+        $endOfWeek = clone $startOfWeek;
+
+        $endOfWeek->modify('sunday this week');
+
+        // Adjust to not exceed the month
+        if ($startOfWeek->format('n') != $month) {
+            $startOfWeek->modify('first day of next month');
+            $startOfWeek->modify('-1 week');
+
+            $endOfWeek = clone $startOfWeek;
+
+            $endOfWeek->modify('sunday this week');
+        }
+
+        // Make sure the end of the week does not exceed the end of the month
+        $endOfMonth = new DateTime("$year-$month-" . date('t', strtotime("$year-$month-01")));
+
+        if ($endOfWeek > $endOfMonth) {
+            $endOfWeek = $endOfMonth;
+        }
+
+        return [
+            'start' => $startOfWeek->format('Y-m-d'),
+            'end' => $endOfWeek->format('Y-m-d')
+        ];
+    }
+}
+
+// All weeks of specific month
+if (!function_exists('getWeeksOfMonth')) {
+    function getWeeksOfMonth($year, $month)
+    {
+        $weeks = [];
+        // Start and end of the month
+        $startDate = new DateTime("$year-$month-01");
+        $endDate = (clone $startDate)->modify('last day of this month');
+        // First week initialization
+        $startOfWeek = clone $startDate;
+
+        $startOfWeek->modify('this week');
+
+        while ($startOfWeek <= $endDate) {
+            $endOfWeek = clone $startOfWeek;
+
+            $endOfWeek->modify('sunday this week');
+
+            // Adjustment to not exceed the end of the month
+            if ($endOfWeek > $endDate) {
+                $endOfWeek = $endDate;
+            }
+
+            // Adding the week to the list
+            $weeks[] = [
+                'start' => $startOfWeek->format('Y-m-d'),
+                'end' => $endOfWeek->format('Y-m-d'),
+            ];
+
+            // Moving on to the next week
+            $startOfWeek->modify('next week');
+        }
+
+        return $weeks;
+    }
+}
+
+// All quarters of specific year
+if (!function_exists('getQuarterDates')) {
+    function getQuarterDates($year, $quarter)
+    {
+        switch ($quarter) {
+            case 1:
+                $startDate = "$year-01-01";
+                $endDate = "$year-03-31";
+                break;
+            case 2:
+                $startDate = "$year-04-01";
+                $endDate = "$year-06-30";
+                break;
+            case 3:
+                $startDate = "$year-07-01";
+                $endDate = "$year-09-30";
+                break;
+            case 4:
+                $startDate = "$year-10-01";
+                $endDate = "$year-12-31";
+                break;
+            default:
+                throw new Exception('Invalid quarter');
+        }
+
+        return [
+            'start' => $startDate,
+            'end' => $endDate
+        ];
+    }
+}
+
+// All half-yearly of specific year
+if (!function_exists('getHalfYearDates')) {
+    function getHalfYearDates($year, $portion)
+    {
+        switch ($portion) {
+            case 1:
+                $startDate = "$year-01-01";
+                $endDate = "$year-06-30";
+                break;
+            case 2:
+                $startDate = "$year-07-01";
+                $endDate = "$year-12-31";
+                break;
+            default:
+                throw new Exception('Invalid portion');
+        }
+
+        return [
+            'start' => $startDate,
+            'end' => $endDate
+        ];
+    }
+}
+
 // Delete item from exploded array
 if (!function_exists('deleteExplodedArrayItem')) {
     function deleteExplodedArrayItem($separator, $subject, $item)

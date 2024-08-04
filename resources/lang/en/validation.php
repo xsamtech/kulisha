@@ -196,6 +196,20 @@ return [
         'owner' => [
             'required' => 'What entity does it belong to?'
         ],
+        'year_month_day' => [
+            'incorrect' => 'Please give correct year, month and day',
+            'required' => 'Day, month and year must be set',
+        ],
+        'year_month' => [
+            'incorrect' => 'Please give correct year and month',
+            'required' => 'Month and year must be set',
+        ],
+        'year' => [
+            'required' => 'The year must be set',
+        ],
+        'month' => [
+            'required' => 'The month must be set',
+        ],
     ],
 
     /*

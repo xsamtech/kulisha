@@ -51,6 +51,9 @@ return [
     'new_partner_message' => 'Vous pouvez maintenant vous connecter en tant que partenaire avec votre n° de téléphone. Mot de passe temportaire :',
     'reaction_sent' => 'Réaction envoyée',
     'invitation_sent' => 'Invitation envoyée',
+    'current_day_error' => 'Ce jour n’est pas encore arrivé !',
+    'current_month_error' => 'Ce mois n’est pas encore arrivé !',
+    'current_year_error' => 'Cette année n’est pas encore arrivée !',
     // Group
     'find_all_groups_success' => 'Groupes trouvés',
     'find_group_success' => 'Groupe trouvé',
@@ -130,6 +133,7 @@ return [
     'delete_budget_success' => 'Budget supprimé',
     // User
     'find_all_users_success' => 'Utilisateurs trouvés',
+    'find_all_profile_views_success' => 'Vues de profil trouvées',
     'find_user_success' => 'Utilisateur trouvé',
     'find_api_token_success' => 'Jeton d’API trouvé',
     'find_user_404' => 'Utilisateur non trouvé',
@@ -183,6 +187,7 @@ return [
     'delete_payment_success' => 'Paiement supprimé',
     // Post
     'find_all_posts_success' => 'Posts trouvés',
+    'find_all_post_views_success' => 'Vues de post trouvées',
     'find_post_success' => 'Post trouvé',
     'find_post_404' => 'Post non trouvé',
     'find_post_parent_404' => 'Sur quel post avez-vous commenté ?',
@@ -190,7 +195,7 @@ return [
     'create_post_success' => 'Post créé',
     'update_post_success' => 'Post modifié',
     'delete_post_success' => 'Post supprimé',
-    'register_post_success' => 'Post enregistré pour voir plus tard',
+    'register_for_later_post_success' => 'Post enregistré pour voir plus tard',
     // Event
     'find_all_events_success' => 'Evénements trouvés',
     'find_event_success' => 'Evénement trouvé',
