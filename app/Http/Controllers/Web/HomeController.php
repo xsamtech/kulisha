@@ -4,11 +4,8 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\ApiClientManager;
 use App\Http\Controllers\Controller;
-use Carbon\Carbon;
-use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
-use stdClass;
 
 /**
  * @author Xanders
