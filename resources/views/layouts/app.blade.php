@@ -280,20 +280,100 @@
         </header>
         <!-- ======================= Header END -->
 
-    <!-- **************** MAIN CONTENT START **************** -->
-    <main>
-        <!-- Container START -->
-        <div class="container">
-            <div class="row g-4">
+        <!-- **************** MAIN CONTENT START **************** -->
+        <main>
+            <!-- Container START -->
+            <div class="container">
+                <div class="row g-4">
 
 @yield('app-content')
 
+                </div>
+            </div>
+            <!-- Container END -->
+        </main>
+        <!-- **************** MAIN CONTENT END **************** -->
+
+
+        <!-- Modal create Feed START -->
+        <div class="modal fade" id="modalCreateFeed" tabindex="-1" aria-labelledby="modalLabelCreateFeed" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                <!-- Modal feed header START -->
+                <div class="modal-header pb-0 border-bottom-0">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <!-- Modal feed header END -->
+
+                <!-- Modal feed body START -->
+                <div class="modal-body">
+                    <!-- Add Feed -->
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1">
+                            <label class="form-check-label" for="inlineRadio1">Produit</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="option2">
+                            <label class="form-check-label" for="inlineRadio2">Service</label>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <!-- Avatar -->
+                        <div class="avatar avatar-xs me-2">
+                            <img class="avatar-img rounded-circle" src="{{ asset('assets/img/template/avatar/07.jpg') }}" alt>
+                        </div>
+                        <!-- Feed box  -->
+                        <form class="w-100">
+                            <textarea class="form-control pe-4 fs-3 lh-1 border-0" rows="4" placeholder="@lang('miscellaneous.public.home.posts.new')" autofocus></textarea>
+                        </form>
+                    </div>
+                    <!-- Feed rect START -->
+                    <div class="hstack gap-2">
+                        <a class="icon-md bg-success bg-opacity-10 text-success rounded-circle" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.type.image')">
+                            <i class="bi bi-camera"></i>
+                        </a>
+                        <a class="icon-md bg-info bg-opacity-10 text-info rounded-circle" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.type.event')">
+                            <i class="bi bi-calendar2-event-fill"></i>
+                        </a>
+                        <a class="icon-md bg-danger bg-opacity-10 text-danger rounded-circle" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.type.poll')">
+                            <i class="bi bi-list-check"></i>
+                        </a>
+                        <a class="icon-md bg-warning bg-opacity-10 text-warning rounded-circle" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.type.anonymous_question')">
+                            <i class="bi bi-question-circle"></i>
+                        </a>
+                    </div>
+                    <!-- Feed rect END -->
+                </div>
+                <!-- Modal feed body END -->
+
+                <!-- Modal feed footer -->
+                <div class="modal-footer px-3 row justify-content-between">
+                    <!-- Select -->
+                    <div class="col-lg-7">
+                        <div class="input-group">
+                            <label class="input-group-text" for="inputGroupSelect01" title="Visibilité"><i class="bi bi-eye"></i></label>
+                            <select id="inputGroupSelect01" class="form-select w-100 js-choice" data-position="top" data-search-enabled="false">
+                                <option class="small" value="PB">Tout le monde</option>
+                                <option class="small" value="PV">Moi uniquement</option>
+                                <option class="small" value="PV">Tout le monde, sauf ...</option>
+                                <option class="small" value="PV">Personne, sauf …</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Button -->
+                    <div class="col-lg-4 text-sm-end">
+                        <button type="button" class="btn btn-success-soft">
+                            <i class="bi bi-send me-1"></i> @lang('miscellaneous.post')
+                        </button>
+                    </div>
+                </div>
+                <!-- Modal feed footer -->
+
+                </div>
             </div>
         </div>
-        <!-- Container END -->
-    </main>
-    <!-- **************** MAIN CONTENT END **************** -->
-
+        <!-- Modal create feed END -->
 
         <!-- ======================= JS libraries, plugins and custom scripts -->
         <!-- jQuery JS -->

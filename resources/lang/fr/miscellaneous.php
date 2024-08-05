@@ -42,6 +42,7 @@ return [
     'no' => 'Non',
     'connection' => 'Connexion',
     'register' => 'Enregistrer',
+    'post' => 'Poster',
     'send' => 'Envoyer',
     'add' => 'Ajouter',
     'validated' => 'Validé',

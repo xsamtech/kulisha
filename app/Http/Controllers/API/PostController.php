@@ -1529,6 +1529,18 @@ class PostController extends BaseController
     }
 
     /**
+     * Save post to see later.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function saveForLater(Request $request, $id)
+    {
+        # code...
+    }
+
+    /**
      * Boost post.
      *
      * @param  \Illuminate\Http\Request  $request

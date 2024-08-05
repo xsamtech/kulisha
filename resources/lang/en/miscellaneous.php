@@ -42,6 +42,7 @@ return [
     'no' => 'No',
     'connection' => 'Connection',
     'register' => 'Register',
+    'post' => 'Post',
     'send' => 'Send',
     'add' => 'Add',
     'validated' => 'Validated',
