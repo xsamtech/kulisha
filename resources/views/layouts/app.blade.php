@@ -306,18 +306,20 @@
                 <!-- Modal feed header END -->
 
                 <!-- Modal feed body START -->
-                <div class="modal-body">
-                    <!-- Add Feed -->
+                <div class="modal-body pt-0">
+                    <!-- Check One Feed Type -->
                     <div class="d-flex justify-content-center mb-3">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1">
+                        <div role="button" class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1" checked>
                             <label class="form-check-label" for="inlineRadio1">Produit</label>
                         </div>
-                        <div class="form-check form-check-inline">
+                        <div role="button" class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="option2">
                             <label class="form-check-label" for="inlineRadio2">Service</label>
                         </div>
                     </div>
+
+                    <!-- Add Feed Text -->
                     <div class="d-flex mb-3">
                         <!-- Avatar -->
                         <div class="avatar avatar-xs me-2">
@@ -325,44 +327,74 @@
                         </div>
                         <!-- Feed box  -->
                         <form class="w-100">
-                            <textarea class="form-control pe-4 fs-3 lh-1 border-0" rows="4" placeholder="@lang('miscellaneous.public.home.posts.new')" autofocus></textarea>
+                            <textarea class="form-control pe-4 fs-3 lh-1 border-0" rows="4" placeholder="Exprimez-vous ..." autofocus></textarea>
                         </form>
                     </div>
-                    <!-- Feed rect START -->
-                    <div class="hstack gap-2">
-                        <a class="icon-md bg-success bg-opacity-10 text-success rounded-circle" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.type.image')">
-                            <i class="bi bi-camera"></i>
+
+                    <!-- Other Feed Data -->
+                    <div class="hstack gap-2 justify-content-center">
+                        <a class="icon-md bg-success bg-opacity-10 rounded-circle text-success" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Image">
+                            <i class="bi bi-image"></i>
                         </a>
-                        <a class="icon-md bg-info bg-opacity-10 text-info rounded-circle" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.type.event')">
-                            <i class="bi bi-calendar2-event-fill"></i>
+                        <a class="icon-md bg-info bg-opacity-10 rounded-circle text-info" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Document">
+                            <i class="bi bi-file-earmark-text"></i>
                         </a>
-                        <a class="icon-md bg-danger bg-opacity-10 text-danger rounded-circle" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.type.poll')">
-                            <i class="bi bi-list-check"></i>
+                        <a class="icon-md bg-danger bg-opacity-10 rounded-circle text-danger" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="GIF">
+                            <i class="bi bi-filetype-gif"></i>
                         </a>
-                        <a class="icon-md bg-warning bg-opacity-10 text-warning rounded-circle" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.type.anonymous_question')">
-                            <i class="bi bi-question-circle"></i>
+                        <a class="icon-md bg-secondary bg-opacity-10 rounded-circle text-secondary" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Localisation">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </a>
+                        <a class="icon-md bg-warning bg-opacity-10 rounded-circle text-warning" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="Emoji">
+                            <i class="bi bi-emoji-smile-fill"></i>
                         </a>
                     </div>
-                    <!-- Feed rect END -->
+
+                    <!-- Select Feed categories -->
+                    <div class="mt-3 text-center">
+                        <input type="checkbox" class="btn-check" id="btn-check-1" autocomplete="off">
+                        <label class="small btn btn-light m-2 rounded-pill" for="btn-check-1">Matériel d’agriculture</label>
+
+                        <input type="checkbox" class="btn-check" id="btn-check-2" autocomplete="off">
+                        <label class="small btn btn-light m-2 rounded-pill" for="btn-check-2">Plante et semence</label>
+
+                        <input type="checkbox" class="btn-check" id="btn-check-3" autocomplete="off">
+                        <label class="small btn btn-light m-2 rounded-pill" for="btn-check-3">Produit transformé</label>
+
+                        <input type="checkbox" class="btn-check" id="btn-check-4" autocomplete="off">
+                        <label class="small btn btn-light m-2 rounded-pill" for="btn-check-4">Produit extrait</label>
+                    </div>
                 </div>
                 <!-- Modal feed body END -->
 
                 <!-- Modal feed footer -->
                 <div class="modal-footer px-3 row justify-content-between">
                     <!-- Select -->
-                    <div class="col-lg-7">
-                        <div class="input-group">
-                            <label class="input-group-text" for="inputGroupSelect01" title="Visibilité"><i class="bi bi-eye"></i></label>
-                            <select id="inputGroupSelect01" class="form-select w-100 js-choice" data-position="top" data-search-enabled="false">
-                                <option class="small" value="PB">Tout le monde</option>
-                                <option class="small" value="PV">Moi uniquement</option>
-                                <option class="small" value="PV">Tout le monde, sauf ...</option>
-                                <option class="small" value="PV">Personne, sauf …</option>
-                            </select>
+                    <div class="col-lg-4">
+                        <div class="dropdown">
+                            <a href="#" class="text-secondary dropdown-toggle btn btn-secondary-soft py-1 px-2 rounded-pill" id="toggleVisibility" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-earth-africa fs-6"></i>
+                            </a>
+
+                            <!-- Visibility dropdown menu -->
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="toggleVisibility">
+                                <li>
+                                    <a class="dropdown-item 1" href="#"><i class="fa-solid fa-earth-africa me-2"></i>Tout le monde</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item 2" href="#"><i class="fa-solid fa-user-secret me-2"></i>Moi uniquement</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item 3" href="#"><i class="fa-solid fa-user-gear me-2"></i>Tout le monde, sauf ...</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item 4" href="#"><i class="fa-solid fa-user-gear me-2"></i>Personne, sauf …</a>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                     <!-- Button -->
-                    <div class="col-lg-4 text-sm-end">
+                    <div class="col-lg-6 text-sm-end">
                         <button type="button" class="btn btn-success-soft">
                             <i class="bi bi-send me-1"></i> @lang('miscellaneous.post')
                         </button>
