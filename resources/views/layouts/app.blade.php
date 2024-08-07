@@ -56,6 +56,9 @@
         <style>
             .kls-fs-7 { font-size: 0.7rem; }
             .kls-text-secondary { color: var(--bs-secondary-text-emphasis); }
+            .btn-check:checked + .btn-success-soft, :not(.btn-check) + .btn-success-soft:active, .btn-success-soft:first-child:active, .btn-success-soft.active, .btn-success-soft.show { color: #000!important; background-color: #a4da22 !important; border-color: #a4da22 !important; }
+            .btn-check:checked + .btn-secondary-soft, :not(.btn-check) + .btn-secondary-soft:active, .btn-secondary-soft:first-child:active, .btn-secondary-soft.active, .btn-secondary-soft.show { color: #fff!important; background-color: #14191e !important; border-color: #14191e !important; }
+            [data-bs-theme=dark] .btn-check:checked + .btn-secondary-soft, [data-bs-theme=dark] :not(.btn-check) + .btn-secondary-soft:active, [data-bs-theme=dark] .btn-secondary-soft:first-child:active, [data-bs-theme=dark] .btn-secondary-soft.active, [data-bs-theme=dark] .btn-secondary-soft.show { color: var(--bs-body-bg)!important; background-color: rgba(var(--bs-secondary-rgb)) !important; border-color: transparent !important; }
         </style>
 
         <title>
@@ -285,125 +288,128 @@
         <div class="modal fade" id="modalCreateFeed" tabindex="-1" aria-labelledby="modalLabelCreateFeed" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content">
-                <!-- Modal post header START -->
-                <div class="modal-header pb-0 border-bottom-0">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <!-- Modal post header END -->
-
-                <!-- Modal post body START -->
-                <div class="modal-body pt-0">
-                    <!-- Check One Post Type -->
-                    <div id="newPostType" class="d-flex justify-content-center mb-3">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="postProduct" value="option1" checked>
-                            <label role="button" class="form-check-label" for="postProduct">
-                                @lang('miscellaneous.public.home.posts.type.product')
-                            </label>
+                    <form id="newPost">
+                        <!-- Modal post header START -->
+                        <div class="modal-header pb-0 border-bottom-0">
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="postService" value="option2">
-                            <label role="button" class="form-check-label" for="postService">
-                                @lang('miscellaneous.public.home.posts.type.service')
-                            </label>
+                        <!-- Modal post header END -->
+
+                        <!-- Modal post body START -->
+                        <div class="modal-body pt-0">
+                            <!-- Check One Post Type -->
+                            <div id="newPostType" class="d-flex justify-content-center mb-3">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="inlineRadioOptions" id="postProduct" value="option1" checked>
+                                    <label role="button" class="form-check-label" for="postProduct">
+                                        @lang('miscellaneous.public.home.posts.type.product')
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="inlineRadioOptions" id="postService" value="option2">
+                                    <label role="button" class="form-check-label" for="postService">
+                                        @lang('miscellaneous.public.home.posts.type.service')
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Add Post Text -->
+                            <div class="d-flex mb-3">
+                                <!-- Avatar -->
+                                <div class="avatar avatar-xs me-2">
+                                    <img class="avatar-img rounded-circle" src="{{ asset('assets/img/template/avatar/07.jpg') }}" alt>
+                                </div>
+                                <!-- Post box  -->
+                                <div class="w-100">
+                                    <textarea class="form-control pe-4 fs-3 lh-1 border-0" rows="3" placeholder="@lang('miscellaneous.public.home.posts.write')" autofocus></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Other Post Data -->
+                            <div class="hstack gap-2 justify-content-center">
+                                <a class="icon-md bg-success bg-opacity-10 rounded-circle text-success" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.other_data.image')">
+                                    <i class="bi bi-image"></i>
+                                </a>
+                                <a class="icon-md bg-info bg-opacity-10 rounded-circle text-info" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.other_data.document')">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                </a>
+                                <a class="icon-md bg-danger bg-opacity-10 rounded-circle text-danger" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.other_data.location')">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                </a>
+                                <a class="icon-md bg-warning bg-opacity-10 rounded-circle text-warning" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.other_data.emoji')">
+                                    <i class="bi bi-emoji-smile-fill"></i>
+                                </a>
+                            </div>
+
+                            <!-- Select Post categories -->
+                            <div class="mt-3 text-center">
+                                <div id="productCategories">
+                                    <input type="checkbox" class="btn-check" id="check-category-product-1" autocomplete="off" data-id="">
+                                    <label for="check-category-product-1" class="small btn btn-success-soft m-2 rounded-pill">Matériel d’agriculture</label>
+
+                                    <input type="checkbox" class="btn-check" id="check-category-product-2" autocomplete="off" data-id="">
+                                    <label for="check-category-product-2" class="small btn btn-success-soft m-2 rounded-pill">Plante et semence</label>
+
+                                    <input type="checkbox" class="btn-check" id="check-category-product-3" autocomplete="off" data-id="">
+                                    <label for="check-category-product-3" class="small btn btn-success-soft m-2 rounded-pill">Produit transformé</label>
+
+                                    <input type="checkbox" class="btn-check" id="check-category-product-4" autocomplete="off" data-id="">
+                                    <label for="check-category-product-4" class="small btn btn-success-soft m-2 rounded-pill">Produit extrait</label>
+                                </div>
+
+                                <div id="serviceCategories" class="d-none">
+                                    <input type="checkbox" class="btn-check" id="check-category-service-1" autocomplete="off" data-id="">
+                                    <label for="check-category-service-1" class="small btn btn-secondary-soft m-2 rounded-pill">Transport et livraison</label>
+
+                                    <input type="checkbox" class="btn-check" id="check-category-service-2" autocomplete="off" data-id="">
+                                    <label for="check-category-service-2" class="small btn btn-secondary-soft m-2 rounded-pill">Stockage et conservation</label>
+
+                                    <input type="checkbox" class="btn-check" id="check-category-service-3" autocomplete="off" data-id="">
+                                    <label for="check-category-service-3" class="small btn btn-secondary-soft m-2 rounded-pill">Transformation et raffinerie</label>
+
+                                    <input type="checkbox" class="btn-check" id="check-category-service-4" autocomplete="off" data-id="">
+                                    <label for="check-category-service-4" class="small btn btn-secondary-soft m-2 rounded-pill">Gastronomie bio</label>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                        <!-- Modal post body END -->
 
-                    <!-- Add Post Text -->
-                    <div class="d-flex mb-3">
-                        <!-- Avatar -->
-                        <div class="avatar avatar-xs me-2">
-                            <img class="avatar-img rounded-circle" src="{{ asset('assets/img/template/avatar/07.jpg') }}" alt>
+                        <!-- Modal post footer -->
+                        <div class="modal-footer px-3 row justify-content-between">
+                            <!-- Select -->
+                            <div class="col-lg-4">
+                                <div class="dropdown d-inline-block" title="@lang('miscellaneous.public.home.posts.choose_visibility')" data-bs-toggle="tooltip" data-bs-placement="bottom">
+                                    <a role="button" class="text-secondary dropdown-toggle btn btn-secondary-soft py-1 px-2 rounded-pill" id="toggleVisibility" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-globe-europe-africa fs-6"></i>
+                                    </a>
+
+                                    <!-- Visibility dropdown menu -->
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="toggleVisibility">
+                                        <li>
+                                            <a role="button" class="dropdown-item everybody"><i class="bi bi-globe-europe-africa me-2"></i>Tout le monde</a>
+                                        </li>
+                                        <li>
+                                            <a role="button" class="dropdown-item incognito"><i class="bi bi-incognito me-2"></i>Moi uniquement</a>
+                                        </li>
+                                        <li>
+                                            <a role="button" class="dropdown-item everybody_except"><i class="fa-solid fa-users-gear me-2"></i>Tout le monde, sauf ...</a>
+                                        </li>
+                                        <li>
+                                            <a role="button" class="dropdown-item nobody_except"><i class="fa-solid fa-user-gear me-2"></i>Personne, sauf …</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Button -->
+                            <div class="col-lg-6 text-sm-end">
+                                <button type="submit" class="btn d-block w-100 btn-primary disabled">
+                                    <i class="bi bi-send me-1"></i> @lang('miscellaneous.post')
+                                </button>
+                            </div>
                         </div>
-                        <!-- Post box  -->
-                        <form class="w-100">
-                            <textarea class="form-control pe-4 fs-3 lh-1 border-0" rows="3" placeholder="@lang('miscellaneous.public.home.posts.write')" autofocus></textarea>
-                        </form>
-                    </div>
-
-                    <!-- Other Post Data -->
-                    <div class="hstack gap-2 justify-content-center">
-                        <a class="icon-md bg-success bg-opacity-10 rounded-circle text-success" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.other_data.image')">
-                            <i class="bi bi-image"></i>
-                        </a>
-                        <a class="icon-md bg-info bg-opacity-10 rounded-circle text-info" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.other_data.document')">
-                            <i class="bi bi-file-earmark-text"></i>
-                        </a>
-                        <a class="icon-md bg-danger bg-opacity-10 rounded-circle text-danger" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.other_data.gif')">
-                            <i class="bi bi-filetype-gif"></i>
-                        </a>
-                        <a class="icon-md bg-secondary bg-opacity-10 rounded-circle text-secondary" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.other_data.location')">
-                            <i class="bi bi-geo-alt-fill"></i>
-                        </a>
-                        <a class="icon-md bg-warning bg-opacity-10 rounded-circle text-warning" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="@lang('miscellaneous.public.home.posts.other_data.emoji')">
-                            <i class="bi bi-emoji-smile-fill"></i>
-                        </a>
-                    </div>
-
-                    <!-- Select Post categories -->
-                    <div class="mt-3 text-center">
-                        <input type="checkbox" class="btn-check" id="check-category-product-1" autocomplete="off">
-                        <label class="small btn btn-info-soft m-2 rounded-pill" for="check-category-product-1">Matériel d’agriculture</label>
-
-                        <input type="checkbox" class="btn-check" id="btn-check-product-2" autocomplete="off">
-                        <label class="small btn btn-info-soft m-2 rounded-pill" for="check-category-product-2">Plante et semence</label>
-
-                        <input type="checkbox" class="btn-check" id="btn-check-product-3" autocomplete="off">
-                        <label class="small btn btn-info-soft m-2 rounded-pill" for="check-category-product-3">Produit transformé</label>
-
-                        <input type="checkbox" class="btn-check" id="btn-check-product-4" autocomplete="off">
-                        <label class="small btn btn-info-soft m-2 rounded-pill" for="check-category-product-4">Produit extrait</label>
-
-                        <input type="checkbox" class="btn-check d-none" id="btn-check-service-1" autocomplete="off">
-                        <label class="small btn btn-warning-soft m-2 rounded-pill d-none" for="check-category-service-1">Transport et livraison</label>
-
-                        <input type="checkbox" class="btn-check d-none" id="btn-check-service-2" autocomplete="off">
-                        <label class="small btn btn-warning-soft m-2 rounded-pill d-none" for="check-category-service-2">Stockage et conservation</label>
-
-                        <input type="checkbox" class="btn-check d-none" id="btn-check-service-3" autocomplete="off">
-                        <label class="small btn btn-warning-soft m-2 rounded-pill d-none" for="check-category-service-3">Transformation et raffinerie</label>
-
-                        <input type="checkbox" class="btn-check d-none" id="btn-check-service-4" autocomplete="off">
-                        <label class="small btn btn-warning-soft m-2 rounded-pill d-none" for="check-category-service-4">Gastronomie bio</label>
-                    </div>
-                </div>
-                <!-- Modal post body END -->
-
-                <!-- Modal post footer -->
-                <div class="modal-footer px-3 row justify-content-between">
-                    <!-- Select -->
-                    <div class="col-lg-4">
-                        <div class="dropdown d-inline-block" title="@lang('miscellaneous.public.home.posts.choose_visibility')" data-bs-toggle="tooltip" data-bs-placement="bottom">
-                            <a role="button" class="text-secondary dropdown-toggle btn btn-secondary-soft py-1 px-2 rounded-pill" id="toggleVisibility" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-globe-europe-africa fs-6"></i>
-                            </a>
-
-                            <!-- Visibility dropdown menu -->
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="toggleVisibility">
-                                <li>
-                                    <a role="button" class="dropdown-item everybody"><i class="bi bi-globe-europe-africa me-2"></i>Tout le monde</a>
-                                </li>
-                                <li>
-                                    <a role="button" class="dropdown-item incognito"><i class="bi bi-incognito me-2"></i>Moi uniquement</a>
-                                </li>
-                                <li>
-                                    <a role="button" class="dropdown-item everybody_except"><i class="bi bi-person-gear me-2"></i>Tout le monde, sauf ...</a>
-                                </li>
-                                <li>
-                                    <a role="button" class="dropdown-item nobody_except"><i class="fa-solid fa-user-gear me-2"></i>Personne, sauf …</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <!-- Button -->
-                    <div class="col-lg-6 text-sm-end">
-                        <button type="button" class="btn btn-success-soft">
-                            <i class="bi bi-send me-1"></i> @lang('miscellaneous.post')
-                        </button>
-                    </div>
-                </div>
-                <!-- Modal post footer -->
-
+                        <!-- Modal post footer -->
+                    </form>
                 </div>
             </div>
         </div>
@@ -446,15 +452,17 @@
         <script src="{{ asset('assets/js/script.app.js') }}"></script>
         <script type="text/javascript">
             $(function () {
-                $('#newPostType .form-check-input').each(function () {
+                $('#newPostType .form-check').each(function () {
                     $(this).on('click', function () {
+                        $('[id^="check-category-"]').prop('checked', false);
+
                         if ($('#postService').is(':checked')) {
-                            $('[for="check-category-service"], [id="check-category-service"]').removeClass('d-none');
-                            $('[for="check-category-product"], [id="check-category-product"]').addClass('d-none');
+                            $('#serviceCategories').removeClass('d-none');
+                            $('#productCategories').addClass('d-none');
 
                         } else {
-                            $('[for="check-category-service"], [id="check-category-service"]').addClass('d-none');
-                            $('[for="check-category-product"], [id="check-category-product"]').removeClass('d-none');
+                            $('#serviceCategories').addClass('d-none');
+                            $('#productCategories').removeClass('d-none');
                         }
                     });
                 });

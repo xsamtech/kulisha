@@ -42,7 +42,7 @@ return [
     'no' => 'Non',
     'connection' => 'Connexion',
     'register' => 'Enregistrer',
-    'post' => 'Poster',
+    'post' => 'Publier',
     'send' => 'Envoyer',
     'add' => 'Ajouter',
     'validated' => 'Validé',
@@ -625,7 +625,6 @@ return [
                 'other_data' => [
                     'image' => 'Image',
                     'document' => 'Document',
-                    'gif' => 'GIF',
                     'location' => 'Emplacement',
                     'emoji' => 'Émoji',
                 ],

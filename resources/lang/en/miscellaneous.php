@@ -625,7 +625,6 @@ return [
                 'other_data' => [
                     'image' => 'Image',
                     'document' => 'Document',
-                    'gif' => 'GIF',
                     'location' => 'Location',
                     'emoji' => 'Emoji',
                 ],
