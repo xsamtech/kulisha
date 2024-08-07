@@ -67,6 +67,7 @@ class VisibilityController extends BaseController
                 'cs' => $request->visibility_description_cs,
                 'eo' => $request->visibility_description_eo
             ],
+            'alias' => $request->alias,
             'color' => $request->color,
             'icon_font' => $request->icon_font,
             'icon_svg' => $request->icon_svg,
@@ -158,6 +159,7 @@ class VisibilityController extends BaseController
                 'cs' => $request->visibility_description_cs,
                 'eo' => $request->visibility_description_eo
             ],
+            'alias' => $request->alias,
             'color' => $request->color,
             'icon_font' => $request->icon_font,
             'icon_svg' => $request->icon_svg,
@@ -185,6 +187,13 @@ class VisibilityController extends BaseController
         if ($inputs['visibility_description'] != null) {
             $visibility->update([
                 'visibility_description' => $inputs['visibility_description'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['alias'] != null) {
+            $visibility->update([
+                'alias' => $inputs['alias'],
                 'updated_at' => now(),
             ]);
         }

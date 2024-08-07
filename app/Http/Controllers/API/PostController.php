@@ -1529,15 +1529,42 @@ class PostController extends BaseController
     }
 
     /**
-     * Save post to see later.
+     * Save/unsave post to see later.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int $id
+     * @param  int  $user_id
+     * @param  int  $post_id
+     * @param  string  $action
      * @return \Illuminate\Http\Response
      */
-    public function saveForLater(Request $request, $id)
+    public function saveForLater($user_id, $post_id, $action)
     {
-        # code...
+        $user = User::find($user_id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        $post = Post::find($post_id);
+
+        if (is_null($post)) {
+            return $this->handleError(__('notifications.find_post_404'));
+        }
+
+        if ($action == 'save') {
+            if (count($user->posts) == 0) {
+                $user->posts()->attach([$post->id]);
+            }
+
+            if (count($user->posts) > 0) {
+                $user->posts()->syncWithoutDetaching([$post->id]);
+            }
+        }
+
+        if ($action == 'unsave') {
+            $user->posts()->detach([$post->id]);
+        }
+
+        return $this->handleResponse(new ResourcesPost($post), __('notifications.find_post_success'));
     }
 
     /**

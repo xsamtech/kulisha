@@ -27,6 +27,7 @@ class Visibility extends JsonResource
             'visibility_description' => $this->visibility_description,
             'visibility_description_fr' => $this->getTranslation('visibility_description', 'fr'),
             'visibility_description_en' => $this->getTranslation('visibility_description', 'en'),
+            'alias' => $this->alias,
             'color' => $this->color,
             'icon_font' => $this->icon_font,
             'icon_svg' => $this->icon_svg,

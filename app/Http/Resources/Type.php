@@ -27,6 +27,7 @@ class Type extends JsonResource
             'type_description' => $this->type_description,
             'type_description_fr' => $this->getTranslation('type_description', 'fr'),
             'type_description_en' => $this->getTranslation('type_description', 'en'),
+            'alias' => $this->alias,
             'color' => $this->color,
             'icon_font' => $this->icon_font,
             'icon_svg' => $this->icon_svg,

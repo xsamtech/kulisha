@@ -117,6 +117,13 @@ return [
     'create_visibility_success' => 'Visibility created',
     'update_visibility_success' => 'Visibility updated',
     'delete_visibility_success' => 'Visibility deleted',
+    // Field
+    'find_all_fields_success' => 'Fields found',
+    'find_field_success' => 'Field found',
+    'find_field_404' => 'Field not found',
+    'create_field_success' => 'Field created',
+    'update_field_success' => 'Field updated',
+    'delete_field_success' => 'Field deleted',
     // CoverageArea
     'find_all_coverage_areas_success' => 'Coverage areas found',
     'find_coverage_area_success' => 'Coverage area found',

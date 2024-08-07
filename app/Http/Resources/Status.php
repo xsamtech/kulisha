@@ -27,6 +27,7 @@ class Status extends JsonResource
             'status_description' => $this->status_description,
             'status_description' => $this->getTranslation('status_description', 'fr'),
             'status_description' => $this->getTranslation('status_description', 'en'),
+            'alias' => $this->alias,
             'color' => $this->color,
             'icon_font' => $this->icon_font,
             'icon_svg' => $this->icon_svg,

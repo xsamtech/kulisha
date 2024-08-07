@@ -117,6 +117,13 @@ return [
     'create_visibility_success' => 'Visibilité créée',
     'update_visibility_success' => 'Visibilité modifiée',
     'delete_visibility_success' => 'Visibilité supprimée',
+    // Field
+    'find_all_fields_success' => 'Secteurs trouvés',
+    'find_field_success' => 'Secteur trouvé',
+    'find_field_404' => 'Secteur non trouvé',
+    'create_field_success' => 'Secteur créé',
+    'update_field_success' => 'Secteur modifié',
+    'delete_field_success' => 'Secteur supprimé',
     // CoverageArea
     'find_all_coverage_areas_success' => 'Zones de couverture trouvées',
     'find_coverage_area_success' => 'Zone de couverture trouvée',

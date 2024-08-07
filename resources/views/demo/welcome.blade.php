@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app', ['page_title' => 'Kulisha / ' . __('miscellaneous.menu.public.news_feed')])
 
 @section('app-content')
 
@@ -128,7 +128,7 @@
 											@lang('miscellaneous.your_language') <i class="fa-solid fa-angle-down"></i>
 										</a>
 
-										<ul class="dropdown-menu mt-1 p-0" aria-labelledby="dropdownLanguage">
+										<ul class="dropdown-menu dropdown-menu-end mt-1 p-0" aria-labelledby="dropdownLanguage">
     @foreach ($available_locales as $locale_name => $available_locale)
                                             <li class="w-100">
 		@if ($available_locale != $current_locale)
@@ -162,10 +162,16 @@
 						<div class="position-relative text-center">
 							<!-- Card START -->
 							<div class="mb-1">
-								<a class="stretched-link btn btn-dark rounded-circle icon-xxl rounded-circle" href="#!"><i class="fa-solid fa-plus fs-6"></i></a>
+								<label role="button" for="image_story" class="stretched-link btn btn-dark rounded-circle icon-xxl rounded-circle">
+									<i class="fa-solid fa-plus fs-6"></i>
+									<input type="file" name="image_story" id="image_story" class="d-none">
+								</label>
+								<input type="hidden" name="data_story" id="data_story">
 							</div>
 
-							<a href="#!" class="small fw-normal text-secondary">@lang('miscellaneous.public.home.stories.new')</a>
+							<a href="#!" class="small fw-normal text-secondary">
+								<p class="d-inline-block kls-line-height-1_25">@lang('miscellaneous.public.home.stories.new')</p>
+							</a>
 							<!-- Card END -->
 						</div>
 						<!-- Stories -->
@@ -192,11 +198,6 @@
 						<!-- Share feed toolbar START -->
 						<ul class="nav nav-pills nav-stack small fw-normal">
 							<li class="nav-item">
-								<a class="nav-link bg-light py-1 px-2 mb-0" href="#!" data-bs-toggle="modal" data-bs-target="#feedActionPhoto">
-									<i class="bi bi-camera pe-2 fs-6 text-success"></i><span class="kls-text-secondary">@lang('miscellaneous.public.home.posts.type.image')</span>
-								</a>
-							</li>
-							<li class="nav-item">
 								<a class="nav-link bg-light py-1 px-2 mb-0" href="#!" data-bs-toggle="modal" data-bs-target="#modalCreateEvents">
 									<i class="bi bi-calendar2-event-fill pe-2 fs-6 text-danger"></i><span class="kls-text-secondary">@lang('miscellaneous.public.home.posts.type.event')</span>
 								</a>
@@ -207,8 +208,13 @@
 								</a>
 							</li>
 							<li class="nav-item">
-								<a class="nav-link bg-light py-1 px-2 mb-0" href="#!" data-bs-toggle="modal" data-bs-target="#feedActionVideo">
+								<a class="nav-link bg-light py-1 px-2 mb-0" href="#!" data-bs-toggle="modal" data-bs-target="#feedActionAnonymousQuestion">
 									<i class="bi bi-question-circle pe-2 fs-6 text-info"></i><span class="kls-text-secondary">@lang('miscellaneous.public.home.posts.type.anonymous_question')</span>
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link bg-light py-1 px-2 mb-0" href="#!" data-bs-toggle="modal" data-bs-target="#feedActionArticle">
+									<i class="bi bi-newspaper pe-2 fs-6 text-success"></i><span class="kls-text-secondary">@lang('miscellaneous.public.home.posts.type.article')</span>
 								</a>
 							</li>
 						</ul>

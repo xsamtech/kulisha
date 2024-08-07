@@ -67,6 +67,7 @@ class TypeController extends BaseController
                 'cs' => $request->type_description_cs,
                 'eo' => $request->type_description_eo
             ],
+            'alias' => $request->alias,
             'color' => $request->color,
             'icon_font' => $request->icon_font,
             'icon_svg' => $request->icon_svg,
@@ -158,6 +159,7 @@ class TypeController extends BaseController
                 'cs' => $request->type_description_cs,
                 'eo' => $request->type_description_eo
             ],
+            'alias' => $request->alias,
             'color' => $request->color,
             'icon_font' => $request->icon_font,
             'icon_svg' => $request->icon_svg,
@@ -186,6 +188,13 @@ class TypeController extends BaseController
         if ($inputs['type_description'] != null) {
             $type->update([
                 'type_description' => $inputs['type_description'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['alias'] != null) {
+            $type->update([
+                'alias' => $inputs['alias'],
                 'updated_at' => now(),
             ]);
         }

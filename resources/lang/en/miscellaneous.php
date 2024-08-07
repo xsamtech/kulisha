@@ -608,13 +608,26 @@ return [
             // Posts
             'posts' => [
                 'new' => 'Share something...',
+                'write' => 'Write here ...',
+                'choose_visibility' => 'Who can see the post?',
 
                 // Type
                 'type' => [
-                    'image' => 'Image',
+                    'product' => 'Product',
+                    'service' => 'Service',
                     'event' => 'Event',
-                    'poll' => 'Create a poll',
+                    'poll' => 'Poll',
                     'anonymous_question' => 'Anonymous question',
+                    'article' => 'Write up article',
+                ],
+
+                // Other data
+                'other_data' => [
+                    'image' => 'Image',
+                    'document' => 'Document',
+                    'gif' => 'GIF',
+                    'location' => 'Location',
+                    'emoji' => 'Emoji',
                 ],
 
                 // Actions

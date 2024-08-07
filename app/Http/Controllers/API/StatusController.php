@@ -67,6 +67,7 @@ class StatusController extends BaseController
                 'cs' => $request->status_description_cs,
                 'eo' => $request->status_description_eo
             ],
+            'alias' => $request->alias,
             'color' => $request->color,
             'icon_font' => $request->icon_font,
             'icon_svg' => $request->icon_svg,
@@ -158,6 +159,7 @@ class StatusController extends BaseController
                 'cs' => $request->status_description_cs,
                 'eo' => $request->status_description_eo
             ],
+            'alias' => $request->alias,
             'color' => $request->color,
             'icon_font' => $request->icon_font,
             'icon_svg' => $request->icon_svg,
@@ -186,6 +188,13 @@ class StatusController extends BaseController
         if ($inputs['status_description'] != null) {
             $status->update([
                 'status_description' => $inputs['status_description'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['alias'] != null) {
+            $status->update([
+                'alias' => $inputs['alias'],
                 'updated_at' => now(),
             ]);
         }

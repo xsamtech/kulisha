@@ -608,13 +608,26 @@ return [
             // Posts
             'posts' => [
                 'new' => 'Partagez quelque chose ...',
+                'write' => 'Écrivez ici ...',
+                'choose_visibility' => 'Qui peut voir ce post ?',
 
                 // Type
                 'type' => [
-                    'image' => 'Image',
+                    'product' => 'Produit',
+                    'service' => 'Service',
                     'event' => 'Evénement',
-                    'poll' => 'Créer sondage',
+                    'poll' => 'Sondage',
                     'anonymous_question' => 'Question anonyme',
+                    'article' => 'Écrire article',
+                ],
+
+                // Other data
+                'other_data' => [
+                    'image' => 'Image',
+                    'document' => 'Document',
+                    'gif' => 'GIF',
+                    'location' => 'Emplacement',
+                    'emoji' => 'Émoji',
                 ],
 
                 // Actions

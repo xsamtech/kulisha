@@ -27,6 +27,7 @@ class Field extends JsonResource
             'field_description' => $this->field_description,
             'field_description_fr' => $this->getTranslation('field_description', 'fr'),
             'field_description_en' => $this->getTranslation('field_description', 'en'),
+            'alias' => $this->alias,
             'color' => $this->color,
             'icon_font' => $this->icon_font,
             'icon_svg' => $this->icon_svg,
