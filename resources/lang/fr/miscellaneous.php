@@ -36,6 +36,7 @@ return [
     'back_list' => 'Retourner à la liste',
     'back_form' => 'Retourner au formulaire',
     'back_toc' => 'Retourner à la table des matières',
+    'select_one_more' => 'Sélectionner un(e) ou plusieurs',
     'see_all_notifications' => 'Voir toutes les notifications',
     'loading' => 'Chargement ...',
     'yes' => 'Oui',
@@ -258,6 +259,12 @@ return [
         'error' => 'Votre confirmation ne correspond pas au mot de passe',
     ],
     'choose_role' => 'Choisir un rôle',
+    'choose_user' => 'Choisir un utilisateur',
+    'website' => [
+        'title' => 'Site(s) web',
+        'name' => 'Nom du site web',
+        'url' => 'URL du site web'
+    ],
     'go_login' => 'J’ai déjà un compte',
     'api_token' => 'Votre clé pour utiliser les APIs',
     'amount' => 'Montant',
@@ -520,15 +527,15 @@ return [
 
             // Reason
             'reason' => [
-                'details' => 'Détails sur la raison',
-                'link' => 'Gérer les raisons',
-                'add' => 'Ajouter une raison',
-                'edit' => 'Editer la raison',
-                'search' => 'Rechercher une raison',
-                'list' => 'Liste de raisons',
+                'details' => 'Détails sur le motif',
+                'link' => 'Gérer les motifs',
+                'add' => 'Ajouter un motif',
+                'edit' => 'Editer le motif',
+                'search' => 'Rechercher un motif',
+                'list' => 'Liste des motifs',
                 'data' => [
-                    'reason_content' => 'Contenu de la raison',
-                    'report_count' => 'Nombre de réactions',
+                    'reason_content' => 'Contenu du motif',
+                    'report_count' => 'Nombre de motifs',
                     'number_of_days' => 'Nombre de jours'
                 ],
             ],
@@ -607,9 +614,13 @@ return [
 
             // Posts
             'posts' => [
-                'new' => 'Partagez quelque chose ...',
+                'new' => 'Publiez quelque chose ...',
                 'write' => 'Écrivez ici ...',
+                'choose_type' => 'Choisissez le type de post',
+                'product_categories' => 'Catégorie(s) de votre produit',
+                'service_categories' => 'Catégorie(s) de votre service',
                 'choose_visibility' => 'Qui peut voir ce post ?',
+                'create_poll_choices' => 'Créez des choix pour ce sondage',
 
                 // Type
                 'type' => [
@@ -627,6 +638,23 @@ return [
                     'document' => 'Document',
                     'location' => 'Emplacement',
                     'emoji' => 'Émoji',
+                ],
+
+                // Boost
+                'boost' => [
+                    'title' => 'Booster',
+                    'description' => 'Booster votre :post_type pour la faire voir à un grand nombre.',
+                    'coverage_area' => 'Zone de couverture',
+                    'budget' => 'Budget',
+                    'keywords' => [
+                        'label' => 'Mot(s)-clé(s)',
+                        'post_error' => 'Veuillez choisir un post'
+                    ],
+                    'transaction_type' => [
+                        'title' => 'Type de transaction',
+                        'mobile_money' => 'Mobile money',
+                        'bank_card' => 'Carte bancaire',
+                    ],
                 ],
 
                 // Actions

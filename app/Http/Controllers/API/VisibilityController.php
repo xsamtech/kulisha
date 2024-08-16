@@ -246,15 +246,32 @@ class VisibilityController extends BaseController
 
     // ==================================== CUSTOM METHODS ====================================
     /**
-     * Search a visibility by its name.
+     * Find a visibility by its name.
      *
      * @param  string $locale
      * @param  string $data
      * @return \Illuminate\Http\Response
      */
-    public function search($locale, $data)
+    public function findByRealName($locale, $data)
     {
         $visibility = Visibility::where('visibility_name->' . $locale, $data)->first();
+
+        if (is_null($visibility)) {
+            return $this->handleError(__('notifications.find_visibility_404'));
+        }
+
+        return $this->handleResponse(new ResourcesVisibility($visibility), __('notifications.find_visibility_success'));
+    }
+
+    /**
+     * Find a visibility by its alias.
+     *
+     * @param  string $alias
+     * @return \Illuminate\Http\Response
+     */
+    public function findByAlias($alias)
+    {
+        $visibility = Visibility::where('alias', $alias)->first();
 
         if (is_null($visibility)) {
             return $this->handleError(__('notifications.find_visibility_404'));

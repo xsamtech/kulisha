@@ -229,12 +229,10 @@ class TypeController extends BaseController
 
         if ($inputs['group_id'] != null) {
             $type->update([
-                'group_id' => $request->group_id,
+                'group_id' => $inputs['group_id'],
                 'updated_at' => now(),
             ]);
         }
-
-        $type->update($inputs);
 
         return $this->handleResponse(new ResourcesType($type), __('notifications.update_type_success'));
     }
@@ -256,15 +254,32 @@ class TypeController extends BaseController
 
     // ==================================== CUSTOM METHODS ====================================
     /**
-     * Search a type by its name.
+     * Find a type by its name.
      *
      * @param  string $locale
      * @param  string $data
      * @return \Illuminate\Http\Response
      */
-    public function search($locale, $data)
+    public function findByRealName($locale, $data)
     {
         $type = Type::where('type_name->' . $locale, $data)->first();
+
+        if (is_null($type)) {
+            return $this->handleError(__('notifications.find_type_404'));
+        }
+
+        return $this->handleResponse(new ResourcesType($type), __('notifications.find_type_success'));
+    }
+
+    /**
+     * Find a type by its alias.
+     *
+     * @param  string $alias
+     * @return \Illuminate\Http\Response
+     */
+    public function findByAlias($alias)
+    {
+        $type = Type::where('alias', $alias)->first();
 
         if (is_null($type)) {
             return $this->handleError(__('notifications.find_type_404'));

@@ -229,7 +229,7 @@ class StatusController extends BaseController
 
         if ($inputs['group_id'] != null) {
             $status->update([
-                'group_id' => $request->group_id,
+                'group_id' => $inputs['group_id'],
                 'updated_at' => now(),
             ]);
         }
@@ -254,15 +254,32 @@ class StatusController extends BaseController
 
     // ==================================== CUSTOM METHODS ====================================
     /**
-     * Search a status by its name.
+     * Find a status by its name.
      *
      * @param  string $locale
      * @param  string $data
      * @return \Illuminate\Http\Response
      */
-    public function search($locale, $data)
+    public function findByRealName($locale, $data)
     {
         $status = Status::where('status_name->' . $locale, $data)->first();
+
+        if (is_null($status)) {
+            return $this->handleError(__('notifications.find_status_404'));
+        }
+
+        return $this->handleResponse(new ResourcesStatus($status), __('notifications.find_status_success'));
+    }
+
+    /**
+     * Find a status by its alias.
+     *
+     * @param  string $alias
+     * @return \Illuminate\Http\Response
+     */
+    public function findByAlias($alias)
+    {
+        $status = Status::where('alias', $alias)->first();
 
         if (is_null($status)) {
             return $this->handleError(__('notifications.find_status_404'));

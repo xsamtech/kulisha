@@ -240,15 +240,32 @@ class FieldController extends BaseController
 
     // ==================================== CUSTOM METHODS ====================================
     /**
-     * Search a field by its name.
+     * Find a field by its name.
      *
      * @param  string $locale
      * @param  string $data
      * @return \Illuminate\Http\Response
      */
-    public function search($locale, $data)
+    public function findByRealName($locale, $data)
     {
         $field = Field::where('field_name->' . $locale, $data)->first();
+
+        if (is_null($field)) {
+            return $this->handleError(__('notifications.find_field_404'));
+        }
+
+        return $this->handleResponse(new ResourcesField($field), __('notifications.find_field_success'));
+    }
+
+    /**
+     * Find a field by its alias.
+     *
+     * @param  string $alias
+     * @return \Illuminate\Http\Response
+     */
+    public function findByAlias($alias)
+    {
+        $field = Field::where('alias', $alias)->first();
 
         if (is_null($field)) {
             return $this->handleError(__('notifications.find_field_404'));

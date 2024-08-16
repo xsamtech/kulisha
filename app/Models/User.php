@@ -117,6 +117,15 @@ class User extends Authenticatable
     }
 
     /**
+     * MANY-TO-MANY
+     * Several users for several messages
+     */
+    public function messages(): BelongsToMany
+    {
+        return $this->belongsToMany(Message::class)->orderByPivot('created_at', 'desc')->withTimestamps()->withPivot('status_id');
+    }
+
+    /**
      * ONE-TO-MANY
      * One status for several users
      * 
@@ -261,13 +270,24 @@ class User extends Authenticatable
 
     /**
      * MANY-TO-ONE
-     * Several messages for a user
+     * Several owned_messages for a user
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function messages(): HasMany
+    public function owned_messages(): HasMany
     {
-        return $this->hasMany(Message::class);
+        return $this->hasMany(Message::class, 'user_id');
+    }
+
+    /**
+     * MANY-TO-ONE
+     * Several has_addressee_messages for a user
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function as_addressee_messages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'addressee_user_id');
     }
 
     /**

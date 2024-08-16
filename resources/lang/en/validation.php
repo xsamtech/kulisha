@@ -193,6 +193,9 @@ return [
         'deadline' => [
             'exists' => 'This deadline already exists'
         ],
+        'url' => [
+            'required' => 'Please provide the URL of this entity'
+        ],
         'owner' => [
             'required' => 'What entity does it belong to?'
         ],

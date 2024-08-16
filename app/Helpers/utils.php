@@ -6,6 +6,7 @@
  */
 
 use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 // Get web URL
 if (!function_exists('getWebURL')) {
@@ -96,7 +97,7 @@ if (!function_exists('inArrayR')) {
     }
 }
 
-// Check if a value exists into an multidimensional array
+// Get array of columns from a keys/values object
 if (!function_exists('getArrayKeys')) {
     function getArrayKeys($haystack, $ref)
     {
@@ -310,5 +311,16 @@ if (!function_exists('addItemsToExplodedArray')) {
         $saved = array_merge($explodes, $items);
 
         return implode($separator, $saved);
+    }
+}
+
+// Paginate an array
+if (!function_exists('paginate')) {
+    function paginate(array $items, int $perPage = 5, ?int $page = null, $options = [])
+    {
+        $page = $page ?: (LengthAwarePaginator::resolveCurrentPage() ?: 1);
+        $items = collect($items);
+
+        return new LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, $options);
     }
 }

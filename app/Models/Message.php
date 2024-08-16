@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -21,6 +22,15 @@ class Message extends Model
      * @var array<int, string>
      */
     protected $guarded = [];
+
+    /**
+     * MANY-TO-MANY
+     * Several users for several messages
+     */
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)->orderByPivot('created_at', 'desc')->withTimestamps()->withPivot('status_id');
+    }
 
     /**
      * ONE-TO-MANY
@@ -52,7 +62,7 @@ class Message extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
@@ -63,7 +73,7 @@ class Message extends Model
      */
     public function addressee_user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'addressee_user_id');
     }
 
     /**

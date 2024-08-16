@@ -7,7 +7,9 @@ use App\Models\File;
 use App\Models\Group;
 use App\Models\Hashtag;
 use App\Models\History;
+use App\Models\Keyword;
 use App\Models\Notification;
+use App\Models\Payment;
 use App\Models\Post;
 use App\Models\Reaction;
 use App\Models\Restriction;
@@ -15,6 +17,7 @@ use App\Models\SentReaction;
 use App\Models\Session;
 use App\Models\Status;
 use App\Models\Subscription;
+use App\Models\Surveychoice;
 use App\Models\Type;
 use App\Models\User;
 use App\Models\Visibility;
@@ -22,6 +25,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\ApiClientManager;
 use App\Http\Resources\History as ResourcesHistory;
 use App\Http\Resources\Post as ResourcesPost;
 use App\Http\Resources\Session as ResourcesSession;
@@ -74,8 +78,10 @@ class PostController extends BaseController
         $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
         $request_for_anonymous_question_type = Type::where([['type_name->fr', 'Demande de question anonyme'], ['group_id', $post_type_group->id]])->first();
         $comment_type = Type::where([['type_name->fr', 'Commentaire'], ['group_id', $post_type_group->id]])->first();
+        $poll_type = Type::where([['type_name->fr', 'Sondage'], ['group_id', $post_type_group->id]])->first();
         $mention_type = Type::where([['type_name->fr', 'Mention'], ['group_id', $notification_type_group->id]])->first();
         $new_post_type = Type::where([['type_name->fr', 'Nouveau post'], ['group_id', $notification_type_group->id]])->first();
+        $new_poll_type = Type::where([['type_name->fr', 'Nouveau sondage'], ['group_id', $notification_type_group->id]])->first();
         $shared_post_type = Type::where([['type_name->fr', 'Post partagé'], ['group_id', $notification_type_group->id]])->first();
         $new_link_type = Type::where([['type_name->fr', 'Nouveau lien'], ['group_id', $notification_type_group->id]])->first();
         $comment_on_post_type = Type::where([['type_name->fr', 'Commentaire sur publication'], ['group_id', $notification_type_group->id]])->first();
@@ -109,383 +115,551 @@ class PostController extends BaseController
             return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['type_id'], __('validation.custom.type.required'), 400);
         }
 
-        $post = Post::create($inputs);
-        // Hashtags management
-        $hashtags = getHashtags($post->post_content);
+        // Validate the coverage area
+        if ($inputs['coverage_area_id'] == null OR !is_numeric($inputs['coverage_area_id'])) {
+            return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['coverage_area_id'], __('validation.required', ['field_name' => __('miscellaneous.public.home.posts.boost.coverage_area')]), 400);
+        }
 
-        if (count($hashtags) > 0) {
-            foreach ($hashtags as $keyword):
-                $existing_hashtag = Hashtag::where('keyword', $keyword)->first();
+        if ($inputs['type_id'] == $poll_type->id) {
+            if (count($request->choices_contents) == 0) {
+                return $this->handleError(__('miscellaneous.found_value') . ' ' . $request->choices_contents, __('miscellaneous.public.home.posts.create_poll_choices'), 400);
+            }
 
-                if ($existing_hashtag != null) {
-                    if (count($existing_hashtag->posts) == 0) {
-                        $existing_hashtag->posts()->attach([$post->id]);
+            $post = Post::create($inputs);
+
+            foreach ($request->choices_contents as $key => $choice_content) {
+                Surveychoice::create([
+                    'choice_content' => $choice_content,
+                    'icon_font' => $request->icons_fonts[$key],
+                    'icon_svg' => $request->icons_svgs[$key],
+                    'image_url' => $request->images_urls[$key],
+                    'post_id' => $post->id
+                ]);
+            }
+
+            // Hashtags management
+            $hashtags = getHashtags($post->post_content);
+
+            if (count($hashtags) > 0) {
+                foreach ($hashtags as $keyword):
+                    $existing_hashtag = Hashtag::where('keyword', $keyword)->first();
+
+                    if ($existing_hashtag != null) {
+                        if (count($existing_hashtag->posts) == 0) {
+                            $existing_hashtag->posts()->attach([$post->id]);
+                        }
+
+                        if (count($existing_hashtag->posts) > 0) {
+                            $existing_hashtag->posts()->syncWithoutDetaching([$post->id]);
+                        }
+
+                    } else {
+                        $hashtag = Hashtag::create(['keyword' => $keyword]);
+
+                        if (count($hashtag->posts) == 0) {
+                            $hashtag->posts()->attach([$post->id]);
+                        }
+
+                        if (count($hashtag->posts) > 0) {
+                            $hashtag->posts()->syncWithoutDetaching([$post->id]);
+                        }
                     }
+                endforeach;
+            }
 
-                    if (count($existing_hashtag->posts) > 0) {
-                        $existing_hashtag->posts()->syncWithoutDetaching([$post->id]);
-                    }
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            // Mentions management
+            $mentions = getMentions($post->post_content);
+
+            if (count($mentions) > 0) {
+                foreach ($mentions as $mention):
+                    $mentioned = User::where('username', $mention)->first();
+
+                    $notification = Notification::create([
+                        'type_id' => $mention_type->id,
+                        'status_id' => $unread_notification_status->id,
+                        'from_user_id' => $post->user_id,
+                        'to_user_id' => $mentioned->id,
+                        'post_id' => $post->id
+                    ]);
+                endforeach;
+            }
+
+            // If the post is for everybody
+            if ($post->visibility_id == $everybody_visibility->id) {
+                // Find all subscribers of the post owner
+                $subscriptions = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
+
+                if ($subscriptions != null) {
+                    foreach ($subscriptions as $subscription):
+                        Notification::create([
+                            'type_id' => $new_poll_type->id,
+                            'status_id' => $unread_notification_status->id,
+                            'from_user_id' => $post->user_id,
+                            'to_user_id' => $subscription->subscriber_id,
+                            'post_id' => $post->id
+                        ]);
+                    endforeach;
 
                 } else {
-                    $hashtag = Hashtag::create(['keyword' => $keyword]);
-
-                    if (count($hashtag->posts) == 0) {
-                        $hashtag->posts()->attach([$post->id]);
-                    }
-
-                    if (count($hashtag->posts) > 0) {
-                        $hashtag->posts()->syncWithoutDetaching([$post->id]);
-                    }
+                    Notification::create([
+                        'type_id' => $new_poll_type->id,
+                        'status_id' => $unread_notification_status->id,
+                        'from_user_id' => $post->user_id,
+                        'post_id' => $post->id
+                    ]);
                 }
-            endforeach;
-        }
-
-        /*
-            HISTORY AND/OR NOTIFICATION MANAGEMENT
-        */
-        // Mentions management
-        $mentions = getMentions($post->post_content);
-
-        if (count($mentions) > 0) {
-            foreach ($mentions as $mention):
-                $mentioned = User::where('username', $mention)->first();
-
-                $notification = Notification::create([
-                    'type_id' => $mention_type->id,
-                    'status_id' => $unread_notification_status->id,
-                    'from_user_id' => $post->user_id,
-                    'to_user_id' => $mentioned->id,
-                    'post_id' => $post->id
-                ]);
-            endforeach;
-        }
-
-        // If it's a comment, check if it's a anonymous question or an answer for a post
-        if ($post->type_id == $comment_type->id) {
-            $parent_post = Post::find($post->answered_for);
-
-            if (is_null($parent_post)) {
-                return $this->handleError(__('notifications.find_post_parent_404'));
             }
 
-            if ($parent_post->type_id != $request_for_anonymous_question_type->id) {
-                $notification = Notification::create([
-                    'type_id' => $anonymous_question_type->id,
-                    'status_id' => $unread_notification_status->id,
-                    'from_user_id' => $post->user_id,
-                    'to_user_id' => $parent_post->user_id,
-                    'post_id' => $post->id
-                ]);
+            // If the post is for everybody except some member(s)
+            if ($post->visibility_id == $everybody_except_visibility->id) {
+                // Find all subscribers excluding those in the restriction
+                $subscribers = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
+                $restrictions = Restriction::where([['visibility_id', $everybody_except_visibility->id], ['post_id', $post->id]])->get();
 
-                History::create([
-                    'type_id' => $activities_history_type->id,
-                    'status_id' => $unread_history_status->id,
-                    'from_user_id' => $post->user_id,
-                    'to_user_id' => $parent_post->user_id,
-                    'post_id' => $post->id,
-                    'for_notification_id' => $notification->id
-                ]);
+                if ($subscribers != null AND $restrictions != null) {
+                    $members_ids = array_diff(getArrayKeys($subscribers, 'user_id'), getArrayKeys($restrictions, 'user_id'));
 
-            } else {
-                $notification = Notification::create([
-                    'type_id' => $comment_on_post_type->id,
-                    'status_id' => $unread_notification_status->id,
-                    'from_user_id' => $post->user_id,
-                    'to_user_id' => $parent_post->user_id,
-                    'post_id' => $post->id
-                ]);
+                    foreach ($members_ids as $member_id):
+                        Notification::create([
+                            'type_id' => $new_poll_type->id,
+                            'status_id' => $unread_notification_status->id,
+                            'from_user_id' => $post->user_id,
+                            'to_user_id' => $member_id,
+                            'post_id' => $post->id
+                        ]);
+                    endforeach;
 
-                History::create([
-                    'type_id' => $activities_history_type->id,
-                    'status_id' => $unread_history_status->id,
-                    'from_user_id' => $post->user_id,
-                    'to_user_id' => $parent_post->user_id,
-                    'post_id' => $post->id,
-                    'for_notification_id' => $notification->id
-                ]);
+                } else {
+                    Notification::create([
+                        'type_id' => $new_poll_type->id,
+                        'status_id' => $unread_notification_status->id,
+                        'from_user_id' => $post->user_id,
+                        'post_id' => $post->id
+                    ]);
+                }
             }
 
-        // Otherwise, check if it's a link or a shared post. Or rather check visibilities
+            // If the post is for nobody except some member(s)
+            if ($post->visibility_id == $nobody_except_visibility->id) {
+                // Find all members included in the restriction
+                $restrictions = Restriction::where([['visibility_id', $nobody_except_visibility->id], ['post_id', $post->id]])->get();
+
+                if ($restrictions != null) {
+                    foreach ($restrictions as $restriction):
+                        Notification::create([
+                            'type_id' => $new_poll_type->id,
+                            'status_id' => $unread_notification_status->id,
+                            'from_user_id' => $post->user_id,
+                            'to_user_id' => $restriction->user_id,
+                            'post_id' => $post->id
+                        ]);
+                    endforeach;
+
+                } else {
+                    Notification::create([
+                        'type_id' => $new_poll_type->id,
+                        'status_id' => $unread_notification_status->id,
+                        'from_user_id' => $post->user_id,
+                        'post_id' => $post->id
+                    ]);
+                }
+            }
+
+            $notification = Notification::where([['type_id', $new_poll_type->id], ['from_user_id', $post->user_id], ['post_id', $post->id]])->first();
+
+            History::create([
+                'type_id' => $activities_history_type->id,
+                'status_id' => $unread_history_status->id,
+                'from_user_id' => $post->user_id,
+                'post_id' => $post->id,
+                'for_notification_id' => $notification->id
+            ]);
+
+            return $this->handleResponse(new ResourcesPost($post), __('notifications.create_post_success'));
+
         } else {
-            if ($post->shared_post_id != null) {
-                // If the post is for everybody
-                if ($post->visibility_id == $everybody_visibility->id) {
-                    // Find all subscribers of the post owner
-                    $subscriptions = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
+            $post = Post::create($inputs);
 
-                    if ($subscriptions != null) {
-                        foreach ($subscriptions as $subscription):
-                            Notification::create([
-                                'type_id' => $shared_post_type->id,
-                                'status_id' => $unread_notification_status->id,
-                                'from_user_id' => $post->user_id,
-                                'to_user_id' => $subscription->subscriber_id,
-                                'post_id' => $post->id
-                            ]);
-                        endforeach;
+            // Hashtags management
+            $hashtags = getHashtags($post->post_content);
 
-                    } else {
-                        Notification::create([
-                            'type_id' => $shared_post_type->id,
-                            'status_id' => $unread_notification_status->id,
-                            'from_user_id' => $post->user_id,
-                            'post_id' => $post->id
-                        ]);
-                    }
-                }
+            if (count($hashtags) > 0) {
+                foreach ($hashtags as $keyword):
+                    $existing_hashtag = Hashtag::where('keyword', $keyword)->first();
 
-                // If the post is for everybody except some member(s)
-                if ($post->visibility_id == $everybody_except_visibility->id) {
-                    // Find all subscribers excluding those in the restriction
-                    $subscribers = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
-                    $restrictions = Restriction::where([['visibility_id', $everybody_except_visibility->id], ['post_id', $post->id]])->get();
+                    if ($existing_hashtag != null) {
+                        if (count($existing_hashtag->posts) == 0) {
+                            $existing_hashtag->posts()->attach([$post->id]);
+                        }
 
-                    if ($subscribers != null AND $restrictions != null) {
-                        $members_ids = array_diff(getArrayKeys($subscribers, 'user_id'), getArrayKeys($restrictions, 'user_id'));
-
-                        foreach ($members_ids as $member_id):
-                            Notification::create([
-                                'type_id' => $shared_post_type->id,
-                                'status_id' => $unread_notification_status->id,
-                                'from_user_id' => $post->user_id,
-                                'to_user_id' => $member_id,
-                                'post_id' => $post->id
-                            ]);
-                        endforeach;
+                        if (count($existing_hashtag->posts) > 0) {
+                            $existing_hashtag->posts()->syncWithoutDetaching([$post->id]);
+                        }
 
                     } else {
-                        Notification::create([
-                            'type_id' => $shared_post_type->id,
-                            'status_id' => $unread_notification_status->id,
-                            'from_user_id' => $post->user_id,
-                            'post_id' => $post->id
-                        ]);
+                        $hashtag = Hashtag::create(['keyword' => $keyword]);
+
+                        if (count($hashtag->posts) == 0) {
+                            $hashtag->posts()->attach([$post->id]);
+                        }
+
+                        if (count($hashtag->posts) > 0) {
+                            $hashtag->posts()->syncWithoutDetaching([$post->id]);
+                        }
                     }
-                }
-
-                // If the post is for nobody except some member(s)
-                if ($post->visibility_id == $nobody_except_visibility->id) {
-                    // Find all members included in the restriction
-                    $restrictions = Restriction::where([['visibility_id', $nobody_except_visibility->id], ['post_id', $post->id]])->get();
-
-                    if ($restrictions != null) {
-                        foreach ($restrictions as $restriction):
-                            Notification::create([
-                                'type_id' => $shared_post_type->id,
-                                'status_id' => $unread_notification_status->id,
-                                'from_user_id' => $post->user_id,
-                                'to_user_id' => $restriction->user_id,
-                                'post_id' => $post->id
-                            ]);
-                        endforeach;
-
-                    } else {
-                        Notification::create([
-                            'type_id' => $shared_post_type->id,
-                            'status_id' => $unread_notification_status->id,
-                            'from_user_id' => $post->user_id,
-                            'post_id' => $post->id
-                        ]);
-                    }
-                }
-
-                $notification = Notification::where([['type_id', $shared_post_type->id], ['from_user_id', $post->user_id], ['post_id', $post->id]])->first();
-
-                History::create([
-                    'type_id' => $activities_history_type->id,
-                    'status_id' => $unread_history_status->id,
-                    'from_user_id' => $post->user_id,
-                    'post_id' => $post->id,
-                    'for_notification_id' => $notification->id
-                ]);
-
-            } else if ($post->post_url != null) {
-                // If the post is for everybody
-                if ($post->visibility_id == $everybody_visibility->id) {
-                    // Find all subscribers of the post owner
-                    $subscriptions = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
-
-                    if ($subscriptions != null) {
-                        foreach ($subscriptions as $subscription):
-                            Notification::create([
-                                'type_id' => $new_link_type->id,
-                                'status_id' => $unread_notification_status->id,
-                                'from_user_id' => $post->user_id,
-                                'to_user_id' => $subscription->subscriber_id,
-                                'post_id' => $post->id
-                            ]);
-                        endforeach;
-
-                    } else {
-                        Notification::create([
-                            'type_id' => $new_link_type->id,
-                            'status_id' => $unread_notification_status->id,
-                            'from_user_id' => $post->user_id,
-                            'post_id' => $post->id
-                        ]);
-                    }
-                }
-
-                // If the post is for everybody except some member(s)
-                if ($post->visibility_id == $everybody_except_visibility->id) {
-                    // Find all subscribers excluding those in the restriction
-                    $subscribers = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
-                    $restrictions = Restriction::where([['visibility_id', $everybody_except_visibility->id], ['post_id', $post->id]])->get();
-
-                    if ($subscribers != null AND $restrictions != null) {
-                        $members_ids = array_diff(getArrayKeys($subscribers, 'user_id'), getArrayKeys($restrictions, 'user_id'));
-
-                        foreach ($members_ids as $member_id):
-                            Notification::create([
-                                'type_id' => $new_link_type->id,
-                                'status_id' => $unread_notification_status->id,
-                                'from_user_id' => $post->user_id,
-                                'to_user_id' => $member_id,
-                                'post_id' => $post->id
-                            ]);
-                        endforeach;
-
-                    } else {
-                        Notification::create([
-                            'type_id' => $new_link_type->id,
-                            'status_id' => $unread_notification_status->id,
-                            'from_user_id' => $post->user_id,
-                            'post_id' => $post->id
-                        ]);
-                    }
-                }
-
-                // If the post is for nobody except some member(s)
-                if ($post->visibility_id == $nobody_except_visibility->id) {
-                    // Find all members included in the restriction
-                    $restrictions = Restriction::where([['visibility_id', $nobody_except_visibility->id], ['post_id', $post->id]])->get();
-
-                    if ($restrictions != null) {
-                        foreach ($restrictions as $restriction):
-                            Notification::create([
-                                'type_id' => $new_link_type->id,
-                                'status_id' => $unread_notification_status->id,
-                                'from_user_id' => $post->user_id,
-                                'to_user_id' => $restriction->user_id,
-                                'post_id' => $post->id
-                            ]);
-                        endforeach;
-
-                    } else {
-                        Notification::create([
-                            'type_id' => $new_link_type->id,
-                            'status_id' => $unread_notification_status->id,
-                            'from_user_id' => $post->user_id,
-                            'post_id' => $post->id
-                        ]);
-                    }
-                }
-
-                $notification = Notification::where([['type_id', $new_link_type->id], ['from_user_id', $post->user_id], ['post_id', $post->id]])->first();
-
-                History::create([
-                    'type_id' => $activities_history_type->id,
-                    'status_id' => $unread_history_status->id,
-                    'from_user_id' => $post->user_id,
-                    'post_id' => $post->id,
-                    'for_notification_id' => $notification->id
-                ]);
-
-            } else {
-                // If the post is for everybody
-                if ($post->visibility_id == $everybody_visibility->id) {
-                    // Find all subscribers of the post owner
-                    $subscriptions = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
-
-                    if ($subscriptions != null) {
-                        foreach ($subscriptions as $subscription):
-                            Notification::create([
-                                'type_id' => $new_post_type->id,
-                                'status_id' => $unread_notification_status->id,
-                                'from_user_id' => $post->user_id,
-                                'to_user_id' => $subscription->subscriber_id,
-                                'post_id' => $post->id
-                            ]);
-                        endforeach;
-
-                    } else {
-                        Notification::create([
-                            'type_id' => $new_post_type->id,
-                            'status_id' => $unread_notification_status->id,
-                            'from_user_id' => $post->user_id,
-                            'post_id' => $post->id
-                        ]);
-                    }
-                }
-
-                // If the post is for everybody except some member(s)
-                if ($post->visibility_id == $everybody_except_visibility->id) {
-                    // Find all subscribers excluding those in the restriction
-                    $subscribers = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
-                    $restrictions = Restriction::where([['visibility_id', $everybody_except_visibility->id], ['post_id', $post->id]])->get();
-
-                    if ($subscribers != null AND $restrictions != null) {
-                        $members_ids = array_diff(getArrayKeys($subscribers, 'user_id'), getArrayKeys($restrictions, 'user_id'));
-
-                        foreach ($members_ids as $member_id):
-                            Notification::create([
-                                'type_id' => $new_post_type->id,
-                                'status_id' => $unread_notification_status->id,
-                                'from_user_id' => $post->user_id,
-                                'to_user_id' => $member_id,
-                                'post_id' => $post->id
-                            ]);
-                        endforeach;
-
-                    } else {
-                        Notification::create([
-                            'type_id' => $new_post_type->id,
-                            'status_id' => $unread_notification_status->id,
-                            'from_user_id' => $post->user_id,
-                            'post_id' => $post->id
-                        ]);
-                    }
-                }
-
-                // If the post is for nobody except some member(s)
-                if ($post->visibility_id == $nobody_except_visibility->id) {
-                    // Find all members included in the restriction
-                    $restrictions = Restriction::where([['visibility_id', $nobody_except_visibility->id], ['post_id', $post->id]])->get();
-
-                    if ($restrictions != null) {
-                        foreach ($restrictions as $restriction):
-                            Notification::create([
-                                'type_id' => $new_post_type->id,
-                                'status_id' => $unread_notification_status->id,
-                                'from_user_id' => $post->user_id,
-                                'to_user_id' => $restriction->user_id,
-                                'post_id' => $post->id
-                            ]);
-                        endforeach;
-
-                    } else {
-                        Notification::create([
-                            'type_id' => $new_post_type->id,
-                            'status_id' => $unread_notification_status->id,
-                            'from_user_id' => $post->user_id,
-                            'post_id' => $post->id
-                        ]);
-                    }
-                }
-
-                $notification = Notification::where([['type_id', $new_post_type->id], ['from_user_id', $post->user_id], ['post_id', $post->id]])->first();
-
-                History::create([
-                    'type_id' => $activities_history_type->id,
-                    'status_id' => $unread_history_status->id,
-                    'from_user_id' => $post->user_id,
-                    'post_id' => $post->id,
-                    'for_notification_id' => $notification->id
-                ]);
+                endforeach;
             }
-        }
 
-        return $this->handleResponse(new ResourcesPost($post), __('notifications.create_post_success'));
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            // Mentions management
+            $mentions = getMentions($post->post_content);
+
+            if (count($mentions) > 0) {
+                foreach ($mentions as $mention):
+                    $mentioned = User::where('username', $mention)->first();
+
+                    $notification = Notification::create([
+                        'type_id' => $mention_type->id,
+                        'status_id' => $unread_notification_status->id,
+                        'from_user_id' => $post->user_id,
+                        'to_user_id' => $mentioned->id,
+                        'post_id' => $post->id
+                    ]);
+                endforeach;
+            }
+
+            // If it's a comment, check if it's a anonymous question or an answer for a post
+            if ($post->type_id == $comment_type->id) {
+                $parent_post = Post::find($post->answered_for);
+
+                if (is_null($parent_post)) {
+                    return $this->handleError(__('notifications.find_post_parent_404'));
+                }
+
+                if ($parent_post->type_id != $request_for_anonymous_question_type->id) {
+                    $notification = Notification::create([
+                        'type_id' => $anonymous_question_type->id,
+                        'status_id' => $unread_notification_status->id,
+                        'from_user_id' => $post->user_id,
+                        'to_user_id' => $parent_post->user_id,
+                        'post_id' => $post->id
+                    ]);
+
+                    History::create([
+                        'type_id' => $activities_history_type->id,
+                        'status_id' => $unread_history_status->id,
+                        'from_user_id' => $post->user_id,
+                        'to_user_id' => $parent_post->user_id,
+                        'post_id' => $post->id,
+                        'for_notification_id' => $notification->id
+                    ]);
+
+                } else {
+                    $notification = Notification::create([
+                        'type_id' => $comment_on_post_type->id,
+                        'status_id' => $unread_notification_status->id,
+                        'from_user_id' => $post->user_id,
+                        'to_user_id' => $parent_post->user_id,
+                        'post_id' => $post->id
+                    ]);
+
+                    History::create([
+                        'type_id' => $activities_history_type->id,
+                        'status_id' => $unread_history_status->id,
+                        'from_user_id' => $post->user_id,
+                        'to_user_id' => $parent_post->user_id,
+                        'post_id' => $post->id,
+                        'for_notification_id' => $notification->id
+                    ]);
+                }
+
+            // Otherwise, check if it's a link or a shared post. Or rather check visibilities
+            } else {
+                if ($post->shared_post_id != null) {
+                    // If the post is for everybody
+                    if ($post->visibility_id == $everybody_visibility->id) {
+                        // Find all subscribers of the post owner
+                        $subscriptions = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
+
+                        if ($subscriptions != null) {
+                            foreach ($subscriptions as $subscription):
+                                Notification::create([
+                                    'type_id' => $shared_post_type->id,
+                                    'status_id' => $unread_notification_status->id,
+                                    'from_user_id' => $post->user_id,
+                                    'to_user_id' => $subscription->subscriber_id,
+                                    'post_id' => $post->id
+                                ]);
+                            endforeach;
+
+                        } else {
+                            Notification::create([
+                                'type_id' => $shared_post_type->id,
+                                'status_id' => $unread_notification_status->id,
+                                'from_user_id' => $post->user_id,
+                                'post_id' => $post->id
+                            ]);
+                        }
+                    }
+
+                    // If the post is for everybody except some member(s)
+                    if ($post->visibility_id == $everybody_except_visibility->id) {
+                        // Find all subscribers excluding those in the restriction
+                        $subscribers = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
+                        $restrictions = Restriction::where([['visibility_id', $everybody_except_visibility->id], ['post_id', $post->id]])->get();
+
+                        if ($subscribers != null AND $restrictions != null) {
+                            $members_ids = array_diff(getArrayKeys($subscribers, 'user_id'), getArrayKeys($restrictions, 'user_id'));
+
+                            foreach ($members_ids as $member_id):
+                                Notification::create([
+                                    'type_id' => $shared_post_type->id,
+                                    'status_id' => $unread_notification_status->id,
+                                    'from_user_id' => $post->user_id,
+                                    'to_user_id' => $member_id,
+                                    'post_id' => $post->id
+                                ]);
+                            endforeach;
+
+                        } else {
+                            Notification::create([
+                                'type_id' => $shared_post_type->id,
+                                'status_id' => $unread_notification_status->id,
+                                'from_user_id' => $post->user_id,
+                                'post_id' => $post->id
+                            ]);
+                        }
+                    }
+
+                    // If the post is for nobody except some member(s)
+                    if ($post->visibility_id == $nobody_except_visibility->id) {
+                        // Find all members included in the restriction
+                        $restrictions = Restriction::where([['visibility_id', $nobody_except_visibility->id], ['post_id', $post->id]])->get();
+
+                        if ($restrictions != null) {
+                            foreach ($restrictions as $restriction):
+                                Notification::create([
+                                    'type_id' => $shared_post_type->id,
+                                    'status_id' => $unread_notification_status->id,
+                                    'from_user_id' => $post->user_id,
+                                    'to_user_id' => $restriction->user_id,
+                                    'post_id' => $post->id
+                                ]);
+                            endforeach;
+
+                        } else {
+                            Notification::create([
+                                'type_id' => $shared_post_type->id,
+                                'status_id' => $unread_notification_status->id,
+                                'from_user_id' => $post->user_id,
+                                'post_id' => $post->id
+                            ]);
+                        }
+                    }
+
+                    $notification = Notification::where([['type_id', $shared_post_type->id], ['from_user_id', $post->user_id], ['post_id', $post->id]])->first();
+
+                    History::create([
+                        'type_id' => $activities_history_type->id,
+                        'status_id' => $unread_history_status->id,
+                        'from_user_id' => $post->user_id,
+                        'post_id' => $post->id,
+                        'for_notification_id' => $notification->id
+                    ]);
+
+                } else if ($post->post_url != null) {
+                    // If the post is for everybody
+                    if ($post->visibility_id == $everybody_visibility->id) {
+                        // Find all subscribers of the post owner
+                        $subscriptions = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
+
+                        if ($subscriptions != null) {
+                            foreach ($subscriptions as $subscription):
+                                Notification::create([
+                                    'type_id' => $new_link_type->id,
+                                    'status_id' => $unread_notification_status->id,
+                                    'from_user_id' => $post->user_id,
+                                    'to_user_id' => $subscription->subscriber_id,
+                                    'post_id' => $post->id
+                                ]);
+                            endforeach;
+
+                        } else {
+                            Notification::create([
+                                'type_id' => $new_link_type->id,
+                                'status_id' => $unread_notification_status->id,
+                                'from_user_id' => $post->user_id,
+                                'post_id' => $post->id
+                            ]);
+                        }
+                    }
+
+                    // If the post is for everybody except some member(s)
+                    if ($post->visibility_id == $everybody_except_visibility->id) {
+                        // Find all subscribers excluding those in the restriction
+                        $subscribers = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
+                        $restrictions = Restriction::where([['visibility_id', $everybody_except_visibility->id], ['post_id', $post->id]])->get();
+
+                        if ($subscribers != null AND $restrictions != null) {
+                            $members_ids = array_diff(getArrayKeys($subscribers, 'user_id'), getArrayKeys($restrictions, 'user_id'));
+
+                            foreach ($members_ids as $member_id):
+                                Notification::create([
+                                    'type_id' => $new_link_type->id,
+                                    'status_id' => $unread_notification_status->id,
+                                    'from_user_id' => $post->user_id,
+                                    'to_user_id' => $member_id,
+                                    'post_id' => $post->id
+                                ]);
+                            endforeach;
+
+                        } else {
+                            Notification::create([
+                                'type_id' => $new_link_type->id,
+                                'status_id' => $unread_notification_status->id,
+                                'from_user_id' => $post->user_id,
+                                'post_id' => $post->id
+                            ]);
+                        }
+                    }
+
+                    // If the post is for nobody except some member(s)
+                    if ($post->visibility_id == $nobody_except_visibility->id) {
+                        // Find all members included in the restriction
+                        $restrictions = Restriction::where([['visibility_id', $nobody_except_visibility->id], ['post_id', $post->id]])->get();
+
+                        if ($restrictions != null) {
+                            foreach ($restrictions as $restriction):
+                                Notification::create([
+                                    'type_id' => $new_link_type->id,
+                                    'status_id' => $unread_notification_status->id,
+                                    'from_user_id' => $post->user_id,
+                                    'to_user_id' => $restriction->user_id,
+                                    'post_id' => $post->id
+                                ]);
+                            endforeach;
+
+                        } else {
+                            Notification::create([
+                                'type_id' => $new_link_type->id,
+                                'status_id' => $unread_notification_status->id,
+                                'from_user_id' => $post->user_id,
+                                'post_id' => $post->id
+                            ]);
+                        }
+                    }
+
+                    $notification = Notification::where([['type_id', $new_link_type->id], ['from_user_id', $post->user_id], ['post_id', $post->id]])->first();
+
+                    History::create([
+                        'type_id' => $activities_history_type->id,
+                        'status_id' => $unread_history_status->id,
+                        'from_user_id' => $post->user_id,
+                        'post_id' => $post->id,
+                        'for_notification_id' => $notification->id
+                    ]);
+
+                } else {
+                    // If the post is for everybody
+                    if ($post->visibility_id == $everybody_visibility->id) {
+                        // Find all subscribers of the post owner
+                        $subscriptions = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
+
+                        if ($subscriptions != null) {
+                            foreach ($subscriptions as $subscription):
+                                Notification::create([
+                                    'type_id' => $new_post_type->id,
+                                    'status_id' => $unread_notification_status->id,
+                                    'from_user_id' => $post->user_id,
+                                    'to_user_id' => $subscription->subscriber_id,
+                                    'post_id' => $post->id
+                                ]);
+                            endforeach;
+
+                        } else {
+                            Notification::create([
+                                'type_id' => $new_post_type->id,
+                                'status_id' => $unread_notification_status->id,
+                                'from_user_id' => $post->user_id,
+                                'post_id' => $post->id
+                            ]);
+                        }
+                    }
+
+                    // If the post is for everybody except some member(s)
+                    if ($post->visibility_id == $everybody_except_visibility->id) {
+                        // Find all subscribers excluding those in the restriction
+                        $subscribers = Subscription::where([['user_id', $post->user_id], ['status_id', $accepted_status->id]])->get();
+                        $restrictions = Restriction::where([['visibility_id', $everybody_except_visibility->id], ['post_id', $post->id]])->get();
+
+                        if ($subscribers != null AND $restrictions != null) {
+                            $members_ids = array_diff(getArrayKeys($subscribers, 'user_id'), getArrayKeys($restrictions, 'user_id'));
+
+                            foreach ($members_ids as $member_id):
+                                Notification::create([
+                                    'type_id' => $new_post_type->id,
+                                    'status_id' => $unread_notification_status->id,
+                                    'from_user_id' => $post->user_id,
+                                    'to_user_id' => $member_id,
+                                    'post_id' => $post->id
+                                ]);
+                            endforeach;
+
+                        } else {
+                            Notification::create([
+                                'type_id' => $new_post_type->id,
+                                'status_id' => $unread_notification_status->id,
+                                'from_user_id' => $post->user_id,
+                                'post_id' => $post->id
+                            ]);
+                        }
+                    }
+
+                    // If the post is for nobody except some member(s)
+                    if ($post->visibility_id == $nobody_except_visibility->id) {
+                        // Find all members included in the restriction
+                        $restrictions = Restriction::where([['visibility_id', $nobody_except_visibility->id], ['post_id', $post->id]])->get();
+
+                        if ($restrictions != null) {
+                            foreach ($restrictions as $restriction):
+                                Notification::create([
+                                    'type_id' => $new_post_type->id,
+                                    'status_id' => $unread_notification_status->id,
+                                    'from_user_id' => $post->user_id,
+                                    'to_user_id' => $restriction->user_id,
+                                    'post_id' => $post->id
+                                ]);
+                            endforeach;
+
+                        } else {
+                            Notification::create([
+                                'type_id' => $new_post_type->id,
+                                'status_id' => $unread_notification_status->id,
+                                'from_user_id' => $post->user_id,
+                                'post_id' => $post->id
+                            ]);
+                        }
+                    }
+
+                    $notification = Notification::where([['type_id', $new_post_type->id], ['from_user_id', $post->user_id], ['post_id', $post->id]])->first();
+
+                    History::create([
+                        'type_id' => $activities_history_type->id,
+                        'status_id' => $unread_history_status->id,
+                        'from_user_id' => $post->user_id,
+                        'post_id' => $post->id,
+                        'for_notification_id' => $notification->id
+                    ]);
+                }
+            }
+
+            return $this->handleResponse(new ResourcesPost($post), __('notifications.create_post_success'));
+        }
     }
 
     /**
@@ -1576,7 +1750,218 @@ class PostController extends BaseController
      */
     public function boost(Request $request, $id)
     {
-        # code...
+        // Manage API Client
+        $api_manager = new ApiClientManager();
+        // FlexPay accessing data
+        $gateway_mobile = config('services.flexpay.gateway_mobile');
+        $gateway_card = config('services.flexpay.gateway_card_v2');
+        // Vonage accessing data
+        // $basic  = new \Vonage\Client\Credentials\Basic(config('vonage.api_key'), config('vonage.api_secret'));
+        // $client = new \Vonage\Client($basic);
+        // Requests
+        $post = Post::find($id);
+
+        if (is_null($post)) {
+            return $this->handleError(__('notifications.find_post_404'));
+        }
+
+        // Mobile money type
+        $mobile_money_type = Type::where('type_name->fr', 'Mobile money')->first();
+
+        if (is_null($mobile_money_type)) {
+            return $this->handleError(__('miscellaneous.public.home.posts.boost.transaction_type.mobile_money'), __('notifications.find_type_404'), 404);
+        }
+
+        // Bank card
+        $bank_card_type = Type::where('type_name->fr', 'Carte bancaire')->first();
+
+        if (is_null($bank_card_type)) {
+            return $this->handleError(__('miscellaneous.public.home.posts.boost.transaction_type.bank_card'), __('notifications.find_type_404'), 404);
+        }
+
+        // Validations
+        if ($request->transaction_type_id == null OR !is_numeric($request->transaction_type_id)) {
+            return $this->handleError(__('miscellaneous.found_value') . ' ' . $request->transaction_type_id, __('validation.required', ['field_name' => __('miscellaneous.public.home.posts.boost.transaction_type.title')]), 400);
+        }
+
+        if ($request->budget_id == null OR !is_numeric($request->budget_id)) {
+            return $this->handleError(__('miscellaneous.found_value') . ' ' . $request->budget_id, __('validation.required', ['field_name' => __('miscellaneous.public.home.posts.boost.budget')]), 400);
+        }
+
+        if ($request->subject_url == null OR !is_numeric($request->subject_url)) {
+            return $this->handleError(__('miscellaneous.found_value') . ' ' . $request->subject_url, __('validation.custom.url.required'), 400);
+        }
+
+        $budget = Post::find($request->budget_id);
+
+        if (is_null($budget)) {
+            return $this->handleError(__('notifications.find_budget_404'));
+        }
+
+        // If the transaction is via mobile money
+        if ($request->transaction_type_id == $mobile_money_type->id) {
+            $current_user = User::find($post->user_id);
+
+            if ($current_user != null) {
+                $reference_code = 'REF-' . ((string) random_int(10000000, 99999999)) . '-' . $current_user->id;
+
+                // Create response by sending request to FlexPay
+                $jsonRes = $api_manager::call('POST', $gateway_mobile, config('services.flexpay.api_token'), [
+                    'merchant' => 'KULISHA',
+                    'type' => $request->transaction_type_id,
+                    'phone' => $request->other_phone,
+                    'reference' => $reference_code,
+                    'amount' => $budget->amount,
+                    'currency' => 'USD',
+                    'callbackUrl' => getApiURL() . '/payment/store'
+                ], null, null, true);
+
+                if (!empty($jsonRes->error)) {
+                    return $this->handleError($jsonRes->error, $jsonRes->message, $jsonRes->status);
+
+                } else {
+                    $code = $jsonRes->code;
+
+                    if ($code != '0') {
+                        // try {
+                        //     $client->sms()->send(new \Vonage\SMS\Message\SMS($current_user->phone, 'Kulisha', __('notifications.process_failed')));
+
+                        // } catch (\Throwable $th) {
+                        //     return $this->handleError($th->getMessage(), __('notifications.process_failed'), 500);
+                        // }
+
+                        return $this->handleError($jsonRes->code, $jsonRes->message, 400);
+
+                    } else {
+                        $object = new stdClass();
+
+                        $object->result_response = [
+                            'message' => $jsonRes->message,
+                            'order_number' => $jsonRes->orderNumber
+                        ];
+
+                        // The post is updated only if the processing succeed
+                        $post->update(['budget_id' => $budget->id]);
+
+                        if (count($request->keywords) > 0) {
+                            foreach ($request->keywords as $keyword):
+                                Keyword::create([
+                                    'keyword' => $keyword,
+                                    'post_id' => $post->id
+                                ]);
+                            endforeach;
+                        }
+
+                        $object->post = new ResourcesPost($post);
+
+                        // Register payment, even if FlexPay will
+                        $payment = Payment::where('order_number', $jsonRes->orderNumber)->first();
+
+                        if (is_null($payment)) {
+                            Payment::create([
+                                'reference' => $reference_code,
+                                'order_number' => $jsonRes->orderNumber,
+                                'amount' => $budget->amount,
+                                'phone' => $request->other_phone,
+                                'currency' => 'USD',
+                                'type_id' => $request->transaction_type_id,
+                                'status_id' => $code,
+                                'subject_url' => $request->subject_url,
+                                'user_id' => $current_user->id
+                            ]);
+                        }
+
+                        return $this->handleResponse($object, __('notifications.boost_post_success'));
+                    }
+                }
+
+            } else {
+                return $this->handleError(__('notifications.find_user_404'));
+            }
+        }
+
+        // If the transaction is via bank card
+        if ($request->transaction_type_id == $bank_card_type->id) {
+            $current_user = User::find($post->user_id);
+
+            if ($current_user != null) {
+                $reference_code = 'REF-' . ((string) random_int(10000000, 99999999)) . '-' . $current_user->id;
+
+                // Create response by sending request to FlexPay
+                $jsonRes = $api_manager::call('POST', $gateway_card, config('services.flexpay.api_token'), [
+                    'merchant' => 'KULISHA',
+                    'reference' => $reference_code,
+                    'amount' => $budget->amount,
+                    'description' => __('miscellaneous.bank_transaction_description'),
+                    'currency' => 'USD',
+                    'callbackUrl' => getApiURL() . '/payment/store',
+                    'approve_url' => $request->app_url . '/boosted/' . $budget->amount . '/USD/0/' . $current_user->id,
+                    'cancel_url' => $request->app_url . '/boosted/' . $budget->amount . '/USD/1/' . $current_user->id,
+                    'decline_url' => $request->app_url . '/boosted/' . $budget->amount . '/USD/2/' . $current_user->id,
+                    'language' => app()->getLocale(),
+                ], null, null, true);
+
+                if (!empty($jsonRes->error)) {
+                    return $this->handleError($jsonRes->error, $jsonRes->message, $jsonRes->status);
+
+                } else {
+                    if ($jsonRes->code != '0') {
+                        // try {
+                        //     $client->sms()->send(new \Vonage\SMS\Message\SMS($current_user->phone, 'Kulisha', __('notifications.process_failed')));
+
+                        // } catch (\Throwable $th) {
+                        //     return $this->handleError($th->getMessage(), __('notifications.process_failed'), 500);
+                        // }
+
+                        return $this->handleError($jsonRes->code, $jsonRes->message, 400);
+
+                    } else {
+                        $object = new stdClass();
+
+                        $object->result_response = [
+                            'message' => $jsonRes->message,
+                            'order_number' => $jsonRes->orderNumber,
+                            'url' => $jsonRes->url
+                        ];
+
+                        // The post is updated only if the processing succeed
+                        $post->update(['budget_id' => $budget->id]);
+
+                        if (count($request->keywords) > 0) {
+                            foreach ($request->keywords as $keyword):
+                                Keyword::create([
+                                    'keyword' => $keyword,
+                                    'post_id' => $post->id
+                                ]);
+                            endforeach;
+                        }
+
+                        $object->post = new ResourcesPost($post);
+
+                        // Register payment, even if FlexPay will
+                        $payment = Payment::where('order_number', $jsonRes->orderNumber)->first();
+
+                        if (is_null($payment)) {
+                            Payment::create([
+                                'reference' => $reference_code,
+                                'order_number' => $jsonRes->orderNumber,
+                                'amount' => $budget->amount,
+                                'currency' => 'USD',
+                                'type_id' => $request->transaction_type_id,
+                                'status_id' => $jsonRes->code,
+                                'subject_url' => $request->subject_url,
+                                'user_id' => $current_user->id
+                            ]);
+                        }
+
+                        return $this->handleResponse($object, __('notifications.boost_post_success'));
+                    }
+                }
+
+            } else {
+                return $this->handleError(__('notifications.find_user_404'));
+            }
+        }
     }
 
     /**

@@ -24,6 +24,7 @@ class Reaction extends JsonResource
             'reaction_name' => $this->reaction_name,
             'reaction_name_fr' => $this->getTranslation('reaction_name', 'fr'),
             'reaction_name_en' => $this->getTranslation('reaction_name', 'en'),
+            'alias' => $this->alias,
             'color' => $this->color,
             'icon_font' => $this->icon_font,
             'icon_svg' => $this->icon_svg,

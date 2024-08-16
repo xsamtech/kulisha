@@ -7,7 +7,6 @@ use App\Models\File;
 use App\Models\Group;
 use App\Models\History;
 use App\Models\Notification;
-use App\Models\Session;
 use App\Models\Status;
 use App\Models\Subscription;
 use App\Models\Type;
@@ -151,7 +150,6 @@ class EventController extends BaseController
         $ended_status = Status::where([['status_name->fr', 'Terminé'], ['group_id', $event_status_group->id]])->first();
         // Types
         $search_history_type = Type::where([['type_name->fr', 'Historique des recherches'], ['group_id', $history_type_group->id]])->first();
-        $consultation_history_type = Type::where([['type_name->fr', 'Historique des consultations'], ['group_id', $history_type_group->id]])->first();
         $searched_event_type = Type::where([['type_name->fr', 'Evénement recherché'], ['group_id', $notification_type_group->id]])->first();
         $started_event_type = Type::where([['type_name->fr', 'Evénement commencé'], ['group_id', $notification_type_group->id]])->first();
         $ended_event_type = Type::where([['type_name->fr', 'Evénement terminé'], ['group_id', $notification_type_group->id]])->first();
@@ -236,64 +234,6 @@ class EventController extends BaseController
                     'type_id' => $search_history_type->id,
                     'from_user_id' => $request->has('visitor_id') ? $request->get('visitor_id') : null,
                     'notification_id' => $notification->id
-                ]);
-            }
-        }
-
-        if ($request->hasHeader('X-user-id') and $request->hasHeader('X-ip-address') or $request->hasHeader('X-user-id') and !$request->hasHeader('X-ip-address')) {
-            $session = Session::where('user_id', $request->header('X-user-id'))->first();
-
-            if (is_null($session)) {
-                $new_session = Session::create([
-                    'id' => Str::random(255),
-                    'ip_address' =>  $request->hasHeader('X-ip-address') ? $request->header('X-ip-address') : null,
-                    'user_agent' => $request->header('X-user-agent'),
-                    'user_id' => $request->header('X-user-id')
-                ]);
-
-                History::create([
-                    'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
-                    'from_user_id' => $new_session->user_id,
-                    'to_user_id' => $event->user_id,
-                    'event_id' => $event->id,
-                    'session_id' => $new_session->id
-                ]);
-
-            } else {
-                History::create([
-                    'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
-                    'from_user_id' => $session->user_id,
-                    'to_user_id' => $event->user_id,
-                    'event_id' => $event->id,
-                    'session_id' => $session->id
-                ]);
-            }
-        }
-
-        if ($request->hasHeader('X-ip-address')) {
-            $session = Session::where('ip_address', $request->header('X-ip-address'))->first();
-
-            if (is_null($session)) {
-                $new_session = Session::create([
-                    'id' => Str::random(255),
-                    'ip_address' =>  $request->header('X-ip-address'),
-                    'user_agent' => $request->header('X-user-agent')
-                ]);
-
-                History::create([
-                    'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
-                    'to_user_id' => $event->user_id,
-                    'event_id' => $event->id,
-                    'session_id' => $new_session->id
-                ]);
-
-            } else {
-                History::create([
-                    'type_id' => is_null($consultation_history_type) ? null : $consultation_history_type->id,
-                    'from_user_id' => is_null($session->user_id) ? null : $session->user_id,
-                    'to_user_id' => $event->user_id,
-                    'event_id' => $event->id,
-                    'session_id' => $session->id
                 ]);
             }
         }

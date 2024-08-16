@@ -249,13 +249,13 @@ class CategoryController extends BaseController
 
     // ==================================== CUSTOM METHODS ====================================
     /**
-     * Search a category by its name.
+     * Find a category by its name.
      *
      * @param  string $locale
      * @param  string $data
      * @return \Illuminate\Http\Response
      */
-    public function search($locale, $data)
+    public function findByRealName($locale, $data)
     {
         $category = Category::where('category_name->' . $locale, $data)->first();
 

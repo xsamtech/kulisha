@@ -36,6 +36,7 @@ return [
     'back_list' => 'Return to the list',
     'back_form' => 'Return to the form',
     'back_toc' => 'Return to the table of content',
+    'select_one_more' => 'Select one or more',
     'see_all_notifications' => 'View all notifications',
     'loading' => 'Loading...',
     'yes' => 'Yes',
@@ -258,6 +259,12 @@ return [
         'error' => 'Your confirmation doesn’t match the new password',
     ],
     'choose_role' => 'Choose a role',
+    'choose_user' => 'Choose a user',
+    'website' => [
+        'title' => 'Website(s)',
+        'name' => 'Website name',
+        'url' => 'Website URL'
+    ],
     'go_login' => 'Already have an account',
     'api_token' => 'Your key for using of APIs',
     'amount' => 'Amount',
@@ -607,9 +614,13 @@ return [
 
             // Posts
             'posts' => [
-                'new' => 'Share something...',
+                'new' => 'Publish something...',
                 'write' => 'Write here ...',
+                'choose_type' => 'Choose the type of post',
+                'product_categories' => 'Category(ies) of your product',
+                'service_categories' => 'Category(ies) of your service',
                 'choose_visibility' => 'Who can see the post?',
+                'create_poll_choices' => 'Create choices for this poll',
 
                 // Type
                 'type' => [
@@ -627,6 +638,23 @@ return [
                     'document' => 'Document',
                     'location' => 'Location',
                     'emoji' => 'Emoji',
+                ],
+
+                // Boost
+                'boost' => [
+                    'title' => 'Boost',
+                    'description' => 'Boost your :post_type to get it seen by a larger number of people.',
+                    'coverage_area' => 'Coverage area',
+                    'budget' => 'Budget',
+                    'keywords' => [
+                        'label' => 'Keyword(s)',
+                        'post_error' => 'Please choose a post'
+                    ],
+                    'transaction_type' => [
+                        'title' => 'Transaction type',
+                        'mobile_money' => 'Mobile money',
+                        'bank_card' => 'Bank card',
+                    ],
                 ],
 
                 // Actions

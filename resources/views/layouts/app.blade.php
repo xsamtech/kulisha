@@ -56,7 +56,6 @@
         <style>
             .kls-fs-7 { font-size: 0.7rem; }
             .kls-text-secondary { color: var(--bs-secondary-text-emphasis); }
-            .btn-check:checked + .btn-success-soft, :not(.btn-check) + .btn-success-soft:active, .btn-success-soft:first-child:active, .btn-success-soft.active, .btn-success-soft.show { color: #000!important; background-color: #a4da22 !important; border-color: #a4da22 !important; }
             .btn-check:checked + .btn-secondary-soft, :not(.btn-check) + .btn-secondary-soft:active, .btn-secondary-soft:first-child:active, .btn-secondary-soft.active, .btn-secondary-soft.show { color: #fff!important; background-color: #14191e !important; border-color: #14191e !important; }
             [data-bs-theme=dark] .btn-check:checked + .btn-secondary-soft, [data-bs-theme=dark] :not(.btn-check) + .btn-secondary-soft:active, [data-bs-theme=dark] .btn-secondary-soft:first-child:active, [data-bs-theme=dark] .btn-secondary-soft.active, [data-bs-theme=dark] .btn-secondary-soft.show { color: var(--bs-body-bg)!important; background-color: rgba(var(--bs-secondary-rgb)) !important; border-color: transparent !important; }
         </style>
@@ -198,7 +197,7 @@
                                 <div class="nav flex-nowrap align-items-center">
                                     <div class="nav-item w-100">
                                         <form class="rounded position-relative">
-                                            <input class="form-control ps-5 bg-light" type="search" placeholder="Search..." aria-label="Search">
+                                            <input class="form-control ps-5 bg-light" type="search" placeholder="@lang('miscellaneous.search_label')" aria-label="Search" title="@lang('miscellaneous.search_label')">
                                             <button class="btn bg-transparent px-2 py-0 position-absolute top-50 start-0 translate-middle-y" type="submit"><i class="bi bi-search fs-5"></i></button>
                                         </form>
                                     </div>
@@ -291,24 +290,25 @@
                     <form id="newPost">
                         <!-- Modal post header START -->
                         <div class="modal-header pb-0 border-bottom-0">
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close btn-secondary-soft p-3 rounded-circle" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <!-- Modal post header END -->
 
                         <!-- Modal post body START -->
-                        <div class="modal-body pt-0">
+                        <div class="modal-body pt-3">
                             <!-- Check One Post Type -->
-                            <div id="newPostType" class="d-flex justify-content-center mb-3">
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="inlineRadioOptions" id="postProduct" value="option1" checked>
-                                    <label role="button" class="form-check-label" for="postProduct">
-                                        @lang('miscellaneous.public.home.posts.type.product')
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="inlineRadioOptions" id="postService" value="option2">
+                            <div id="newPostType" class="mb-3 px-3 py-2 border rounded-pill">
+                                <span class="d-inline-block me-3">@lang('miscellaneous.public.home.posts.choose_type')</span>
+                                <div class="form-check form-check-inline float-end">
+                                    <input class="form-check-input" type="radio" name="post-type" id="postService" value="service">
                                     <label role="button" class="form-check-label" for="postService">
                                         @lang('miscellaneous.public.home.posts.type.service')
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline float-end">
+                                    <input class="form-check-input" type="radio" name="post-type" id="postProduct" value="product" checked>
+                                    <label role="button" class="form-check-label" for="postProduct">
+                                        @lang('miscellaneous.public.home.posts.type.product')
                                     </label>
                                 </div>
                             </div>
@@ -344,30 +344,36 @@
                             <!-- Select Post categories -->
                             <div class="mt-3 text-center">
                                 <div id="productCategories">
-                                    <input type="checkbox" class="btn-check" id="check-category-product-1" autocomplete="off" data-id="">
-                                    <label for="check-category-product-1" class="small btn btn-success-soft m-2 rounded-pill">Matériel d’agriculture</label>
+                                    <input type="checkbox" class="btn-check" id="check-category-product-1" name="check-category-product-1" autocomplete="off" value="1">
+                                    <label for="check-category-product-1" class="small btn btn-secondary-soft m-2 rounded-pill">Matériel d’agriculture</label>
 
-                                    <input type="checkbox" class="btn-check" id="check-category-product-2" autocomplete="off" data-id="">
-                                    <label for="check-category-product-2" class="small btn btn-success-soft m-2 rounded-pill">Plante et semence</label>
+                                    <input type="checkbox" class="btn-check" id="check-category-product-2" name="check-category-product-2" autocomplete="off" value="2">
+                                    <label for="check-category-product-2" class="small btn btn-secondary-soft m-2 rounded-pill">Plante et semence</label>
 
-                                    <input type="checkbox" class="btn-check" id="check-category-product-3" autocomplete="off" data-id="">
-                                    <label for="check-category-product-3" class="small btn btn-success-soft m-2 rounded-pill">Produit transformé</label>
+                                    <input type="checkbox" class="btn-check" id="check-category-product-3" name="check-category-product-3" autocomplete="off" value="3">
+                                    <label for="check-category-product-3" class="small btn btn-secondary-soft m-2 rounded-pill">Produit transformé</label>
 
-                                    <input type="checkbox" class="btn-check" id="check-category-product-4" autocomplete="off" data-id="">
-                                    <label for="check-category-product-4" class="small btn btn-success-soft m-2 rounded-pill">Produit extrait</label>
+                                    <input type="checkbox" class="btn-check" id="check-category-product-4" name="check-category-product-4" autocomplete="off" value="4">
+                                    <label for="check-category-product-4" class="small btn btn-secondary-soft m-2 rounded-pill">Produit extrait</label>
+
+                                    <input type="checkbox" class="btn-check" id="check-category-product-5" name="check-category-product-5" autocomplete="off" value="5">
+                                    <label for="check-category-product-5" class="small btn btn-secondary-soft m-2 rounded-pill">Produit rafffiné</label>
+
+                                    <input type="checkbox" class="btn-check" id="check-category-product-6" name="check-category-product-6" autocomplete="off" value="6">
+                                    <label for="check-category-product-6" class="small btn btn-secondary-soft m-2 rounded-pill">Traitement des plantes</label>
                                 </div>
 
                                 <div id="serviceCategories" class="d-none">
-                                    <input type="checkbox" class="btn-check" id="check-category-service-1" autocomplete="off" data-id="">
+                                    <input type="checkbox" class="btn-check" id="check-category-service-1" name="check-category-service-1" autocomplete="off" value="20">
                                     <label for="check-category-service-1" class="small btn btn-secondary-soft m-2 rounded-pill">Transport et livraison</label>
 
-                                    <input type="checkbox" class="btn-check" id="check-category-service-2" autocomplete="off" data-id="">
+                                    <input type="checkbox" class="btn-check" id="check-category-service-2" name="check-category-service-2" autocomplete="off" value="21">
                                     <label for="check-category-service-2" class="small btn btn-secondary-soft m-2 rounded-pill">Stockage et conservation</label>
 
-                                    <input type="checkbox" class="btn-check" id="check-category-service-3" autocomplete="off" data-id="">
+                                    <input type="checkbox" class="btn-check" id="check-category-service-3" name="check-category-service-3" autocomplete="off" value="22">
                                     <label for="check-category-service-3" class="small btn btn-secondary-soft m-2 rounded-pill">Transformation et raffinerie</label>
 
-                                    <input type="checkbox" class="btn-check" id="check-category-service-4" autocomplete="off" data-id="">
+                                    <input type="checkbox" class="btn-check" id="check-category-service-4" name="check-category-service-4" autocomplete="off" value="23">
                                     <label for="check-category-service-4" class="small btn btn-secondary-soft m-2 rounded-pill">Gastronomie bio</label>
                                 </div>
                             </div>
@@ -378,6 +384,7 @@
                         <div class="modal-footer px-3 row justify-content-between">
                             <!-- Select -->
                             <div class="col-lg-4">
+                                <input type="hidden" id="post-visibility" name="post-visibility" value="everybody">
                                 <div class="dropdown d-inline-block" title="@lang('miscellaneous.public.home.posts.choose_visibility')" data-bs-toggle="tooltip" data-bs-placement="bottom">
                                     <a role="button" class="text-secondary dropdown-toggle btn btn-secondary-soft py-1 px-2 rounded-pill" id="toggleVisibility" data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="bi bi-globe-europe-africa fs-6"></i>

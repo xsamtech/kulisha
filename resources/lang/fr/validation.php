@@ -193,6 +193,9 @@ return [
         'deadline' => [
             'exists' => 'Cette échéance existe déjà'
         ],
+        'url' => [
+            'required' => 'Veuillez donner l’URL de ce sujet'
+        ],
         'owner' => [
             'required' => 'A quelle entité ça appartient ?'
         ],
