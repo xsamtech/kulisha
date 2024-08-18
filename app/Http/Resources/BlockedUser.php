@@ -23,6 +23,7 @@ class BlockedUser extends JsonResource
             'id' => $this->id,
             'user' => User::make($this->user),
             'reaction_reason' => ReactionReason::make($this->reaction_reason),
+            'status' => Status::make($this->status),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
             'created_at_explicit' => $this->created_at->format('Y') == date('Y') ? explicitDayMonth($this->created_at->format('Y-m-d H:i:s')) : explicitDate($this->created_at->format('Y-m-d H:i:s')),

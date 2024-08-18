@@ -54,6 +54,17 @@ class Status extends Model
 
     /**
      * MANY-TO-ONE
+     * Several blocked_users for a status
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function blocked_users(): HasMany
+    {
+        return $this->hasMany(BlockedUser::class);
+    }
+
+    /**
+     * MANY-TO-ONE
      * Several subscriptions for a status
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasMany

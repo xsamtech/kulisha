@@ -23,6 +23,17 @@ class BlockedUser extends Model
 
     /**
      * ONE-TO-MANY
+     * One status for several blocked_users
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class);
+    }
+
+    /**
+     * ONE-TO-MANY
      * One user for several blocked_users
      * 
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
