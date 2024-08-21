@@ -22,7 +22,7 @@ class NotificationController extends BaseController
      */
     public function index()
     {
-        $notifications = Notification::orderByDesc('created_at')->get();
+        $notifications = Notification::orderByDesc('updated_at')->get();
 
         return $this->handleResponse(ResourcesNotification::collection($notifications), __('notifications.find_all_notifications_success'));
     }
@@ -37,6 +37,7 @@ class NotificationController extends BaseController
     {
         // Get inputs
         $inputs = [
+            'days_before_blocking' => $request->days_before_blocking,
             'type_id' => $request->type_id,
             'status_id' => $request->status_id,
             'from_user_id' => $request->from_user_id,
@@ -93,6 +94,7 @@ class NotificationController extends BaseController
         // Get inputs
         $inputs = [
             'id' => $request->id,
+            'days_before_blocking' => $request->days_before_blocking,
             'type_id' => $request->type_id,
             'status_id' => $request->status_id,
             'from_user_id' => $request->from_user_id,

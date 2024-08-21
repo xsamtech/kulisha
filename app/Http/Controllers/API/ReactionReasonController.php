@@ -51,7 +51,8 @@ class ReactionReasonController extends BaseController
                 'eo' => $request->reason_content_eo
             ],
             'report_count' => $request->report_count,
-            'number_of_days' => $request->number_of_days
+            'number_of_days' => $request->number_of_days,
+            'is_for_post' => $request->is_for_post
         ];
         // Select all reactions reasons to check unique constraint
         $reactions_reasons = ReactionReason::all();
@@ -119,7 +120,8 @@ class ReactionReasonController extends BaseController
                 'eo' => $request->reason_content_eo
             ],
             'report_count' => $request->report_count,
-            'number_of_days' => $request->number_of_days
+            'number_of_days' => $request->number_of_days,
+            'is_for_post' => $request->is_for_post
         ];
         // Select all reactions reasons and specific reason to check unique constraint
         $reactions_reasons = ReactionReason::all();
@@ -154,6 +156,13 @@ class ReactionReasonController extends BaseController
             ]);
         }
 
+        if ($inputs['is_for_post'] != null) {
+            $reaction_reason->update([
+                'is_for_post' => $inputs['is_for_post'],
+                'updated_at' => now(),
+            ]);
+        }
+
         return $this->handleResponse(new ResourcesReactionReason($reaction_reason), __('notifications.update_reaction_reason_success'));
     }
 
@@ -170,5 +179,19 @@ class ReactionReasonController extends BaseController
         $reactions_reasons = ReactionReason::all();
 
         return $this->handleResponse(ResourcesReactionReason::collection($reactions_reasons), __('notifications.delete_reaction_reason_success'));
+    }
+
+    // ==================================== CUSTOM METHODS ====================================
+    /**
+     * Find a status by its name.
+     *
+     * @param  string $is_for_post
+     * @return \Illuminate\Http\Response
+     */
+    public function findByForPost($is_for_post)
+    {
+        $reactions_reasons = ReactionReason::where('is_for_post' . $is_for_post)->get();
+
+        return $this->handleResponse(ResourcesReactionReason::collection($reactions_reasons), __('notifications.find_all_reactions_reasons_success'));
     }
 }

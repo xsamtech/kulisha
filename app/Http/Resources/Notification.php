@@ -21,6 +21,7 @@ class Notification extends JsonResource
     {
         return [
             'id' => $this->id,
+            'days_before_blocking' => $this->days_before_blocking,
             'type' => Type::make($this->type),
             'status' => Status::make($this->status),
             'from' => User::make($this->from_user),
