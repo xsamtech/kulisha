@@ -627,7 +627,14 @@ return [
                     'product' => 'Produit',
                     'service' => 'Service',
                     'event' => 'Evénement',
-                    'poll' => 'Sondage',
+                    'poll' => [
+                        'label' => 'Sondage',
+                        'choice' => [
+                            'description' => 'Mettez des assertions pour permettre à chacun de choisir une',
+                            'content' => 'Contenu de l’assertion'
+                        ],
+                        'post_error' => 'Veuillez choisir un post'
+                    ],
                     'anonymous_question' => 'Question anonyme',
                     'article' => 'Écrire article',
                 ],

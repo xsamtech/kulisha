@@ -117,6 +117,13 @@ return [
     'create_visibility_success' => 'Visibility created',
     'update_visibility_success' => 'Visibility updated',
     'delete_visibility_success' => 'Visibility deleted',
+    // Restriction
+    'find_all_restrictions_success' => 'Restrictions found',
+    'find_restriction_success' => 'Restriction found',
+    'find_restriction_404' => 'Restriction not found',
+    'create_restriction_success' => 'Restriction created',
+    'update_restriction_success' => 'Restriction updated',
+    'delete_restriction_success' => 'Restriction deleted',
     // Field
     'find_all_fields_success' => 'Fields found',
     'find_field_success' => 'Field found',
@@ -160,6 +167,13 @@ return [
     'subscribe_user_success' => 'Subscription sent',
     'subscribe_user_accepted' => 'Subscription accepted',
     'unsubscribe_user_success' => 'Unsubscription done',
+    // BlockedUser
+    'find_all_blocked_users_success' => 'Blocked members found',
+    'find_blocked_user_success' => 'Blocked member found',
+    'find_blocked_user_404' => 'Blocked member not found',
+    'create_blocked_user_success' => 'Blocked member created',
+    'update_blocked_user_success' => 'Blocked member updated',
+    'delete_blocked_user_success' => 'Blocked member deleted',
     // Website
     'find_all_websites_success' => 'Websites found',
     'find_website_success' => 'Website found',
@@ -243,6 +257,13 @@ return [
     'update_post_success' => 'Post updated',
     'delete_post_success' => 'Post deleted',
     'register_for_later_post_success' => 'Post registered to see later',
+    // Surveychoice
+    'find_all_surveychoices_success' => 'Polls found',
+    'find_surveychoice_success' => 'Poll found',
+    'find_surveychoice_404' => 'Poll not found',
+    'create_surveychoice_success' => 'Poll created',
+    'update_surveychoice_success' => 'Poll updated',
+    'delete_surveychoice_success' => 'Poll deleted',
     // Hashtag
     'find_all_hashtags_success' => 'Hashtags found',
     'find_hashtag_success' => 'Hashtag found',
@@ -299,6 +320,13 @@ return [
     'create_sent_reaction_success' => 'Sending reaction created',
     'update_sent_reaction_success' => 'Sending reaction updated',
     'delete_sent_reaction_success' => 'Sending reaction deleted',
+    // File
+    'find_all_files_success' => 'Files found',
+    'find_file_success' => 'File found',
+    'find_file_404' => 'File not found',
+    'create_file_success' => 'File created',
+    'update_file_success' => 'File updated',
+    'delete_file_success' => 'File deleted',
 
     // ===== USER HISTORIES
     // Subscriptions

@@ -1102,7 +1102,7 @@ class PostController extends BaseController
                             $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
                         }])->orWhere([['post_content', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
                             $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
-                        }])->paginate(12);
+                        }])->paginate(30);
         $count_posts = Post::where([['post_title', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
                             $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
                         }])->orWhere([['post_content', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {

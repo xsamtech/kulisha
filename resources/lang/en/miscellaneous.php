@@ -627,7 +627,14 @@ return [
                     'product' => 'Product',
                     'service' => 'Service',
                     'event' => 'Event',
-                    'poll' => 'Poll',
+                    'poll' => [
+                        'label' => 'Poll',
+                        'choice' => [
+                            'description' => 'Put assertions to allow everyone to choose one',
+                            'content' => 'Assertion content'
+                        ],
+                        'post_error' => 'Please choose a post',
+                    ],
                     'anonymous_question' => 'Anonymous question',
                     'article' => 'Write up article',
                 ],

@@ -117,6 +117,13 @@ return [
     'create_visibility_success' => 'Visibilité créée',
     'update_visibility_success' => 'Visibilité modifiée',
     'delete_visibility_success' => 'Visibilité supprimée',
+    // Restriction
+    'find_all_restrictions_success' => 'Restrictions trouvées',
+    'find_restriction_success' => 'Restriction trouvée',
+    'find_restriction_404' => 'Restriction non trouvée',
+    'create_restriction_success' => 'Restriction créée',
+    'update_restriction_success' => 'Restriction modifiée',
+    'delete_restriction_success' => 'Restriction supprimée',
     // Field
     'find_all_fields_success' => 'Secteurs trouvés',
     'find_field_success' => 'Secteur trouvé',
@@ -160,6 +167,13 @@ return [
     'subscribe_user_success' => 'Abonnement envoyé',
     'subscribe_user_accepted' => 'Abonnement accepté',
     'unsubscribe_user_success' => 'Désabonnement effectué',
+    // BlockedUser
+    'find_all_blocked_users_success' => 'Membres bloqués trouvés',
+    'find_blocked_user_success' => 'Membre bloqué trouvé',
+    'find_blocked_user_404' => 'Membre bloqué non trouvé',
+    'create_blocked_user_success' => 'Membre bloqué créé',
+    'update_blocked_user_success' => 'Membre bloqué modifié',
+    'delete_blocked_user_success' => 'Membre bloqué supprimé',
     // Website
     'find_all_websites_success' => 'Sites web trouvés',
     'find_website_success' => 'Site web trouvé',
@@ -243,6 +257,13 @@ return [
     'update_post_success' => 'Post modifié',
     'delete_post_success' => 'Post supprimé',
     'register_for_later_post_success' => 'Post enregistré pour voir plus tard',
+    // Surveychoice
+    'find_all_surveychoices_success' => 'Sondages trouvés',
+    'find_surveychoice_success' => 'Sondage trouvé',
+    'find_surveychoice_404' => 'Sondage non trouvé',
+    'create_surveychoice_success' => 'Sondage créé',
+    'update_surveychoice_success' => 'Sondage modifié',
+    'delete_surveychoice_success' => 'Sondage supprimé',
     // Hashtag
     'find_all_hashtags_success' => 'Hashtags trouvés',
     'find_hashtag_success' => 'Hashtag trouvé',
@@ -299,6 +320,13 @@ return [
     'create_sent_reaction_success' => 'Envoi de réaction créé',
     'update_sent_reaction_success' => 'Envoi de réaction modifié',
     'delete_sent_reaction_success' => 'Envoi de réaction supprimé',
+    // File
+    'find_all_files_success' => 'Fichiers trouvés',
+    'find_file_success' => 'Fichier trouvé',
+    'find_file_404' => 'Fichier non trouvé',
+    'create_file_success' => 'Fichier créé',
+    'update_file_success' => 'Fichier modifié',
+    'delete_file_success' => 'Fichier supprimé',
 
     // ===== USER HISTORIES
     // Subscriptions

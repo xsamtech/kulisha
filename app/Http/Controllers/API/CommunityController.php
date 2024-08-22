@@ -28,7 +28,7 @@ class CommunityController extends BaseController
      */
     public function index()
     {
-        $communities = Community::orderByDesc('created_at')->paginate(12);
+        $communities = Community::orderByDesc('created_at')->paginate(30);
         $count_communities = Community::count();
 
         return $this->handleResponse(ResourcesCommunity::collection($communities), __('notifications.find_all_communities_success'), $communities->lastPage(), $count_communities);
@@ -293,7 +293,7 @@ class CommunityController extends BaseController
     {
         $community->delete();
 
-        $communities = Community::orderByDesc('created_at')->paginate(12);
+        $communities = Community::orderByDesc('created_at')->paginate(30);
         $count_communities = Community::count();
 
         return $this->handleResponse(ResourcesCommunity::collection($communities), __('notifications.delete_community_success'), $communities->lastPage(), $count_communities);
@@ -314,7 +314,7 @@ class CommunityController extends BaseController
         // Type
         $search_history_type = !empty($history_type_group) ? Type::where([['type_name->fr', 'Historique des recherches'], ['group_id', $history_type_group->id]])->first() : Type::where('type_name->fr', 'Historique des recherches')->first();
         // Search request
-        $communities = Community::where('community_name', 'LIKE', '%' . $data . '%')->orderByDesc('created_at')->paginate(12);
+        $communities = Community::where('community_name', 'LIKE', '%' . $data . '%')->orderByDesc('created_at')->paginate(30);
         $count_communities = Community::where('community_name', 'LIKE', '%' . $data . '%')->count();
 
         if (is_null($communities)) {
@@ -354,7 +354,7 @@ class CommunityController extends BaseController
             return $this->handleError(__('notifications.find_type_404'));
         }
 
-        $communities = Community::where('type_id', $type->id)->orderByDesc('created_at')->paginate(12);
+        $communities = Community::where('type_id', $type->id)->orderByDesc('created_at')->paginate(30);
         $count_communities = Community::where('type_id', $type->id)->count();
 
         return $this->handleResponse(ResourcesCommunity::collection($communities), __('notifications.find_all_communities_success'), $communities->lastPage(), $count_communities);
@@ -375,7 +375,7 @@ class CommunityController extends BaseController
             return $this->handleError(__('notifications.find_status_404'));
         }
 
-        $communities = Community::where('status_id', $status->id)->orderByDesc('created_at')->paginate(12);
+        $communities = Community::where('status_id', $status->id)->orderByDesc('created_at')->paginate(30);
         $count_communities = Community::where('status_id', $status->id)->count();
 
         return $this->handleResponse(ResourcesCommunity::collection($communities), __('notifications.find_all_communities_success'), $communities->lastPage(), $count_communities);
@@ -395,7 +395,7 @@ class CommunityController extends BaseController
             return $this->handleError(__('notifications.find_user_404'));
         }
 
-        $communities = Community::where('user_id', $user->id)->orderByDesc('created_at')->paginate(12);
+        $communities = Community::where('user_id', $user->id)->orderByDesc('created_at')->paginate(30);
         $count_communities = Community::where('user_id', $user->id)->count();
 
         return $this->handleResponse(ResourcesCommunity::collection($communities), __('notifications.find_all_communities_success'), $communities->lastPage(), $count_communities);
@@ -429,7 +429,7 @@ class CommunityController extends BaseController
                 return $this->handleError(__('notifications.find_status_404'));
             }
 
-            $communities = Community::where([['user_id', $user->id], ['type_id', $type->id], ['status_id', $status->id]])->orderByDesc('created_at')->paginate(12);
+            $communities = Community::where([['user_id', $user->id], ['type_id', $type->id], ['status_id', $status->id]])->orderByDesc('created_at')->paginate(30);
             $count_communities = Community::where([['user_id', $user->id], ['type_id', $type->id], ['status_id', $status->id]])->count();
 
             return $this->handleResponse(ResourcesCommunity::collection($communities), __('notifications.find_all_communities_success'), $communities->lastPage(), $count_communities);
@@ -442,7 +442,7 @@ class CommunityController extends BaseController
                     return $this->handleError(__('notifications.find_type_404'));
                 }
 
-                $communities = Community::where([['user_id', $user->id], ['type_id', $type->id]])->orderByDesc('created_at')->paginate(12);
+                $communities = Community::where([['user_id', $user->id], ['type_id', $type->id]])->orderByDesc('created_at')->paginate(30);
                 $count_communities = Community::where([['user_id', $user->id], ['type_id', $type->id]])->count();
 
                 return $this->handleResponse(ResourcesCommunity::collection($communities), __('notifications.find_all_communities_success'), $communities->lastPage(), $count_communities);
@@ -455,7 +455,7 @@ class CommunityController extends BaseController
                     return $this->handleError(__('notifications.find_status_404'));
                 }
 
-                $communities = Community::where([['user_id', $user->id], ['status_id', $status->id]])->orderByDesc('created_at')->paginate(12);
+                $communities = Community::where([['user_id', $user->id], ['status_id', $status->id]])->orderByDesc('created_at')->paginate(30);
                 $count_communities = Community::where([['user_id', $user->id], ['status_id', $status->id]])->count();
 
                 return $this->handleResponse(ResourcesCommunity::collection($communities), __('notifications.find_all_communities_success'), $communities->lastPage(), $count_communities);

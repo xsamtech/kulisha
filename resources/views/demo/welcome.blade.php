@@ -204,7 +204,7 @@
 							</li>
 							<li class="nav-item">
 								<a class="nav-link bg-light py-1 px-2 mb-0" href="#!" data-bs-toggle="modal" data-bs-target="#modalCreatePoll">
-									<i class="bi bi-list-check pe-2 fs-6 text-warning"></i><span class="kls-text-secondary">@lang('miscellaneous.public.home.posts.type.poll')</span>
+									<i class="bi bi-list-check pe-2 fs-6 text-warning"></i><span class="kls-text-secondary">@lang('miscellaneous.public.home.posts.type.poll.label')</span>
 								</a>
 							</li>
 							<li class="nav-item">
