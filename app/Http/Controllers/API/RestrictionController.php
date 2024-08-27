@@ -19,7 +19,7 @@ class RestrictionController extends BaseController
      */
     public function index()
     {
-        $restrictions = Restriction::orderBy('created_at')->paginate(30);
+        $restrictions = Restriction::orderByDesc('created_at')->paginate(30);
         $count_restrictions = Restriction::count();
 
         return $this->handleResponse(ResourcesRestriction::collection($restrictions), __('notifications.find_all_restrictions_success'), $restrictions->lastPage(), $count_restrictions);
@@ -117,7 +117,7 @@ class RestrictionController extends BaseController
     {
         $restriction->delete();
 
-        $restrictions = Restriction::orderBy('created_at')->paginate(30);
+        $restrictions = Restriction::orderByDesc('created_at')->paginate(30);
         $count_restrictions = Restriction::count();
 
         return $this->handleResponse(ResourcesRestriction::collection($restrictions), __('notifications.delete_restriction_success'), $restrictions->lastPage(), $count_restrictions);

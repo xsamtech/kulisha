@@ -19,7 +19,7 @@ class SurveychoiceController extends BaseController
      */
     public function index()
     {
-        $surveychoices = Surveychoice::orderBy('created_at')->paginate(30);
+        $surveychoices = Surveychoice::orderByDesc('created_at')->paginate(30);
         $count_surveychoices = Surveychoice::count();
 
         return $this->handleResponse(ResourcesSurveychoice::collection($surveychoices), __('notifications.find_all_surveychoices_success'), $surveychoices->lastPage(), $count_surveychoices);

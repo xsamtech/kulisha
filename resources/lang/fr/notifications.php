@@ -82,13 +82,6 @@ return [
     'create_category_success' => 'Catégorie créée',
     'update_category_success' => 'Catégorie modifiée',
     'delete_category_success' => 'Catégorie supprimée',
-    // Country
-    'find_all_countries_success' => 'Pays trouvés',
-    'find_country_success' => 'Pays trouvé',
-    'find_country_404' => 'Pays non trouvé',
-    'create_country_success' => 'Pays créé',
-    'update_country_success' => 'Pays modifié',
-    'delete_country_success' => 'Pays supprimé',
     // Order
     'find_all_orders_success' => 'Commandes trouvées',
     'find_order_success' => 'Commande trouvée',

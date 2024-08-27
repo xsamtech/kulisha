@@ -460,7 +460,7 @@ class MessageController extends BaseController
      * @param  int $addressee_user_id
      * @return \Illuminate\Http\Response
      */
-    public function userChat($locale, $type_name, $sender_id, $addressee_user_id)
+    public function chatWithUser($locale, $type_name, $sender_id, $addressee_user_id)
     {
         $type = Type::where('type_name->' . $locale, $type_name)->first();
 
@@ -492,7 +492,7 @@ class MessageController extends BaseController
      * @param  int $entity_id
      * @return \Illuminate\Http\Response
      */
-    public function groupChat($entity, $entity_id)
+    public function chatWithGroup($entity, $entity_id)
     {
         if ($entity == 'community') {
             $community = Community::find($entity_id);

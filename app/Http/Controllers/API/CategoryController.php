@@ -269,11 +269,11 @@ class CategoryController extends BaseController
     /**
      * Find all categories by type.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @param  string $locale
-     * @param  string $type_name
      * @return \Illuminate\Http\Response
      */
-    public function findByType($locale, $type_name)
+    public function filterByFieldsType(Request $request, $locale, $type_name)
     {
         $type = Type::where('type_name->' . $locale, $type_name)->first();
 
@@ -281,9 +281,18 @@ class CategoryController extends BaseController
             return $this->handleError(__('notifications.find_type_404'));
         }
 
-        $categories = Category::where('type_id', $type->id)->get();
+        if (count($request->fields_ids) == 0 OR $request->fields_ids[0] == 0) {
+            $categories = Category::where('type_id', $type->id)->get();
 
-        return $this->handleResponse(ResourcesCategory::collection($categories), __('notifications.find_all_categories_success'));
+            return $this->handleResponse(ResourcesCategory::collection($categories), __('notifications.find_all_categories_success'));
+
+        } else {
+            $categories = Category::whereHas('fields', function ($query) use ($request) {
+                                $query->whereIn('fields.id', $request->fields_ids);
+                            })->where('type_id', $type->id)->get();
+
+            return $this->handleResponse(ResourcesCategory::collection($categories), __('notifications.find_all_categories_success'));
+        }
     }
 
     /**

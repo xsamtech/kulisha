@@ -930,7 +930,7 @@ class UserController extends BaseController
      * Search a member
      *
      * @param  string $data
-     * @param  int $visitor_id
+     * @param  null|int $visitor_id
      * @return \Illuminate\Http\Response
      */
     public function search($data, $visitor_id = null)
@@ -971,7 +971,6 @@ class UserController extends BaseController
      * @param  \Illuminate\Http\Request  $request
      * @param  string $username
      * @return \Illuminate\Http\Response
-
      */
     public function profile(Request $request, $username)
     {
@@ -1130,12 +1129,12 @@ class UserController extends BaseController
     }
 
     /**
-     * Search all users having specific visibility.
+     * Suggest connections to a member.
      *
      * @param  int $user_id
      * @return \Illuminate\Http\Response
      */
-    public function connectionsProposal($user_id)
+    public function connectionsSuggestion($user_id)
     {
         // Groups
         $to_connect_visibility_group = Group::where('group_name->fr', 'Visibilité pour se connecter')->first();
@@ -1294,10 +1293,10 @@ class UserController extends BaseController
      * Ask subscription to another member.
      *
      * @param  int $id
-     * @param  int $concerned_id
+     * @param  int $addressee_id
      * @return \Illuminate\Http\Response
      */
-    public function addConnection($id, $concerned_id)
+    public function addConnection($id, $addressee_id)
     {
         // Groups
         $susbcription_status_group = Group::where('group_name->fr', 'Etat de la souscription')->first();
@@ -1318,19 +1317,19 @@ class UserController extends BaseController
         $connection_request_sent_type = Type::where([['type_name->fr', 'Demande de connexion envoyée'], ['group_id', $notification_type_group->id]])->first();
         // Users
         $user = User::find($id);
-        $concerned = User::find($concerned_id);
+        $addressee = User::find($addressee_id);
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
         }
 
-        if (is_null($concerned)) {
-            return $this->handleError(__('notifications.find_concerned_404'));
+        if (is_null($addressee)) {
+            return $this->handleError(__('notifications.find_addressee_404'));
         }
 
-        if ($concerned->type_id == $ordinary_member_type->id OR $concerned->type_id == $certified_member_type->id) {
+        if ($addressee->type_id == $ordinary_member_type->id OR $addressee->type_id == $certified_member_type->id) {
             Subscription::create([
-                'user_id' => $concerned->id,
+                'user_id' => $addressee->id,
                 'subscriber_id' => $user->id,
                 'status_id' => $accepted_status->id
             ]);
@@ -1342,20 +1341,20 @@ class UserController extends BaseController
                 'type_id' => $connection_request_sent_type->id,
                 'status_id' => $unread_notification_status->id,
                 'from_user_id' => $user->id,
-                'to_user_id' => $concerned->id
+                'to_user_id' => $addressee->id
             ]);
 
             History::create([
                 'type_id' => $activities_history_type->id,
                 'status_id' => $unread_history_status->id,
                 'from_user_id' => $user->id,
-                'to_user_id' => $concerned->id,
+                'to_user_id' => $addressee->id,
                 'for_notification_id' => $notification->id
             ]);
 
         } else {
             Subscription::create([
-                'user_id' => $concerned->id,
+                'user_id' => $addressee->id,
                 'subscriber_id' => $user->id,
                 'status_id' => $on_hold_status->id
             ]);
@@ -1367,14 +1366,14 @@ class UserController extends BaseController
                 'type_id' => $connection_request_sent_type->id,
                 'status_id' => $unread_notification_status->id,
                 'from_user_id' => $user->id,
-                'to_user_id' => $concerned->id
+                'to_user_id' => $addressee->id
             ]);
 
             History::create([
                 'type_id' => $activities_history_type->id,
                 'status_id' => $unread_history_status->id,
                 'from_user_id' => $user->id,
-                'to_user_id' => $concerned->id,
+                'to_user_id' => $addressee->id,
                 'for_notification_id' => $notification->id
             ]);
         }
@@ -1386,10 +1385,10 @@ class UserController extends BaseController
      * A member rejected connection request.
      *
      * @param  int $id
-     * @param  int $concerned_id
+     * @param  int $addressee_id
      * @return \Illuminate\Http\Response
      */
-    public function invitationRefusal($id, $concerned_id)
+    public function invitationRefusal($id, $addressee_id)
     {
         // Groups
         $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
@@ -1404,17 +1403,17 @@ class UserController extends BaseController
         $connection_request_rejected_type = Type::where([['type_name->fr', 'Demande de connexion rejetée'], ['group_id', $notification_type_group->id]])->first();
         // Users
         $user = User::find($id);
-        $concerned = User::find($concerned_id);
+        $addressee = User::find($addressee_id);
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
         }
 
-        if (is_null($concerned)) {
-            return $this->handleError(__('notifications.find_concerned_404'));
+        if (is_null($addressee)) {
+            return $this->handleError(__('notifications.find_addressee_404'));
         }
 
-        $subscription = Subscription::where([['user_id', $user->id], ['subscriber_id', $concerned->id]])->first();
+        $subscription = Subscription::where([['user_id', $user->id], ['subscriber_id', $addressee->id]])->first();
 
         if (is_null($subscription)) {
             return $this->handleError(__('notifications.find_subscription_404'));
@@ -1430,14 +1429,14 @@ class UserController extends BaseController
             'type_id' => $connection_request_rejected_type->id,
             'status_id' => $unread_notification_status->id,
             'from_user_id' => $user->id,
-            'to_user_id' => $concerned->id
+            'to_user_id' => $addressee->id
         ]);
 
         History::create([
             'type_id' => $activities_history_type->id,
             'status_id' => $unread_history_status->id,
             'from_user_id' => $user->id,
-            'to_user_id' => $concerned->id,
+            'to_user_id' => $addressee->id,
             'for_notification_id' => $notification->id
         ]);
 
@@ -1448,9 +1447,10 @@ class UserController extends BaseController
      * Send an invitation to join the network
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function sendExternalInvitation(Request $request)
+    public function sendExternalInvitation(Request $request, $id)
     {
         $object = new stdClass();
         // Groups
@@ -1463,7 +1463,7 @@ class UserController extends BaseController
         // Types
         $invitations_history_type = Type::where([['type_name->fr', 'Historique des invitations'], ['group_id', $history_type_group->id]])->first();
         // Users
-        $user = User::find($request->id);
+        $user = User::find($id);
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
@@ -1521,7 +1521,7 @@ class UserController extends BaseController
      * @param  int $id
      * @return \Illuminate\Http\Response
      */
-    public function registerPost(Request $request, $id)
+    public function registerPostForLater(Request $request, $id)
     {
         $user = User::find($id);
 
@@ -1543,12 +1543,14 @@ class UserController extends BaseController
     }
 
     /**
-     * Ask subscription to a community.
+     * Ask subscription to an event or a community.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @param  null|int  $addressee_id
      * @return \Illuminate\Http\Response
      */
-    public function subscribe(Request $request)
+    public function subscribeToGroup(Request $request, $id, $addressee_id = null)
     {
         // Groups
         $susbcription_status_group = Group::where('group_name->fr', 'Etat de la souscription')->first();
@@ -1567,19 +1569,15 @@ class UserController extends BaseController
         $public_type = Type::where([['type_name->fr', 'Public'], ['group_id' => $access_type_group->id]])->first();
         $private_type = Type::where([['type_name->fr', 'Privé'], ['group_id' => $access_type_group->id]])->first();
         $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
+        $subscription_request_type = Type::where([['type_name->fr', 'Demande d’abonnement'], ['group_id', $notification_type_group->id]])->first();
         $invitation_type = Type::where([['type_name->fr', 'Invitation'], ['group_id', $notification_type_group->id]])->first();
         // Reactions
         $i_accept_reaction = Reaction::where([['reaction_name->fr', 'J’y serai'], ['group_id', $reaction_on_invitation_group->id]])->first();
         // Requests
-        $user = User::find($request->id);
-        $visitor = User::find($request->visitor_id);
+        $user = User::find($id);
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
-        }
-
-        if (is_null($visitor)) {
-            return $this->handleError(__('notifications.find_visitor_404'));
         }
 
         if (isset($request->event_id)) {
@@ -1590,7 +1588,7 @@ class UserController extends BaseController
             }
 
             // If it's the current user who subscribed
-            if ($user->id == $visitor->id) {
+            if ($addressee_id == null OR $user->id == $addressee_id) {
                 // If the event is public, accept the user
                 if ($event->type_id == $public_type->id) {
                     $event->users()->attach($user->id, [
@@ -1607,17 +1605,33 @@ class UserController extends BaseController
                     ]);
                 }
 
+                $notification = Notification::create([
+                    'type_id' => $subscription_request_type->id,
+                    'status_id' => $unread_notification_status->id,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $event->user_id,
+                    'event_id' => $event->id
+                ]);
+
                 History::create([
                     'type_id' => $activities_history_type->id,
                     'status_id' => $unread_history_status->id,
                     'from_user_id' => $user->id,
-                    'event_id' => $event->id
+                    'to_user_id' => $event->user_id,
+                    'event_id' => $event->id,
+                    'for_notification_id' => $notification->id
                 ]);
             }
 
             // If it's a event member who sent an invitation to another member
-            if ($user->id != $visitor->id) {
-                $event->users()->attach($user->id, ['status_id' => $accepted_status->id]);
+            if ($addressee_id != null AND $user->id != $addressee_id) {
+                $addressee = User::find($addressee_id);
+
+                if (is_null($addressee)) {
+                    return $this->handleError(__('notifications.find_addressee_404'));
+                }
+
+                $event->users()->attach($addressee->id, ['status_id' => $accepted_status->id]);
 
                 /*
                     HISTORY AND/OR NOTIFICATION MANAGEMENT
@@ -1625,16 +1639,16 @@ class UserController extends BaseController
                 $notification = Notification::create([
                     'type_id' => $invitation_type->id,
                     'status_id' => $unread_notification_status->id,
-                    'from_user_id' => $visitor->id,
-                    'to_user_id' => $user->id,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $addressee->id,
                     'event_id' => $event->id
                 ]);
 
                 History::create([
                     'type_id' => $activities_history_type->id,
                     'status_id' => $unread_history_status->id,
-                    'from_user_id' => $visitor->id,
-                    'to_user_id' => $user->id,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $addressee->id,
                     'event_id' => $event->id,
                     'for_notification_id' => $notification->id
                 ]);
@@ -1649,7 +1663,7 @@ class UserController extends BaseController
             }
 
             // If it's the current user who subscribed
-            if ($user->id == $visitor->id) {
+            if ($addressee_id == null OR $user->id == $addressee_id) {
                 // If the community is public, accept the user
                 if ($community->type_id == $public_type->id) {
                     $community->users()->attach($user->id, [
@@ -1666,16 +1680,32 @@ class UserController extends BaseController
                     ]);
                 }
 
+                $notification = Notification::create([
+                    'type_id' => $subscription_request_type->id,
+                    'status_id' => $unread_notification_status->id,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $community->user_id,
+                    'community_id' => $community->id
+                ]);
+
                 History::create([
                     'type_id' => $activities_history_type->id,
                     'status_id' => $unread_history_status->id,
                     'from_user_id' => $user->id,
-                    'community_id' => $community->id
+                    'to_user_id' => $community->user_id,
+                    'community_id' => $community->id,
+                    'for_notification_id' => $notification->id
                 ]);
             }
 
             // If it's a community member who sent an invitation to another member
-            if ($user->id != $visitor->id) {
+            if ($addressee_id != null AND $user->id != $addressee_id) {
+                $addressee = User::find($addressee_id);
+
+                if (is_null($addressee)) {
+                    return $this->handleError(__('notifications.find_addressee_404'));
+                }
+
                 $community->users()->attach($user->id, ['status_id' => $accepted_status->id]);
 
                 /*
@@ -1684,16 +1714,16 @@ class UserController extends BaseController
                 $notification = Notification::create([
                     'type_id' => $invitation_type->id,
                     'status_id' => $unread_notification_status->id,
-                    'from_user_id' => $visitor->id,
-                    'to_user_id' => $user->id,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $addressee->id,
                     'community_id' => $community->id
                 ]);
 
                 History::create([
                     'type_id' => $activities_history_type->id,
                     'status_id' => $unread_history_status->id,
-                    'from_user_id' => $visitor->id,
-                    'to_user_id' => $user->id,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $addressee->id,
                     'community_id' => $community->id,
                     'for_notification_id' => $notification->id
                 ]);
@@ -1704,12 +1734,14 @@ class UserController extends BaseController
     }
 
     /**
-     * Ask subscription to an event.
+     * Unsubscribe to an event or a community.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @param  null|int  $addressee_id
      * @return \Illuminate\Http\Response
      */
-    public function unsubscribe(Request $request)
+    public function unsubscribeToGroup(Request $request, $id, $addressee_id = null)
     {
         // Groups
         $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
@@ -1724,15 +1756,10 @@ class UserController extends BaseController
         $separation_type = Type::where([['type_name->fr', 'Séparation'], ['group_id', $notification_type_group->id]])->first();
         $expulsion_type = Type::where([['type_name->fr', 'Expulsion'], ['group_id', $notification_type_group->id]])->first();
         // Requests
-        $user = User::find($request->id);
-        $visitor = User::find($request->visitor_id);
+        $user = User::find($id);
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
-        }
-
-        if (is_null($visitor)) {
-            return $this->handleError(__('notifications.find_visitor_404'));
         }
 
         if (isset($request->event_id)) {
@@ -1748,11 +1775,11 @@ class UserController extends BaseController
                 HISTORY AND/OR NOTIFICATION MANAGEMENT
             */
             // If it's the current user who has left
-            if ($user->id == $visitor->id) {
+            if ($addressee_id == null OR $user->id == $addressee_id) {
                 $notification = Notification::create([
                     'type_id' => $separation_type->id,
                     'status_id' => $unread_notification_status->id,
-                    'from_user_id' => $visitor->id,
+                    'from_user_id' => $user->id,
                     'to_user_id' => $event->user_id,
                     'event_id' => $event->id
                 ]);
@@ -1768,12 +1795,18 @@ class UserController extends BaseController
             }
 
             // If it's a event member who has withdrawn the current user
-            if ($user->id != $visitor->id) {
+            if ($addressee_id != null AND $user->id != $addressee_id) {
+                $addressee = User::find($addressee_id);
+
+                if (is_null($addressee)) {
+                    return $this->handleError(__('notifications.find_addressee_404'));
+                }
+
                 $notification = Notification::create([
                     'type_id' => $expulsion_type->id,
                     'status_id' => $unread_notification_status->id,
-                    'from_user_id' => $visitor->id,
-                    'to_user_id' => $user->id,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $addressee->id,
                     'event_id' => $event->id
                 ]);
 
@@ -1781,7 +1814,7 @@ class UserController extends BaseController
                     'type_id' => $activities_history_type->id,
                     'status_id' => $unread_history_status->id,
                     'from_user_id' => $user->id,
-                    'to_user_id' => $user->id,
+                    'to_user_id' => $addressee->id,
                     'event_id' => $event->id,
                     'for_notification_id' => $notification->id
                 ]);
@@ -1801,11 +1834,11 @@ class UserController extends BaseController
                 HISTORY AND/OR NOTIFICATION MANAGEMENT
             */
             // If it's the current user who has left
-            if ($user->id == $visitor->id) {
+            if ($addressee_id == null OR $user->id == $addressee_id) {
                 $notification = Notification::create([
                     'type_id' => $separation_type->id,
                     'status_id' => $unread_notification_status->id,
-                    'from_user_id' => $visitor->id,
+                    'from_user_id' => $user->id,
                     'to_user_id' => $community->user_id,
                     'community_id' => $community->id
                 ]);
@@ -1821,12 +1854,18 @@ class UserController extends BaseController
             }
 
             // If it's a event member who has withdrawn the current user
-            if ($user->id != $visitor->id) {
+            if ($addressee_id != null AND $user->id != $addressee_id) {
+                $addressee = User::find($addressee_id);
+
+                if (is_null($addressee)) {
+                    return $this->handleError(__('notifications.find_addressee_404'));
+                }
+
                 $notification = Notification::create([
                     'type_id' => $expulsion_type->id,
                     'status_id' => $unread_notification_status->id,
-                    'from_user_id' => $visitor->id,
-                    'to_user_id' => $user->id,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $addressee->id,
                     'community_id' => $community->id
                 ]);
 
@@ -1834,7 +1873,7 @@ class UserController extends BaseController
                     'type_id' => $activities_history_type->id,
                     'status_id' => $unread_history_status->id,
                     'from_user_id' => $user->id,
-                    'to_user_id' => $user->id,
+                    'to_user_id' => $addressee->id,
                     'community_id' => $community->id,
                     'for_notification_id' => $notification->id
                 ]);
@@ -1845,12 +1884,13 @@ class UserController extends BaseController
     }
 
     /**
-     * Ask subscription to an event.
+     * React to invitation to an event or a community.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function reactToInvitation(Request $request)
+    public function reactToInvitation(Request $request, $id)
     {
         // Groups
         $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
@@ -1871,7 +1911,7 @@ class UserController extends BaseController
         $i_accept_reaction = Reaction::where([['reaction_name->fr', 'J’y serai'], ['group_id', $reaction_on_invitation_group->id]])->first();
         $decline_reaction = Reaction::where([['reaction_name->fr', 'Décliner'], ['group_id', $reaction_on_invitation_group->id]])->first();
         // Requests
-        $user = User::find($request->id);
+        $user = User::find($id);
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
@@ -1884,12 +1924,18 @@ class UserController extends BaseController
                 return $this->handleError(__('notifications.find_event_404'));
             }
 
-            $event->users()->updateExistingPivot($user->id, ['reaction_id' => $request->reaction_id]);
+            $reaction = Reaction::find($request->reaction_id);
+
+            if (is_null($reaction)) {
+                return $this->handleError(__('notifications.find_reaction_404'));
+            }
+
+            $event->users()->updateExistingPivot($user->id, ['reaction_id' => $reaction->id]);
 
             /*
                 HISTORY AND/OR NOTIFICATION MANAGEMENT
             */
-            if ($request->reaction_id == $maybe_reaction->id) {
+            if ($reaction->id == $maybe_reaction->id) {
                 $notification = Notification::create([
                     'type_id' => $acceptation_maybe_type->id,
                     'status_id' => $unread_notification_status->id,
@@ -1908,7 +1954,7 @@ class UserController extends BaseController
                 ]);
             }
 
-            if ($request->reaction_id == $i_accept_reaction->id) {
+            if ($reaction->id == $i_accept_reaction->id) {
                 $notification = Notification::create([
                     'type_id' => $acceptation_type->id,
                     'status_id' => $unread_notification_status->id,
@@ -1927,7 +1973,7 @@ class UserController extends BaseController
                 ]);
             }
 
-            if ($request->reaction_id == $decline_reaction->id) {
+            if ($reaction->id == $decline_reaction->id) {
                 $notification = Notification::create([
                     'type_id' => $refusal_type->id,
                     'status_id' => $unread_notification_status->id,
@@ -1960,12 +2006,18 @@ class UserController extends BaseController
                 return $this->handleError(__('notifications.community_404'));
             }
 
-            $community->users()->updateExistingPivot($user->id, ['reaction_id' => $request->reaction_id]);
+            $reaction = Reaction::find($request->reaction_id);
+
+            if (is_null($reaction)) {
+                return $this->handleError(__('notifications.find_reaction_404'));
+            }
+
+            $community->users()->updateExistingPivot($user->id, ['reaction_id' => $reaction->id]);
 
             /*
                 HISTORY AND/OR NOTIFICATION MANAGEMENT
             */
-            if ($request->reaction_id == $i_accept_reaction->id) {
+            if ($reaction->id == $i_accept_reaction->id) {
                 $notification = Notification::create([
                     'type_id' => $acceptation_type->id,
                     'status_id' => $unread_notification_status->id,
@@ -1984,7 +2036,7 @@ class UserController extends BaseController
                 ]);
             }
 
-            if ($request->reaction_id == $decline_reaction->id) {
+            if ($reaction->id == $decline_reaction->id) {
                 $notification = Notification::create([
                     'type_id' => $refusal_type->id,
                     'status_id' => $unread_notification_status->id,
@@ -2015,9 +2067,10 @@ class UserController extends BaseController
      * Update event/community subscription.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function acceptSubscription(Request $request)
+    public function acceptSubscription(Request $request, $id)
     {
         // Groups
         $susbcription_status_group = Group::where('group_name->fr', 'Etat de la souscription')->first();
@@ -2033,7 +2086,7 @@ class UserController extends BaseController
         $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
         $subscription_accepted_type = Type::where([['type_name->fr', 'Abonnement accepté'], ['group_id', $notification_type_group->id]])->first();
         // Requests
-        $user = User::find($request->id);
+        $user = User::find($id);
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
@@ -2099,7 +2152,7 @@ class UserController extends BaseController
             ]);
         }
 
-        return $this->handleResponse(new ResourcesUser($user), __('notifications.subscribe_user_success'));
+        return $this->handleResponse(new ResourcesUser($user), __('notifications.subscribe_user_accepted'));
     }
 
     /**
@@ -2107,7 +2160,6 @@ class UserController extends BaseController
      *
      * @param  int $id
      * @param  int $status_id
-     * @param  boolean $notify
      * @return \Illuminate\Http\Response
      */
     public function switchStatus($id, $status_id)
@@ -2217,7 +2269,6 @@ class UserController extends BaseController
      *
      * @param  int $id
      * @param  int $type_id
-     * @param  boolean $notify
      * @return \Illuminate\Http\Response
      */
     public function switchType($id, $type_id)

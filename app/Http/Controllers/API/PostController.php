@@ -1081,6 +1081,48 @@ class PostController extends BaseController
 
     // ==================================== CUSTOM METHODS ====================================
     /**
+     * News feed.
+     *
+     * @param  string $type_aliases
+     * @param  int $user_id
+     * @return \Illuminate\Http\Response
+     */
+    public function news_feed($type_aliases, $user_id = null)
+    {
+        // Convertir la chaîne de caractères en tableau d'IDs
+        $aliases = explode(',', $type_aliases);
+
+        $types_ids = Type::whereIn('alias', $aliases)->pluck('id')->toArray();
+
+        if (count($types_ids) == 0) {
+            return $this->handleError(__('notifications.find_type_404'));
+        }
+
+        // Groups
+        $post_or_community_status_group = Group::where('group_name->fr', 'Etat du post ou de la communauté')->first();
+        // Statuses
+        $operational_status = Status::where([['status_name->fr', 'Opérationnel'], ['group_id', $post_or_community_status_group->id]])->first();
+
+        // If the user is unknown, only show posts visible to everyone
+        if ($user_id == null) {
+            $posts = Post::whereIn([['posts.type_id', $types_ids], ['posts.status_id', $operational_status->id]])->orderByDesc('posts.created_at')->paginate(50);
+            $count_posts = Post::whereIn([['posts.type_id', $types_ids], ['posts.status_id', $operational_status->id]])->count();
+
+            return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.find_all_posts_success'), $posts->lastPage(), $count_posts);
+        }
+
+        if ($user_id != null) {
+            $posts = Post::with(['users', 'visibilities', 'restrictions', 'reactions'])
+                        ->whereHas('comments', function ($query) {
+                                $query->where('content', 'like', '%important%');
+                            })->whereIn([['posts.type_id', $types_ids], ['posts.status_id', $operational_status->id]])->orderByDesc('posts.created_at')->paginate(50);
+            $count_posts = Post::whereIn([['posts.type_id', $types_ids], ['posts.status_id', $operational_status->id]])->count();
+
+            return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.find_all_posts_success'), $posts->lastPage(), $count_posts);
+        }
+    }
+
+    /**
      * Search a member
      *
      * @param  string $data

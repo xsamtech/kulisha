@@ -120,4 +120,26 @@ class BudgetController extends BaseController
 
         return $this->handleResponse(ResourcesBudget::collection($budgets), __('notifications.delete_budget_success'));
     }
+
+    // ==================================== CUSTOM METHODS ====================================
+    /**
+     * Group budget by specific column.
+     *
+     * @param  string $entity
+     * @return \Illuminate\Http\Response
+     */
+    public function findByEntity($entity)
+    {
+        if ($entity == 'notification') {
+            $budgets = Budget::whereNotNull('notifications_count')->get();
+
+            return $this->handleResponse(ResourcesBudget::collection($budgets), __('notifications.find_all_budgets_success'));
+        }
+
+        if ($entity == 'reaction') {
+            $budgets = Budget::whereNotNull('reactions_count')->get();
+
+            return $this->handleResponse(ResourcesBudget::collection($budgets), __('notifications.find_all_budgets_success'));
+        }
+    }
 }

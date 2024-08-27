@@ -19,7 +19,7 @@ class BlockedUserController extends BaseController
      */
     public function index()
     {
-        $blocked_users = BlockedUser::orderBy('created_at')->paginate(30);
+        $blocked_users = BlockedUser::orderByDesc('created_at')->paginate(30);
         $count_blocked_users = BlockedUser::count();
 
         return $this->handleResponse(ResourcesBlockedUser::collection($blocked_users), __('notifications.find_all_blocked_users_success'), $blocked_users->lastPage(), $count_blocked_users);
@@ -112,7 +112,7 @@ class BlockedUserController extends BaseController
     {
         $blocked_user->delete();
 
-        $blocked_users = BlockedUser::orderBy('created_at')->paginate(30);
+        $blocked_users = BlockedUser::orderByDesc('created_at')->paginate(30);
         $count_blocked_users = BlockedUser::count();
 
         return $this->handleResponse(ResourcesBlockedUser::collection($blocked_users), __('notifications.delete_blocked_user_success'), $blocked_users->lastPage(), $count_blocked_users);
