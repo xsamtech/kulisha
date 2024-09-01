@@ -45,11 +45,12 @@ class TypeController extends BaseController
                 'fr' => $request->type_name_fr,
                 'it' => $request->type_name_it,
                 'ja' => $request->type_name_ja,
+                'ln' => $request->type_name_ln,
+                'nl' => $request->type_name_nl,
                 'ru' => $request->type_name_ru,
                 'sw' => $request->type_name_sw,
                 'tr' => $request->type_name_tr,
-                'cs' => $request->type_name_cs,
-                'eo' => $request->type_name_eo
+                'cs' => $request->type_name_cs
             ],
             'type_description' => [
                 'af' => $request->type_description_af,
@@ -61,11 +62,12 @@ class TypeController extends BaseController
                 'fr' => $request->type_description_fr,
                 'it' => $request->type_description_it,
                 'ja' => $request->type_description_ja,
+                'ln' => $request->type_description_ln,
+                'nl' => $request->type_description_nl,
                 'ru' => $request->type_description_ru,
                 'sw' => $request->type_description_sw,
                 'tr' => $request->type_description_tr,
-                'cs' => $request->type_description_cs,
-                'eo' => $request->type_description_eo
+                'cs' => $request->type_description_cs
             ],
             'alias' => $request->alias,
             'color' => $request->color,
@@ -137,11 +139,12 @@ class TypeController extends BaseController
                 'fr' => $request->type_name_fr,
                 'it' => $request->type_name_it,
                 'ja' => $request->type_name_ja,
+                'ln' => $request->type_name_ln,
+                'nl' => $request->type_name_nl,
                 'ru' => $request->type_name_ru,
                 'sw' => $request->type_name_sw,
                 'tr' => $request->type_name_tr,
-                'cs' => $request->type_name_cs,
-                'eo' => $request->type_name_eo
+                'cs' => $request->type_name_cs
             ],
             'type_description' => [
                 'af' => $request->type_description_af,
@@ -153,11 +156,12 @@ class TypeController extends BaseController
                 'fr' => $request->type_description_fr,
                 'it' => $request->type_description_it,
                 'ja' => $request->type_description_ja,
+                'ln' => $request->type_description_ln,
+                'nl' => $request->type_description_nl,
                 'ru' => $request->type_description_ru,
                 'sw' => $request->type_description_sw,
                 'tr' => $request->type_description_tr,
-                'cs' => $request->type_description_cs,
-                'eo' => $request->type_description_eo
+                'cs' => $request->type_description_cs
             ],
             'alias' => $request->alias,
             'color' => $request->color,

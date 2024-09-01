@@ -44,11 +44,12 @@ class ReactionReasonController extends BaseController
                 'fr' => $request->reason_content_fr,
                 'it' => $request->reason_content_it,
                 'ja' => $request->reason_content_ja,
+                'ln' => $request->reason_content_ln,
+                'nl' => $request->reason_content_nl,
                 'ru' => $request->reason_content_ru,
                 'sw' => $request->reason_content_sw,
                 'tr' => $request->reason_content_tr,
-                'cs' => $request->reason_content_cs,
-                'eo' => $request->reason_content_eo
+                'cs' => $request->reason_content_cs
             ],
             'report_count' => $request->report_count,
             'number_of_days' => $request->number_of_days,
@@ -113,11 +114,12 @@ class ReactionReasonController extends BaseController
                 'fr' => $request->reason_content_fr,
                 'it' => $request->reason_content_it,
                 'ja' => $request->reason_content_ja,
+                'ln' => $request->reason_content_ln,
+                'nl' => $request->reason_content_nl,
                 'ru' => $request->reason_content_ru,
                 'sw' => $request->reason_content_sw,
                 'tr' => $request->reason_content_tr,
-                'cs' => $request->reason_content_cs,
-                'eo' => $request->reason_content_eo
+                'cs' => $request->reason_content_cs
             ],
             'report_count' => $request->report_count,
             'number_of_days' => $request->number_of_days,
@@ -183,9 +185,9 @@ class ReactionReasonController extends BaseController
 
     // ==================================== CUSTOM METHODS ====================================
     /**
-     * Find a status by its name.
+     * All reasons concerning post or not.
      *
-     * @param  string $is_for_post
+     * @param  int $is_for_post
      * @return \Illuminate\Http\Response
      */
     public function findByForPost($is_for_post)

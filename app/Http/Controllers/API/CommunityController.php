@@ -307,7 +307,7 @@ class CommunityController extends BaseController
      * @param  int $visitor_id
      * @return \Illuminate\Http\Response
      */
-    public function search($data, $visitor_id = null)
+    public function search($data, $visitor_id)
     {
         // Group
         $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
@@ -324,7 +324,7 @@ class CommunityController extends BaseController
         /*
             HISTORY AND/OR NOTIFICATION MANAGEMENT
         */
-        if ($visitor_id != null) {
+        if ($visitor_id != 0) {
             $visitor = User::find($visitor_id);
 
             if (!is_null($visitor)) {

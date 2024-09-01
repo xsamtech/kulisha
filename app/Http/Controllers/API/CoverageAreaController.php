@@ -44,11 +44,12 @@ class CoverageAreaController extends BaseController
                 'fr' => $request->area_name_fr,
                 'it' => $request->area_name_it,
                 'ja' => $request->area_name_ja,
+                'ln' => $request->area_name_ln,
+                'nl' => $request->area_name_nl,
                 'ru' => $request->area_name_ru,
                 'sw' => $request->area_name_sw,
                 'tr' => $request->area_name_tr,
-                'cs' => $request->area_name_cs,
-                'eo' => $request->area_name_eo
+                'cs' => $request->area_name_cs
             ],
             'area_description' => [
                 'af' => $request->area_description_af,
@@ -60,11 +61,12 @@ class CoverageAreaController extends BaseController
                 'fr' => $request->area_description_fr,
                 'it' => $request->area_description_it,
                 'ja' => $request->area_description_ja,
+                'ln' => $request->area_description_ln,
+                'nl' => $request->area_description_nl,
                 'ru' => $request->area_description_ru,
                 'sw' => $request->area_description_sw,
                 'tr' => $request->area_description_tr,
-                'cs' => $request->area_description_cs,
-                'eo' => $request->area_description_eo
+                'cs' => $request->area_description_cs
             ],
             'color' => $request->color,
             'icon_font' => $request->icon_font,
@@ -131,11 +133,12 @@ class CoverageAreaController extends BaseController
                 'fr' => $request->area_name_fr,
                 'it' => $request->area_name_it,
                 'ja' => $request->area_name_ja,
+                'ln' => $request->area_name_ln,
+                'nl' => $request->area_name_nl,
                 'ru' => $request->area_name_ru,
                 'sw' => $request->area_name_sw,
                 'tr' => $request->area_name_tr,
-                'cs' => $request->area_name_cs,
-                'eo' => $request->area_name_eo
+                'cs' => $request->area_name_cs
             ],
             'area_description' => [
                 'af' => $request->area_description_af,
@@ -147,11 +150,12 @@ class CoverageAreaController extends BaseController
                 'fr' => $request->area_description_fr,
                 'it' => $request->area_description_it,
                 'ja' => $request->area_description_ja,
+                'ln' => $request->area_description_ln,
+                'nl' => $request->area_description_nl,
                 'ru' => $request->area_description_ru,
                 'sw' => $request->area_description_sw,
                 'tr' => $request->area_description_tr,
-                'cs' => $request->area_description_cs,
-                'eo' => $request->area_description_eo
+                'cs' => $request->area_description_cs
             ],
             'color' => $request->color,
             'icon_font' => $request->icon_font,

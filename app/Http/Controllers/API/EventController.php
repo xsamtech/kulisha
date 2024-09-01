@@ -411,36 +411,50 @@ class EventController extends BaseController
      * @param  int $visitor_id
      * @return \Illuminate\Http\Response
      */
-    public function search($data, $visitor_id = null)
+    public function search($data, $visitor_id )
     {
         // Group
         $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
+        $access_type_group = Group::where('group_name->fr', 'Type d’accès')->first();
         // Type
-        $search_history_type = !empty($history_type_group) ? Type::where([['type_name->fr', 'Historique des recherches'], ['group_id', $history_type_group->id]])->first() : Type::where('type_name->fr', 'Historique des recherches')->first();
-        // Search request
-        $events = Event::where('event_title', 'LIKE', '%' . $data . '%')->orderByDesc('created_at')->paginate(30);
-        $count_events = Event::where('event_title', 'LIKE', '%' . $data . '%')->count();
+        $search_history_type = Type::where([['type_name->fr', 'Historique des recherches'], ['group_id', $history_type_group->id]])->first();
+        $public_type = Type::where([['type_name->fr', 'Public'], ['group_id', $access_type_group->id]])->first();
 
-        if (is_null($events)) {
-            return $this->handleResponse([], __('miscellaneous.empty_list'));
-        }
-
-        /*
-            HISTORY AND/OR NOTIFICATION MANAGEMENT
-        */
-        if ($visitor_id != null) {
+        if ($visitor_id != 0) {
             $visitor = User::find($visitor_id);
 
-            if (!is_null($visitor)) {
-                History::create([
-                    'search_content' => $data,
-                    'type_id' => $search_history_type->id,
-                    'from_user_id' => $visitor->id
-                ]);
+            if (is_null($visitor)) {
+                return $this->handleResponse([], __('notifications.find_visitor_404'));
             }
-        }
 
-        return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_events_success'), $events->lastPage(), $count_events);
+            $events = Event::where('event_title', 'LIKE', '%' . $data . '%')->orderByDesc('created_at')->paginate(30);
+            $count_events = Event::where('event_title', 'LIKE', '%' . $data . '%')->count();
+
+            if (is_null($events)) {
+                return $this->handleResponse([], __('miscellaneous.empty_list'));
+            }
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            History::create([
+                'search_content' => $data,
+                'type_id' => $search_history_type->id,
+                'from_user_id' => $visitor->id
+            ]);
+
+            return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_events_success'), $events->lastPage(), $count_events);
+ 
+        } else {
+            $events = Event::where([['event_title', 'LIKE', '%' . $data . '%'], ['type_id', $public_type->id]])->orderByDesc('created_at')->paginate(30);
+            $count_events = Event::where([['event_title', 'LIKE', '%' . $data . '%'], ['type_id', $public_type->id]])->count();
+
+            if (is_null($events)) {
+                return $this->handleResponse([], __('miscellaneous.empty_list'));
+            }
+
+            return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_events_success'), $events->lastPage(), $count_events);
+        }
     }
 
     /**

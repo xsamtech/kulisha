@@ -19,6 +19,11 @@ return [
     'welcome_description_food' => 'Vendez de la nourriture saine et bio et attirer plus de clients chez vous.',
     'slogan' => 'Mieux nourrir la vie !',
     'keywords' => 'kulisha, agribusiness agroalimentaire, agriculteur, éleveur, pêche, pêcheur, mieux nourrir la vie',
+    'app_invitation' => [
+        'title' => 'Bienvenue sur Kulisha',
+        'message' => 'As-tu entendu parler de « Kulisha », la plateforme qui aide à mieux se nourrir et garder une bonne santé ?<br><br>Il suffit de cliquer sur le lien ci-dessous pour te faciliter la vie toi aussi.<br><a href="https://kulisha.com/register?ref=invitation&from=:from_user_id">Découvrir maintenant !</a>',
+        'chat' => 'Vous avez reçu un message privé sur Kulisha.<br><a href="https://kulisha.com/register?ref=invitation&from=:from_user_id">Ouvrir le message</a>'
+    ],
     'all_right_reserved' => 'Tous droits réservés',
     'follow_us' => 'Suivez-nous :',
     'call_us' => 'Appelez-nous :',

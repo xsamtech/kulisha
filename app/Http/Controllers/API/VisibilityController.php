@@ -45,11 +45,12 @@ class VisibilityController extends BaseController
                 'fr' => $request->visibility_name_fr,
                 'it' => $request->visibility_name_it,
                 'ja' => $request->visibility_name_ja,
+                'ln' => $request->visibility_name_ln,
+                'nl' => $request->visibility_name_nl,
                 'ru' => $request->visibility_name_ru,
                 'sw' => $request->visibility_name_sw,
                 'tr' => $request->visibility_name_tr,
-                'cs' => $request->visibility_name_cs,
-                'eo' => $request->visibility_name_eo
+                'cs' => $request->visibility_name_cs
             ],
             'visibility_description' => [
                 'af' => $request->visibility_description_af,
@@ -61,11 +62,12 @@ class VisibilityController extends BaseController
                 'fr' => $request->visibility_description_fr,
                 'it' => $request->visibility_description_it,
                 'ja' => $request->visibility_description_ja,
+                'ln' => $request->visibility_description_ln,
+                'nl' => $request->visibility_description_nl,
                 'ru' => $request->visibility_description_ru,
                 'sw' => $request->visibility_description_sw,
                 'tr' => $request->visibility_description_tr,
-                'cs' => $request->visibility_description_cs,
-                'eo' => $request->visibility_description_eo
+                'cs' => $request->visibility_description_cs
             ],
             'alias' => $request->alias,
             'color' => $request->color,
@@ -137,11 +139,12 @@ class VisibilityController extends BaseController
                 'fr' => $request->visibility_name_fr,
                 'it' => $request->visibility_name_it,
                 'ja' => $request->visibility_name_ja,
+                'ln' => $request->visibility_name_ln,
+                'nl' => $request->visibility_name_nl,
                 'ru' => $request->visibility_name_ru,
                 'sw' => $request->visibility_name_sw,
                 'tr' => $request->visibility_name_tr,
-                'cs' => $request->visibility_name_cs,
-                'eo' => $request->visibility_name_eo
+                'cs' => $request->visibility_name_cs
             ],
             'visibility_description' => [
                 'af' => $request->visibility_description_af,
@@ -153,11 +156,12 @@ class VisibilityController extends BaseController
                 'fr' => $request->visibility_description_fr,
                 'it' => $request->visibility_description_it,
                 'ja' => $request->visibility_description_ja,
+                'ln' => $request->visibility_description_ln,
+                'nl' => $request->visibility_description_nl,
                 'ru' => $request->visibility_description_ru,
                 'sw' => $request->visibility_description_sw,
                 'tr' => $request->visibility_description_tr,
-                'cs' => $request->visibility_description_cs,
-                'eo' => $request->visibility_description_eo
+                'cs' => $request->visibility_description_cs
             ],
             'alias' => $request->alias,
             'color' => $request->color,

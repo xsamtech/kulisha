@@ -44,11 +44,12 @@ class FieldController extends BaseController
                 'fr' => $request->field_name_fr,
                 'it' => $request->field_name_it,
                 'ja' => $request->field_name_ja,
+                'ln' => $request->field_name_ln,
+                'nl' => $request->field_name_nl,
                 'ru' => $request->field_name_ru,
                 'sw' => $request->field_name_sw,
                 'tr' => $request->field_name_tr,
-                'cs' => $request->field_name_cs,
-                'eo' => $request->field_name_eo
+                'cs' => $request->field_name_cs
             ],
             'field_description' => [
                 'af' => $request->field_description_af,
@@ -60,11 +61,12 @@ class FieldController extends BaseController
                 'fr' => $request->field_description_fr,
                 'it' => $request->field_description_it,
                 'ja' => $request->field_description_ja,
+                'ln' => $request->field_description_ln,
+                'nl' => $request->field_description_nl,
                 'ru' => $request->field_description_ru,
                 'sw' => $request->field_description_sw,
                 'tr' => $request->field_description_tr,
-                'cs' => $request->field_description_cs,
-                'eo' => $request->field_description_eo
+                'cs' => $request->field_description_cs
             ],
             'alias' => $request->alias,
             'color' => $request->color,
@@ -130,11 +132,12 @@ class FieldController extends BaseController
                 'fr' => $request->field_name_fr,
                 'it' => $request->field_name_it,
                 'ja' => $request->field_name_ja,
+                'ln' => $request->field_name_ln,
+                'nl' => $request->field_name_nl,
                 'ru' => $request->field_name_ru,
                 'sw' => $request->field_name_sw,
                 'tr' => $request->field_name_tr,
-                'cs' => $request->field_name_cs,
-                'eo' => $request->field_name_eo
+                'cs' => $request->field_name_cs
             ],
             'field_description' => [
                 'af' => $request->field_description_af,
@@ -146,11 +149,12 @@ class FieldController extends BaseController
                 'fr' => $request->field_description_fr,
                 'it' => $request->field_description_it,
                 'ja' => $request->field_description_ja,
+                'ln' => $request->field_description_ln,
+                'nl' => $request->field_description_nl,
                 'ru' => $request->field_description_ru,
                 'sw' => $request->field_description_sw,
                 'tr' => $request->field_description_tr,
-                'cs' => $request->field_description_cs,
-                'eo' => $request->field_description_eo
+                'cs' => $request->field_description_cs
             ],
             'alias' => $request->alias,
             'color' => $request->color,

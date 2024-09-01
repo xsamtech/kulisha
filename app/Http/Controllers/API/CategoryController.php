@@ -45,11 +45,12 @@ class CategoryController extends BaseController
                 'fr' => $request->category_name_fr,
                 'it' => $request->category_name_it,
                 'ja' => $request->category_name_ja,
+                'ln' => $request->category_name_ln,
+                'nl' => $request->category_name_nl,
                 'ru' => $request->category_name_ru,
                 'sw' => $request->category_name_sw,
                 'tr' => $request->category_name_tr,
-                'cs' => $request->category_name_cs,
-                'eo' => $request->category_name_eo
+                'cs' => $request->category_name_cs
             ],
             'category_description' => [
                 'af' => $request->category_description_af,
@@ -61,11 +62,12 @@ class CategoryController extends BaseController
                 'fr' => $request->category_description_fr,
                 'it' => $request->category_description_it,
                 'ja' => $request->category_description_ja,
+                'ln' => $request->category_description_ln,
+                'nl' => $request->category_description_nl,
                 'ru' => $request->category_description_ru,
                 'sw' => $request->category_description_sw,
                 'tr' => $request->category_description_tr,
-                'cs' => $request->category_description_cs,
-                'eo' => $request->category_description_eo
+                'cs' => $request->category_description_cs
             ],
             'color' => $request->color,
             'icon_font' => $request->icon_font,
@@ -140,11 +142,12 @@ class CategoryController extends BaseController
                 'fr' => $request->category_name_fr,
                 'it' => $request->category_name_it,
                 'ja' => $request->category_name_ja,
+                'ln' => $request->category_name_ln,
+                'nl' => $request->category_name_nl,
                 'ru' => $request->category_name_ru,
                 'sw' => $request->category_name_sw,
                 'tr' => $request->category_name_tr,
-                'cs' => $request->category_name_cs,
-                'eo' => $request->category_name_eo
+                'cs' => $request->category_name_cs
             ],
             'category_description' => [
                 'af' => $request->category_description_af,
@@ -156,11 +159,12 @@ class CategoryController extends BaseController
                 'fr' => $request->category_description_fr,
                 'it' => $request->category_description_it,
                 'ja' => $request->category_description_ja,
+                'ln' => $request->category_description_ln,
+                'nl' => $request->category_description_nl,
                 'ru' => $request->category_description_ru,
                 'sw' => $request->category_description_sw,
                 'tr' => $request->category_description_tr,
-                'cs' => $request->category_description_cs,
-                'eo' => $request->category_description_eo
+                'cs' => $request->category_description_cs
             ],
             'color' => $request->color,
             'icon_font' => $request->icon_font,

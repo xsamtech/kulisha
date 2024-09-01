@@ -45,11 +45,12 @@ class ReactionController extends BaseController
                 'fr' => $request->reaction_name_fr,
                 'it' => $request->reaction_name_it,
                 'ja' => $request->reaction_name_ja,
+                'ln' => $request->reaction_name_ln,
+                'nl' => $request->reaction_name_nl,
                 'ru' => $request->reaction_name_ru,
                 'sw' => $request->reaction_name_sw,
                 'tr' => $request->reaction_name_tr,
-                'cs' => $request->reaction_name_cs,
-                'eo' => $request->reaction_name_eo
+                'cs' => $request->reaction_name_cs
             ],
             'alias' => $request->alias,
             'color' => $request->color,
@@ -121,11 +122,12 @@ class ReactionController extends BaseController
                 'fr' => $request->reaction_name_fr,
                 'it' => $request->reaction_name_it,
                 'ja' => $request->reaction_name_ja,
+                'ln' => $request->reaction_name_ln,
+                'nl' => $request->reaction_name_nl,
                 'ru' => $request->reaction_name_ru,
                 'sw' => $request->reaction_name_sw,
                 'tr' => $request->reaction_name_tr,
-                'cs' => $request->reaction_name_cs,
-                'eo' => $request->reaction_name_eo
+                'cs' => $request->reaction_name_cs
             ],
             'alias' => $request->alias,
             'color' => $request->color,

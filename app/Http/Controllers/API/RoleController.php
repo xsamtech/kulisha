@@ -44,11 +44,12 @@ class RoleController extends BaseController
                 'fr' => $request->role_name_fr,
                 'it' => $request->role_name_it,
                 'ja' => $request->role_name_ja,
+                'ln' => $request->role_name_ln,
+                'nl' => $request->role_name_nl,
                 'ru' => $request->role_name_ru,
                 'sw' => $request->role_name_sw,
                 'tr' => $request->role_name_tr,
-                'cs' => $request->role_name_cs,
-                'eo' => $request->role_name_eo
+                'cs' => $request->role_name_cs
             ],
             'role_description' => [
                 'af' => $request->role_description_af,
@@ -60,11 +61,12 @@ class RoleController extends BaseController
                 'fr' => $request->role_description_fr,
                 'it' => $request->role_description_it,
                 'ja' => $request->role_description_ja,
+                'ln' => $request->role_description_ln,
+                'nl' => $request->role_description_nl,
                 'ru' => $request->role_description_ru,
                 'sw' => $request->role_description_sw,
                 'tr' => $request->role_description_tr,
-                'cs' => $request->role_description_cs,
-                'eo' => $request->role_description_eo
+                'cs' => $request->role_description_cs
             ],
             'color' => $request->color,
             'icon_font' => $request->icon_font,
@@ -130,11 +132,12 @@ class RoleController extends BaseController
                 'fr' => $request->role_name_fr,
                 'it' => $request->role_name_it,
                 'ja' => $request->role_name_ja,
+                'ln' => $request->role_name_ln,
+                'nl' => $request->role_name_nl,
                 'ru' => $request->role_name_ru,
                 'sw' => $request->role_name_sw,
                 'tr' => $request->role_name_tr,
-                'cs' => $request->role_name_cs,
-                'eo' => $request->role_name_eo
+                'cs' => $request->role_name_cs
             ],
             'role_description' => [
                 'af' => $request->role_description_af,
@@ -146,11 +149,12 @@ class RoleController extends BaseController
                 'fr' => $request->role_description_fr,
                 'it' => $request->role_description_it,
                 'ja' => $request->role_description_ja,
+                'ln' => $request->role_description_ln,
+                'nl' => $request->role_description_nl,
                 'ru' => $request->role_description_ru,
                 'sw' => $request->role_description_sw,
                 'tr' => $request->role_description_tr,
-                'cs' => $request->role_description_cs,
-                'eo' => $request->role_description_eo
+                'cs' => $request->role_description_cs
             ],
             'color' => $request->color,
             'icon_font' => $request->icon_font,

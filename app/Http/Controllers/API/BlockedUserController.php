@@ -117,4 +117,15 @@ class BlockedUserController extends BaseController
 
         return $this->handleResponse(ResourcesBlockedUser::collection($blocked_users), __('notifications.delete_blocked_user_success'), $blocked_users->lastPage(), $count_blocked_users);
     }
+
+    // ==================================== CUSTOM METHODS ====================================
+    /**
+     * Unlock a user.
+     *
+     * @param  int $user_id
+     */
+    public function unlockUser($user_id)
+    {
+        // TODO 
+    }
 }

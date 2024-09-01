@@ -44,11 +44,12 @@ class GroupController extends BaseController
                 'fr' => $request->group_name_fr,
                 'it' => $request->group_name_it,
                 'ja' => $request->group_name_ja,
+                'ln' => $request->group_name_ln,
+                'nl' => $request->group_name_nl,
                 'ru' => $request->group_name_ru,
                 'sw' => $request->group_name_sw,
                 'tr' => $request->group_name_tr,
-                'cs' => $request->group_name_cs,
-                'eo' => $request->group_name_eo
+                'cs' => $request->group_name_cs
             ],
             'group_description' => [
                 'af' => $request->group_description_af,
@@ -60,11 +61,12 @@ class GroupController extends BaseController
                 'fr' => $request->group_description_fr,
                 'it' => $request->group_description_it,
                 'ja' => $request->group_description_ja,
+                'ln' => $request->group_description_ln,
+                'nl' => $request->group_description_nl,
                 'ru' => $request->group_description_ru,
                 'sw' => $request->group_description_sw,
                 'tr' => $request->group_description_tr,
-                'cs' => $request->group_description_cs,
-                'eo' => $request->group_description_eo
+                'cs' => $request->group_description_cs
             ]
         ];
         // Select all groups to check unique constraint
@@ -126,11 +128,12 @@ class GroupController extends BaseController
                 'fr' => $request->group_name_fr,
                 'it' => $request->group_name_it,
                 'ja' => $request->group_name_ja,
+                'ln' => $request->group_name_ln,
+                'nl' => $request->group_name_nl,
                 'ru' => $request->group_name_ru,
                 'sw' => $request->group_name_sw,
                 'tr' => $request->group_name_tr,
-                'cs' => $request->group_name_cs,
-                'eo' => $request->group_name_eo
+                'cs' => $request->group_name_cs
             ],
             'group_description' => [
                 'af' => $request->group_description_af,
@@ -142,11 +145,12 @@ class GroupController extends BaseController
                 'fr' => $request->group_description_fr,
                 'it' => $request->group_description_it,
                 'ja' => $request->group_description_ja,
+                'ln' => $request->group_description_ln,
+                'nl' => $request->group_description_nl,
                 'ru' => $request->group_description_ru,
                 'sw' => $request->group_description_sw,
                 'tr' => $request->group_description_tr,
-                'cs' => $request->group_description_cs,
-                'eo' => $request->group_description_eo
+                'cs' => $request->group_description_cs
             ]
         ];
         // Select all groups and specific group to check unique constraint

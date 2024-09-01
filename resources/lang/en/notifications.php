@@ -320,6 +320,13 @@ return [
     'create_file_success' => 'File created',
     'update_file_success' => 'File updated',
     'delete_file_success' => 'File deleted',
+    // Session
+    'find_all_sessions_success' => 'Sessions found',
+    'find_session_success' => 'Session found',
+    'find_session_404' => 'Session not found',
+    'create_session_success' => 'Session created',
+    'update_session_success' => 'Session updated',
+    'delete_session_success' => 'Session deleted',
 
     // ===== USER HISTORIES
     // Subscriptions
@@ -450,6 +457,9 @@ return [
     'one_person_post_interesting' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> considers your :post_type :interesting.',
     'two_persons_post_interesting' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> and another person consider your :post_type :interesting.',
     'many_persons_post_interesting' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> and :reactions_count others consider your :post_type :interesting.',
+    'one_person_post_disappointing' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> is :disappointed with your :post_type.',
+    'two_persons_post_disappointing' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> and another person are :disappointed with your :post_type.',
+    'many_persons_post_disappointing' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> and :reactions_count others are :disappointed with your :post_type.',
     'one_person_reacted_message' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> reacted to your message.',
     'two_persons_reacted_message' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> and another person reacted to your message.',
     'many_persons_reacted_message' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> and :reactions_count others reacted to your message.',

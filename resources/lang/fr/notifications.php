@@ -320,6 +320,13 @@ return [
     'create_file_success' => 'Fichier créé',
     'update_file_success' => 'Fichier modifié',
     'delete_file_success' => 'Fichier supprimé',
+    // Session
+    'find_all_sessions_success' => 'Sessions trouvés',
+    'find_session_success' => 'Session trouvé',
+    'find_session_404' => 'Session non trouvé',
+    'create_session_success' => 'Session créé',
+    'update_session_success' => 'Session modifié',
+    'delete_session_success' => 'Session supprimé',
 
     // ===== USER HISTORIES
     // Subscriptions
@@ -450,6 +457,9 @@ return [
     'one_person_post_interesting' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> trouve votre :post_type :interesting.',
     'two_persons_post_interesting' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne trouvent votre :post_type :interesting.',
     'many_persons_post_interesting' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :reactions_count autres personnes trouvent votre :post_type :interesting.',
+    'one_person_post_disappointing' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> est :disappointed concernant votre :post_type.',
+    'two_persons_post_disappointing' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne sont :disappointed concernant votre :post_type.',
+    'many_persons_post_disappointing' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :reactions_count autres personnes sont :disappointed concernant votre :post_type.',
     'one_person_reacted_message' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> a réagi à votre message.',
     'two_persons_reacted_message' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et une autre personne ont réagi à votre message.',
     'many_persons_reacted_message' => '<strong><a href="/users/:from_user_id">:from_user_names</a></strong> et :reactions_count autres personnes ont réagi à votre message.',

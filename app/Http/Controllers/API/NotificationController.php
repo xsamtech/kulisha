@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Models\Group;
 use App\Models\Notification;
+use App\Models\Reaction;
+use App\Models\SentReaction;
 use App\Models\Status;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -148,22 +151,35 @@ class NotificationController extends BaseController
      */
     public function selectByUser($user_id, $status_alias = null)
     {
+        // Group
+        $reaction_on_post_type_group = Group::where('group_name->fr', 'Réaction sur type de notification')->first();
+        // Reaction
+        $don_t_see_this_anymore_reaction = Reaction::where([['reaction_name->fr', 'Ne plus voir ça'], ['group_id', $reaction_on_post_type_group->id]])->first();
+        // Requests
         $user = User::find($user_id);
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
         }
 
+        // Get the IDs of the notifications that are hidden by the current user
+        $with_sent_reactions_notification_type_ids = SentReaction::where([['reaction_id', $don_t_see_this_anymore_reaction->id], ['user_id', $user->id]])
+                                                                    ->pluck('to_notification_type_id')->toArray();
+        $with_sent_reactions_notification_type_ids = $with_sent_reactions_notification_type_ids != null ? $with_sent_reactions_notification_type_ids : [0];
+
         if ($status_alias != null) {
             $status = Status::where('alias', $status_alias)->first();
-            $notifications = Notification::where([['status_id', $status->id], ['to_user_id', $user->id]])->orderByDesc('created_at')->get();
+            $notifications = Notification::whereNotIn('type_id', $with_sent_reactions_notification_type_ids)
+                                            ->where([['status_id', $status->id], ['to_user_id', $user->id]])
+                                            ->orderByDesc('created_at')->orderByDesc('created_at')->paginate(20);
 
-            return $this->handleResponse(ResourcesNotification::collection($notifications), __('notifications.find_all_notifications_success'));
+            return $this->handleResponse(ResourcesNotification::collection($notifications), __('notifications.find_all_notifications_success'), $notifications->lastPage());
 
         } else {
-            $notifications = Notification::where('to_user_id', $user->id)->get();
+            $notifications = Notification::whereNotIn('type_id', $with_sent_reactions_notification_type_ids)
+                                            ->where('to_user_id', $user->id)->orderByDesc('created_at')->paginate(20);
 
-            return $this->handleResponse(ResourcesNotification::collection($notifications), __('notifications.find_all_notifications_success'));
+            return $this->handleResponse(ResourcesNotification::collection($notifications), __('notifications.find_all_notifications_success'), $notifications->lastPage());
         }
     }
 

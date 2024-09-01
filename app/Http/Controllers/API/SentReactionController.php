@@ -4,17 +4,18 @@ namespace App\Http\Controllers\API;
 
 use App\Models\BlockedUser;
 use App\Models\Group;
+use App\Models\History;
 use App\Models\Notification;
 use App\Models\Post;
 use App\Models\Reaction;
 use App\Models\ReactionReason;
 use App\Models\SentReaction;
 use App\Models\Status;
+use App\Models\Subscription;
 use App\Models\Type;
 use App\Models\User;
 use App\Http\Resources\SentReaction as ResourcesSentReaction;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 
 /**
  * @author Xanders
@@ -43,43 +44,26 @@ class SentReactionController extends BaseController
     public function store(Request $request)
     {
         // Groups
+        $member_status_group = Group::where('group_name->fr', 'Etat du membre')->first();
         $blocked_member_status_group = Group::where('group_name->fr', 'Etat du membre bloqué')->first();
         $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
         $history_status_group = Group::where('group_name->fr', 'Etat de l’historique')->first();
         $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
         $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
         $reaction_on_member_or_post_group = Group::where('group_name->fr', 'Réaction sur membre ou post')->first();
-        // $reaction_on_post_group = Group::where('group_name->fr', 'Réaction sur post')->first();
-        // $reaction_on_comment_group = Group::where('group_name->fr', 'Réaction sur commentaire')->first();
         // Statuses
+        $blocked_member_status = Status::where([['status_name->fr', 'Bloqué'], ['group_id', $member_status_group->id]])->first();
         $in_progress_blocking_status = Status::where([['status_name->fr', 'Blocage en cours'], ['group_id', $blocked_member_status_group->id]])->first();
-        $finished_blocking_status = Status::where([['status_name->fr', 'Blocage terminé'], ['group_id', $blocked_member_status_group->id]])->first();
         $unread_notification_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first();
         $unread_history_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $history_status_group->id]])->first();
         // Types
         $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
         $imminent_account_blocking_type = Type::where([['type_name->fr', 'Blocage de compte imminent'], ['group_id', $notification_type_group->id]])->first();
+        $blocked_account_type = Type::where([['type_name->fr', 'Compte bloqué'], ['group_id', $notification_type_group->id]])->first();
         $reaction_type = Type::where([['type_name->fr', 'Réaction'], ['group_id', $notification_type_group->id]])->first();
+        $connection_suggestion_type = Type::where([['type_name->fr', 'Suggestion de connexion'], ['group_id', $notification_type_group->id]])->first();
         // Reactions
         $reported_reaction = Reaction::where([['reaction_name->fr', 'Signalé'], ['group_id', $reaction_on_member_or_post_group->id]])->first();
-        // $bravo_reaction = Reaction::where([['reaction_name->fr', 'Bravo'], ['group_id', $reaction_on_post_group->id]])->first();
-        // $i_like_reaction = Reaction::where([['reaction_name->fr', 'J’aime'], ['group_id', $reaction_on_post_group->id]])->first();
-        // $i_support_reaction = Reaction::where([['reaction_name->fr', 'Je soutiens'], ['group_id', $reaction_on_post_group->id]])->first();
-        // $interesting_reaction = Reaction::where([['reaction_name->fr', 'Intéressant'], ['group_id', $reaction_on_post_group->id]])->first();
-        // $i_like_reaction = Reaction::where([['reaction_name->fr', 'J’aime'], ['group_id', $reaction_on_comment_group->id]])->first();
-        // Reactions reasons
-        $off_topic_reaction_reason = ReactionReason::where('reason_content->fr', 'Hors-sujet agroalimentaire')->first();
-        $fake_news_reaction_reason = ReactionReason::where('reason_content->fr', 'Fake news')->first();
-        $fake_account_reaction_reason = ReactionReason::where('reason_content->fr', 'Faux compte')->first();
-        $sensitive_content_reaction_reason = ReactionReason::where('reason_content->fr', 'Contenu sensible')->first();
-        $product_copyright_reaction_reason = ReactionReason::where('reason_content->fr', 'Ce produit appartient à un autre')->first();
-        $dangerous_for_health_reaction_reason = ReactionReason::where('reason_content->fr', 'Produit dangereux pour la santé')->first();
-        $undelivered_product_reaction_reason = ReactionReason::where('reason_content->fr', 'Le produit n’a jamais été livré après paiement')->first();
-        $unoffered_service_reaction_reason = ReactionReason::where('reason_content->fr', 'Le service n’a jamais été offert après paiement')->first();
-        $defamation_reaction_reason = ReactionReason::where('reason_content->fr', 'Diffamation')->first();
-        $inciting_hatred_reaction_reason = ReactionReason::where('reason_content->fr', 'Incitation à la haine')->first();
-        $sexually_inappropriate_reaction_reason = ReactionReason::where('reason_content->fr', 'Sexuellement inapproprié')->first();
-        $other_reaction_reason = ReactionReason::where('reason_content->fr', 'Autre motif')->first();
         // Get inputs
         $inputs = [
             'reaction_description' => $request->reaction_description,
@@ -87,7 +71,7 @@ class SentReactionController extends BaseController
             'to_post_id' => $request->to_post_id,
             'to_notification_type_id' => $request->to_notification_type_id,
             'reaction_id' => $request->reaction_id,
-            'reaction_reason_id' => isset($request->to_user_id) ? (isset($request->reaction_reason_id) ? $request->reaction_reason_id : $other_reaction_reason->id) : $request->reaction_reason_id,
+            'reaction_reason_id' => $request->reaction_reason_id,
             'user_id' => $request->user_id
         ];
 
@@ -96,12 +80,16 @@ class SentReactionController extends BaseController
             return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['user_id'], __('validation.required', ['field_name' => __('miscellaneous.choose_user')]), 400);
         }
 
+        if (trim($inputs['to_user_id']) == null AND trim($inputs['to_post_id']) == null AND trim($inputs['to_notification_type_id']) == null) {
+            return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['to_user_id'], __('validation.custom.owner.required'), 400);
+        }
+
         if (!is_numeric($inputs['reaction_id']) OR trim($inputs['reaction_id']) == null) {
             return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['reaction_id'], __('miscellaneous.admin.group.reaction.add'), 400);
         }
 
-        if (trim($inputs['to_user_id']) == null AND trim($inputs['to_post_id']) == null AND trim($inputs['to_notification_type_id']) == null) {
-            return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['to_user_id'], __('validation.custom.owner.required'), 400);
+        if (!is_numeric($inputs['reaction_reason_id']) OR trim($inputs['reaction_reason_id']) == null) {
+            return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['reaction_reason_id'], __('miscellaneous.admin.miscellaneous.reason.add'), 400);
         }
 
         $from_current_user = User::find($inputs['user_id']);
@@ -111,8 +99,9 @@ class SentReactionController extends BaseController
         }
 
         $sent_reaction = SentReaction::create($inputs);
+        $reaction = Reaction::find($sent_reaction->reaction_id);
 
-        // If the reaction is "Reported", check if we can block the member
+        // If the reaction is "Signalé", check if we can block the member
         if ($inputs['reaction_id'] == $reported_reaction->id) {
             // If the reaction is on member
             if ($inputs['to_user_id'] != null) {
@@ -123,30 +112,39 @@ class SentReactionController extends BaseController
                 }
 
                 // Count the number of people who reported to know if we should send a warning to the member
-                $count_fake_account_reaction = SentReaction::where(['to_user_id', $to_current_user->id], ['reaction_id', $reported_reaction->id], ['reaction_reason_id', $fake_account_reaction_reason->id])->count();
+                $count_reaction = SentReaction::where(['to_user_id', $to_current_user->id], ['reaction_id', $reported_reaction->id])->count();
+                $reaction_reason = ReactionReason::find($inputs['reaction_reason_id']);
 
-                if ($count_fake_account_reaction >= 25) {
+                if ($count_reaction == $reaction_reason->report_count) {
                     BlockedUser::create([
                         'user_id' => $to_current_user->id,
-                        'reaction_reason_id' => $fake_account_reaction_reason->id,
+                        'reaction_reason_id' => $inputs['reaction_reason_id'],
                         'status_id' => $in_progress_blocking_status->id,
                     ]);
 
-                    Notification::create([
-                        'days_before_blocking' => $count_fake_account_reaction,
-                        'type_id' => $imminent_account_blocking_type->id,
-                        'status_id' => $unread_notification_status->id,
-                        'from_user_id' => $from_current_user->id,
-                        'to_user_id' => $to_current_user->id
+                    $to_current_user->update([
+                        'status_id' => $blocked_member_status->id,
+                        'updated_at' => now()
                     ]);
 
-                } else {
                     Notification::create([
-                        'days_before_blocking' => $count_fake_account_reaction,
+                        'days_before_blocking' => $count_reaction,
                         'type_id' => $imminent_account_blocking_type->id,
                         'status_id' => $unread_notification_status->id,
                         'from_user_id' => $from_current_user->id,
-                        'to_user_id' => $to_current_user->id
+                        'to_user_id' => $to_current_user->id,
+                        'reaction_id' => $reaction->id
+                    ]);
+                }
+
+                if ($count_reaction >= ($reaction_reason->report_count - 5) AND $count_reaction < $reaction_reason->report_count) {
+                    Notification::create([
+                        'days_before_blocking' => $count_reaction,
+                        'type_id' => $imminent_account_blocking_type->id,
+                        'status_id' => $unread_notification_status->id,
+                        'from_user_id' => $from_current_user->id,
+                        'to_user_id' => $to_current_user->id,
+                        'reaction_id' => $reaction->id
                     ]);
                 }
             }
@@ -156,76 +154,45 @@ class SentReactionController extends BaseController
                 $to_post = Post::find($inputs['to_post_id']);
                 $to_current_user = User::find($to_post->user_id);
 
-                // Count the number of people who reported to know if we should send a warning to the owner of the post
-                if ($inputs['reaction_reason_id'] == $off_topic_reaction_reason->id) {
-                    $count_off_topic_reaction = SentReaction::where(['to_post_id', $to_post->id], ['reaction_id', $reported_reaction->id], ['reaction_reason_id', $off_topic_reaction_reason->id])->count();
-                    $blocked_user_in_progress = BlockedUser::where(['user_id', $to_current_user->id], ['reaction_reason_id', $off_topic_reaction_reason->id], ['status_id', $in_progress_blocking_status->id])->whereMonth('created_at', Carbon::now()->month)->first();
+                // Count the number of people who reported to know if we should send a warning to the member
+                $count_reaction = SentReaction::where(['to_post_id', $to_post->id], ['reaction_id', $reported_reaction->id])->count();
+                $reaction_reason = ReactionReason::find($inputs['reaction_reason_id']);
 
-                    if ($count_fake_account_reaction >= 30) {
-                        BlockedUser::create([
-                            'user_id' => $to_current_user->id,
-                            'reaction_reason_id' => $off_topic_reaction_reason->id,
-                            'status_id' => $in_progress_blocking_status->id,
-                        ]);
+                if ($count_reaction == $reaction_reason->report_count) {
+                    BlockedUser::create([
+                        'user_id' => $to_current_user->id,
+                        'reaction_reason_id' => $inputs['reaction_reason_id'],
+                        'status_id' => $in_progress_blocking_status->id,
+                    ]);
 
-                        Notification::create([
-                            'days_before_blocking' => $count_off_topic_reaction,
-                            'type_id' => $imminent_account_blocking_type->id,
-                            'status_id' => $unread_notification_status->id,
-                            'from_user_id' => $from_current_user->id,
-                            'to_user_id' => $to_current_user->id,
-                            'post_id' => $to_post->id
-                        ]);
+                    $to_current_user->update([
+                        'status_id' => $blocked_member_status->id,
+                        'updated_at' => now()
+                    ]);
 
-                    } else {
-                        Notification::create([
-                            'days_before_blocking' => $count_off_topic_reaction,
-                            'type_id' => $imminent_account_blocking_type->id,
-                            'status_id' => $unread_notification_status->id,
-                            'from_user_id' => $from_current_user->id,
-                            'to_user_id' => $to_current_user->id,
-                            'post_id' => $to_post->id
-                        ]);
-                    }
+                    Notification::create([
+                        'days_before_blocking' => $count_reaction,
+                        'type_id' => $blocked_account_type->id,
+                        'status_id' => $unread_notification_status->id,
+                        'from_user_id' => $from_current_user->id,
+                        'to_user_id' => $to_current_user->id,
+                        'reaction_id' => $reaction->id
+                    ]);
                 }
 
-                // Count the number of people who reported to know if we should send a warning to the owner of the post
-                if ($inputs['reaction_reason_id'] == $fake_news_reaction_reason->id) {
-                    $count_fake_news_reaction = SentReaction::where(['to_post_id', $to_post->id], ['reaction_id', $reported_reaction->id], ['reaction_reason_id', $fake_news_reaction_reason->id])->count();
-                    $blocked_user_in_progress = BlockedUser::where(['user_id', $to_current_user->id], ['reaction_reason_id', $fake_news_reaction_reason->id], ['status_id', $in_progress_blocking_status->id])->whereMonth('created_at', Carbon::now()->month)->first();
-
-                    if ($count_fake_account_reaction >= 30) {
-                        BlockedUser::create([
-                            'user_id' => $to_current_user->id,
-                            'reaction_reason_id' => $fake_news_reaction_reason->id,
-                            'status_id' => $in_progress_blocking_status->id,
-                        ]);
-
-                        Notification::create([
-                            'days_before_blocking' => $count_fake_news_reaction,
-                            'type_id' => $imminent_account_blocking_type->id,
-                            'status_id' => $unread_notification_status->id,
-                            'from_user_id' => $from_current_user->id,
-                            'to_user_id' => $to_current_user->id,
-                            'post_id' => $to_post->id
-                        ]);
-
-                    } else {
-                        Notification::create([
-                            'days_before_blocking' => $count_fake_news_reaction,
-                            'type_id' => $imminent_account_blocking_type->id,
-                            'status_id' => $unread_notification_status->id,
-                            'from_user_id' => $from_current_user->id,
-                            'to_user_id' => $to_current_user->id,
-                            'post_id' => $to_post->id
-                        ]);
-                    }
+                if ($count_reaction >= ($reaction_reason->report_count - 5) AND $count_reaction < $reaction_reason->report_count) {
+                    Notification::create([
+                        'days_before_blocking' => $count_reaction,
+                        'type_id' => $imminent_account_blocking_type->id,
+                        'status_id' => $unread_notification_status->id,
+                        'from_user_id' => $from_current_user->id,
+                        'to_user_id' => $to_current_user->id,
+                        'reaction_id' => $reaction->id
+                    ]);
                 }
             }
 
         } else {
-            $reaction = Reaction::find($inputs['reaction_id']);
-
             if ($inputs['to_user_id'] != null) {
                 $to_current_user = User::find($inputs['to_user_id']);
 
@@ -241,6 +208,8 @@ class SentReactionController extends BaseController
             if ($inputs['to_post_id'] != null) {
                 $to_post = Post::find($inputs['to_post_id']);
                 $to_current_user = User::find($to_post->user_id);
+                $subscription = Subscription::where([['user_id', $to_post->user_id], ['subscriber_id', $inputs['user_id']]])
+                                                ->orWhere([['user_id', $inputs['user_id']], ['subscriber_id', $to_post->user_id]])->first();
 
                 Notification::create([
                     'type_id' => $reaction_type->id,
@@ -249,8 +218,27 @@ class SentReactionController extends BaseController
                     'to_user_id' => $to_current_user->id,
                     'reaction_id' => $reaction->id
                 ]);
+
+                if (is_null($subscription)) {
+                    Notification::create([
+                        'type_id' => $connection_suggestion_type->id,
+                        'status_id' => $unread_notification_status->id,
+                        'from_user_id' => $to_current_user->id,
+                        'to_user_id' => $inputs['user_id']
+                    ]);
+                }
             }
         }
+
+        $notification = Notification::where('from_user_id', $from_current_user->id)->whereNotNull('reaction_id')->first();
+
+        History::create([
+            'type_id' => $activities_history_type->id,
+            'status_id' => $unread_history_status->id,
+            'from_user_id' => $from_current_user->id,
+            'reaction_id' => $reaction->id,
+            'for_notification_id' => $notification->id
+        ]);
 
         return $this->handleResponse(new ResourcesSentReaction($sent_reaction), __('notifications.create_sent_reaction_success'));
     }

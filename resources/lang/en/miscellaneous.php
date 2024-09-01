@@ -19,6 +19,11 @@ return [
     'welcome_description_food' => 'Sell healthy, organic food and attract more customers to your business.',
     'slogan' => 'Better feeding life!',
     'keywords' => 'kulisha, agribusiness agrifood, agriculture, farmer, breeding, breeder, fishing, fisherman, better feeding life',
+    'app_invitation' => [
+        'title' => 'Welcome on Kulisha',
+        'message' => 'Have you heard of "Kulisha", the plateform that helps to better feed and maintain good health?<br><br>Just click on the link below to make your life easier too.<br><a href="https://kulisha.com/register?ref=invitation&from=:from_user_id">Discover now!</a>',
+        'chat' => 'You have received a private message on Kulisha.<br><a href="https://kulisha.com/register?ref=invitation&from=:from_user_id">Open message</a>'
+    ],
     'all_right_reserved' => 'All right reserved',
     'follow_us' => 'Follow us:',
     'call_us' => 'Call us:',

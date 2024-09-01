@@ -45,11 +45,12 @@ class StatusController extends BaseController
                 'fr' => $request->status_name_fr,
                 'it' => $request->status_name_it,
                 'ja' => $request->status_name_ja,
+                'ln' => $request->status_name_ln,
+                'nl' => $request->status_name_nl,
                 'ru' => $request->status_name_ru,
                 'sw' => $request->status_name_sw,
                 'tr' => $request->status_name_tr,
-                'cs' => $request->status_name_cs,
-                'eo' => $request->status_name_eo
+                'cs' => $request->status_name_cs
             ],
             'status_description' => [
                 'af' => $request->status_description_af,
@@ -61,11 +62,12 @@ class StatusController extends BaseController
                 'fr' => $request->status_description_fr,
                 'it' => $request->status_description_it,
                 'ja' => $request->status_description_ja,
+                'ln' => $request->status_description_ln,
+                'nl' => $request->status_description_nl,
                 'ru' => $request->status_description_ru,
                 'sw' => $request->status_description_sw,
                 'tr' => $request->status_description_tr,
-                'cs' => $request->status_description_cs,
-                'eo' => $request->status_description_eo
+                'cs' => $request->status_description_cs
             ],
             'alias' => $request->alias,
             'color' => $request->color,
@@ -137,11 +139,12 @@ class StatusController extends BaseController
                 'fr' => $request->status_name_fr,
                 'it' => $request->status_name_it,
                 'ja' => $request->status_name_ja,
+                'ln' => $request->status_name_ln,
+                'nl' => $request->status_name_nl,
                 'ru' => $request->status_name_ru,
                 'sw' => $request->status_name_sw,
                 'tr' => $request->status_name_tr,
-                'cs' => $request->status_name_cs,
-                'eo' => $request->status_name_eo
+                'cs' => $request->status_name_cs
             ],
             'status_description' => [
                 'af' => $request->status_description_af,
@@ -153,11 +156,12 @@ class StatusController extends BaseController
                 'fr' => $request->status_description_fr,
                 'it' => $request->status_description_it,
                 'ja' => $request->status_description_ja,
+                'ln' => $request->status_description_ln,
+                'nl' => $request->status_description_nl,
                 'ru' => $request->status_description_ru,
                 'sw' => $request->status_description_sw,
                 'tr' => $request->status_description_tr,
-                'cs' => $request->status_description_cs,
-                'eo' => $request->status_description_eo
+                'cs' => $request->status_description_cs
             ],
             'alias' => $request->alias,
             'color' => $request->color,

@@ -133,6 +133,7 @@ return [
         'Français' => 'fr',
         'Italiano' => 'it',
         '日本語' => 'ja',
+        'Lingala' => 'ln',
         'Nederlands' => 'nl',
         'Русский' => 'ru',
         'Swahili' => 'sw',

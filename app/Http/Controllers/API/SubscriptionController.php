@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Models\Group;
-use App\Models\History;
 use App\Models\Subscription;
-use App\Models\Type;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Resources\Subscription as ResourcesSubscription;
@@ -166,16 +163,12 @@ class SubscriptionController extends BaseController
     /**
      * Invite a contact by mail or phone
      *
-     * @param  string $data
+     * @param  \Illuminate\Http\Request  $request
      * @param  int $visitor_id
      * @return \Illuminate\Http\Response
      */
-    public function inviteContact($data, $visitor_id = null)
+    public function changeContactToMember(Request $request, $visitor_id)
     {
-        // Groups
-        $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
-        // Types
-        $invitation_history_type = Type::where([['type_name->fr', 'Historique des invitations'], ['group_id', $history_type_group->id]])->first();
         // Visitor
         $visitor = User::find($visitor_id);
 
@@ -183,27 +176,35 @@ class SubscriptionController extends BaseController
             return $this->handleError(__('notifications.find_visitor_404'));
         }
 
-        if (is_numeric($data)) {
-            $subscription = Subscription::create([
-                'phone' => $data,
-                'user_id' => $visitor->id
-            ]);
+        if (isset($request->phone)) {
+            $user = User::where('phone', $request->phone)->first();
 
-        } else {
-            $subscription = Subscription::create([
-                'email' => $data,
-                'user_id' => $visitor->id
+            if (is_null($user)) {
+                return $this->handleError(__('notifications.find_user_404'));
+            }
+
+            $subscription = Subscription::where([['phone', $user->phone], ['subscriber_id', $visitor->id]])->first();
+
+            $subscription->update([
+                'user_id' => $user->id,
+                'updated_at' => now()
             ]);
         }
 
-        /*
-            HISTORY AND/OR NOTIFICATION MANAGEMENT
-        */
-        History::create([
-            'search_content' => $data,
-            'type_id' => $invitation_history_type->id,
-            'from_user_id' => $visitor->id
-        ]);
+        if (isset($request->email)) {
+            $user = User::where('email', $request->email)->first();
+
+            if (is_null($user)) {
+                return $this->handleError(__('notifications.find_user_404'));
+            }
+
+            $subscription = Subscription::where([['email', $user->email], ['subscriber_id', $visitor->id]])->first();
+
+            $subscription->update([
+                'user_id' => $user->id,
+                'updated_at' => now()
+            ]);
+        }
 
         return $this->handleResponse(new ResourcesSubscription($subscription), __('notifications.create_subscription_success'));
     }

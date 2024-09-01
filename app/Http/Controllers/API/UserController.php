@@ -31,6 +31,9 @@ use App\Http\Resources\PasswordResetToken as ResourcesPasswordReset;
 use App\Http\Resources\Post as ResourcesPost;
 use App\Http\Resources\Subscription as ResourcesSubscription;
 use App\Http\Resources\User as ResourcesUser;
+use App\Mail\OTPCode;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * @author Xanders
@@ -45,7 +48,7 @@ class UserController extends BaseController
      */
     public function index()
     {
-        $users = User::orderByDesc('created_at')->paginate(50);
+        $users = User::orderByDesc('created_at')->paginate(10);
         $count_users = User::count();
 
         return $this->handleResponse(ResourcesUser::collection($users), __('notifications.find_all_users_success'), $users->lastPage(), $count_users);
@@ -100,8 +103,15 @@ class UserController extends BaseController
             'type_id' => is_null($ordinary_member_type) ? (isset($request->type_id) ? $request->type_id : null) : $ordinary_member_type->id,
             'visibility_id' => isset($request->visibility_id) ? $request->visibility_id : (!is_null($everybody_on_kulisha_visibility) ? $everybody_on_kulisha_visibility->id : null)
         ];
-        $users = User::all();
         $password_resets = PasswordResetToken::all();
+        // $basic = new \Vonage\Client\Credentials\Basic(config('vonage.api_key'), config('vonage.api_secret'));
+        // $client = new \Vonage\Client($basic);
+
+        $request->validate([
+            'email' => ['string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'phone' => ['string', 'phone', 'max:45', 'unique:' . User::class],
+            'username' => ['string', 'lowercase', 'username', 'max:255', 'unique:' . User::class],
+        ]);
 
         if (trim($inputs['email']) == null AND trim($inputs['phone']) == null) {
             return $this->handleError(__('validation.custom.email_or_phone.required'));
@@ -109,11 +119,11 @@ class UserController extends BaseController
 
         if ($inputs['email'] != null) {
             // Check if user email already exists
-            foreach ($users as $another_user):
-                if ($another_user->email == $inputs['email']) {
-                    return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['email'], __('validation.custom.email.exists'), 400);
-                }
-            endforeach;
+            // foreach ($users as $another_user):
+            //     if ($another_user->email == $inputs['email']) {
+            //         return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['email'], __('validation.custom.email.exists'), 400);
+            //     }
+            // endforeach;
 
             // If email exists in "password_reset" table, delete it
             if ($password_resets != null) {
@@ -127,11 +137,11 @@ class UserController extends BaseController
 
         if ($inputs['phone'] != null) {
             // Check if user phone already exists
-            foreach ($users as $another_user):
-                if ($another_user->phone == $inputs['phone']) {
-                    return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['phone'], __('validation.custom.phone.exists'), 400);
-                }
-            endforeach;
+            // foreach ($users as $another_user):
+            //     if ($another_user->phone == $inputs['phone']) {
+            //         return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['phone'], __('validation.custom.phone.exists'), 400);
+            //     }
+            // endforeach;
 
             // If phone exists in "password_reset" table, delete it
             if ($password_resets != null) {
@@ -145,11 +155,11 @@ class UserController extends BaseController
 
         if ($inputs['username'] != null) {
             // Check if username already exists
-            foreach ($users as $another_user):
-                if ($another_user->username == $inputs['username']) {
-                    return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['username'], __('validation.custom.username.exists'), 400);
-                }
-            endforeach;
+            // foreach ($users as $another_user):
+            //     if ($another_user->username == $inputs['username']) {
+            //         return $this->handleError(__('miscellaneous.found_value') . ' ' . $inputs['username'], __('validation.custom.username.exists'), 400);
+            //     }
+            // endforeach;
 
             // Check correct username
             if (preg_match('#^[\w]+$#', $inputs['username']) == 0) {
@@ -176,6 +186,15 @@ class UserController extends BaseController
                     'former_password' => $request->password
                 ]);
 
+                Mail::to($inputs['email'])->send(new OTPCode($password_reset->token));
+
+                // try {
+                //     $client->sms()->send(new \Vonage\SMS\Message\SMS($password_reset->phone, 'Kulisha', (string) $password_reset->token));
+
+                // } catch (\Throwable $th) {
+                //     return $this->handleError($th->getMessage(), __('notifications.create_user_SMS_failed'), 500);
+                // }
+
             } else {
                 if ($inputs['email'] != null) {
                     PasswordResetToken::create([
@@ -183,6 +202,8 @@ class UserController extends BaseController
                         'token' => $random_string,
                         'former_password' => $request->password
                     ]);
+
+                    Mail::to($inputs['email'])->send(new OTPCode($password_reset->token));
                 }
 
                 if ($inputs['phone'] != null) {
@@ -191,6 +212,13 @@ class UserController extends BaseController
                         'token' => $random_string,
                         'former_password' => $request->password
                     ]);
+
+                    // try {
+                    //     $client->sms()->send(new \Vonage\SMS\Message\SMS($password_reset->phone, 'Kulisha', (string) $password_reset->token));
+
+                    // } catch (\Throwable $th) {
+                    //     return $this->handleError($th->getMessage(), __('notifications.create_user_SMS_failed'), 500);
+                    // }
                 }
             }
         }
@@ -208,6 +236,15 @@ class UserController extends BaseController
 
                 $inputs['password'] = Hash::make($password_reset->former_password);
 
+                Mail::to($inputs['email'])->send(new OTPCode($password_reset->token));
+
+                // try {
+                //     $client->sms()->send(new \Vonage\SMS\Message\SMS($password_reset->phone, 'Kulisha', (string) $password_reset->token));
+
+                // } catch (\Throwable $th) {
+                //     return $this->handleError($th->getMessage(), __('notifications.create_user_SMS_failed'), 500);
+                // }
+
             } else {
                 if ($inputs['email'] != null) {
                     $password_reset = PasswordResetToken::create([
@@ -217,6 +254,8 @@ class UserController extends BaseController
                     ]);
 
                     $inputs['password'] = Hash::make($password_reset->former_password);
+
+                    Mail::to($inputs['email'])->send(new OTPCode($password_reset->token));
                 }
 
                 if ($inputs['phone'] != null) {
@@ -227,6 +266,13 @@ class UserController extends BaseController
                     ]);
 
                     $inputs['password'] = Hash::make($password_reset->former_password);
+
+                    // try {
+                    //     $client->sms()->send(new \Vonage\SMS\Message\SMS($password_reset->phone, 'Kulisha', (string) $password_reset->token));
+
+                    // } catch (\Throwable $th) {
+                    //     return $this->handleError($th->getMessage(), __('notifications.create_user_SMS_failed'), 500);
+                    // }
                 }
             }
         }
@@ -889,7 +935,7 @@ class UserController extends BaseController
     {
         $user->delete();
 
-        $users = User::orderByDesc('created_at')->paginate(50);
+        $users = User::orderByDesc('created_at')->paginate(10);
         $count_users = User::count();
         $password_reset = PasswordResetToken::where('email', $user->email)->orWhere('phone', $user->phone)->first();
         $personal_access_tokens = PersonalAccessToken::where('tokenable_id', $user->id)->get();
@@ -930,10 +976,10 @@ class UserController extends BaseController
      * Search a member
      *
      * @param  string $data
-     * @param  null|int $visitor_id
+     * @param  int $visitor_id
      * @return \Illuminate\Http\Response
      */
-    public function search($data, $visitor_id = null)
+    public function search($data, $visitor_id)
     {
         // Group
         $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
@@ -950,7 +996,7 @@ class UserController extends BaseController
         /*
             HISTORY AND/OR NOTIFICATION MANAGEMENT
         */
-        if ($visitor_id != null) {
+        if ($visitor_id != 0) {
             $visitor = User::find($visitor_id);
 
             if (!is_null($visitor)) {
@@ -1148,15 +1194,28 @@ class UserController extends BaseController
             return $this->handleError(__('notifications.find_user_404'));
         }
 
+        // Get the IDs of the users whose current user is subscribed
+        $with_subscriptions_user_ids = Subscription::where('subscriber_id', $user->id)->pluck('user_id')->toArray();
+        // Get the IDs of the users who are subscribed to the current user
+        $with_subscriptions_subscriber_ids = Subscription::where('user_id', $user->id)->pluck('subscriber_id')->toArray();
+        // Get the IDs of the users connected to the current user
+        $connected_users_ids = User::whereIn('id', $with_subscriptions_user_ids)->orWhereIn('id', $with_subscriptions_subscriber_ids)->pluck('id')->toArray();
+        // Get the mutual connections with the current user
+        $mutual_users_ids = Subscription::where('subscriber_id', '<>', $user->id)->whereIn('subscriber_id', $connected_users_ids)->pluck('user_id')->toArray();
+        $mutual_subscribers_ids = Subscription::where('user_id', '<>', $user->id)->whereIn('user_id', $connected_users_ids)->pluck('subscriber_id')->toArray();
+        // ========== THE MAIN QUERY STATEMENT
         // All users visibles by everybody or those who have the same connections as the current user
-        $users = User::where(function ($query) use ($everybody_on_kulisha_visibility) {
-                            $query->where('visibility_id.' . $everybody_on_kulisha_visibility->id);
-                        })
-                        ->orWhere(function ($query) use ($only_mutual_connections_visibility, $user) {
-                            $query->where('visibility_id' . $only_mutual_connections_visibility->id)->whereHas('subscriptions', function ($q) use ($user) {
-                                        $q->where('subscriptions.user_id' . $user->id)->orWhere('subscriptions.subscriber_id' . $user->id);
+        $users = User::whereNotIn([['users.id', $with_subscriptions_user_ids], ['users.id', $with_subscriptions_subscriber_ids]])
+                        ->where('users.visibility_id.' . $everybody_on_kulisha_visibility->id)
+                        ->orWhere(function ($query) use ($only_mutual_connections_visibility, $mutual_users_ids, $mutual_subscribers_ids) {
+                            $query->where('users.visibility_id' . $only_mutual_connections_visibility->id)
+                                    ->whereHas('subscriptions', function ($q) use ($mutual_users_ids, $mutual_subscribers_ids) {
+                                        $q->whereIn('subscriptions.user_id', $mutual_users_ids)->orWhereIn('subscriptions.subscriber_id', $mutual_subscribers_ids)
+                                            ->orWhereIn('subscriptions.user_id', $mutual_subscribers_ids)->orWhereIn('subscriptions.subscriber_id', $mutual_users_ids);
                                     });
-                        })->orderByDesc('created_at')->get();
+                        })->orWhere(function ($query) {
+                            $query->whereYear('users.created_at', '=', Carbon::now()->year)->whereMonth('users.created_at', '=', Carbon::now()->month);
+                        })->orderByDesc('users.created_at')->get();
 
         return $this->handleResponse(ResourcesUser::collection($users), __('notifications.find_all_users_success'));
     }
@@ -1464,9 +1523,43 @@ class UserController extends BaseController
         $invitations_history_type = Type::where([['type_name->fr', 'Historique des invitations'], ['group_id', $history_type_group->id]])->first();
         // Users
         $user = User::find($id);
+        // SMS Management
+        // $basic = new \Vonage\Client\Credentials\Basic(config('vonage.api_key'), config('vonage.api_secret'));
+        // $client = new \Vonage\Client($basic);
 
         if (is_null($user)) {
             return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        if (isset($request->phones)) {
+            foreach ($request->phones as $phone) {
+                Subscription::create([
+                    'phone' => $phone,
+                    'subscriber_id' => $user->id,
+                    'status_id' => $on_hold_status->id
+                ]);
+
+                // try {
+                //     $client->sms()->send(new \Vonage\SMS\Message\SMS($phone, $user->phone, __('miscellaneous.app_invitation.message', ['from_user_id' => $user->id])));
+
+                // } catch (\Throwable $th) {
+                //     return $this->handleError($th->getMessage(), __('notifications.create_user_SMS_failed'), 500);
+                // }
+            }
+
+            $subscription = Subscription::where([['phone', $phone], ['subscriber_id', $user->id]])->first();
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            History::create([
+                'type_id' => $invitations_history_type->id,
+                'status_id' => $unread_history_status->id,
+                'subscription_id' => $subscription->id,
+                'from_user_id' => $user->id
+            ]);
+
+            $object->subscription = new ResourcesSubscription($subscription);
         }
 
         if (isset($request->phone)) {
@@ -1475,6 +1568,39 @@ class UserController extends BaseController
                 'subscriber_id' => $user->id,
                 'status_id' => $on_hold_status->id
             ]);
+
+            // try {
+            //     $client->sms()->send(new \Vonage\SMS\Message\SMS($request->phone, $user->phone, __('miscellaneous.app_invitation.message', ['from_user_id' => $user->id])));
+
+            // } catch (\Throwable $th) {
+            //     return $this->handleError($th->getMessage(), __('notifications.create_user_SMS_failed'), 500);
+            // }
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            History::create([
+                'type_id' => $invitations_history_type->id,
+                'status_id' => $unread_history_status->id,
+                'subscription_id' => $subscription->id,
+                'from_user_id' => $user->id
+            ]);
+
+            $object->subscription = new ResourcesSubscription($subscription);
+        }
+
+        if (isset($request->emails)) {
+            foreach ($request->emails as $email) {
+                Subscription::create([
+                    'email' => $email,
+                    'subscriber_id' => $user->id,
+                    'status_id' => $on_hold_status->id
+                ]);
+
+                Mail::to($email)->send(new OTPCode(null, __('miscellaneous.app_invitation.message', ['from_user_id' => $user->id])));
+            }
+
+            $subscription = Subscription::where([['email', $email], ['subscriber_id', $user->id]])->first();
 
             /*
                 HISTORY AND/OR NOTIFICATION MANAGEMENT
@@ -1495,6 +1621,8 @@ class UserController extends BaseController
                 'subscriber_id' => $user->id,
                 'status_id' => $on_hold_status->id
             ]);
+
+            Mail::to($request->email)->send(new OTPCode(null, __('miscellaneous.app_invitation.message', ['from_user_id' => $user->id])));
 
             /*
                 HISTORY AND/OR NOTIFICATION MANAGEMENT

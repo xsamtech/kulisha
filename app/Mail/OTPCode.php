@@ -20,7 +20,7 @@ class OTPCode extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(private $token)
+    public function __construct(private $token = null, private $message = null)
     {
         //
     }
@@ -30,9 +30,16 @@ class OTPCode extends Mailable
      */
     public function envelope(): Envelope
     {
-        return new Envelope(
-            subject: 'Boongo OTP',
-        );
+        if ($this->token == null) {
+            return new Envelope(
+                subject: __('miscellaneous.app_invitation.title'),
+            );
+
+        } else {
+            return new Envelope(
+                subject: 'Kulisha OTP',
+            );
+        }
     }
 
     /**
@@ -40,9 +47,16 @@ class OTPCode extends Mailable
      */
     public function content(): Content
     {
-        return new Content(
-            view: 'otp-code', with: ['token' => $this->token]
-        );
+        if ($this->token == null) {
+            return new Content(
+                view: 'invitation', with: ['message' => $this->message]
+            );
+
+        } else {
+            return new Content(
+                view: 'otp-code', with: ['token' => $this->token]
+            );
+        }
     }
 
     /**

@@ -12,6 +12,7 @@ use App\Models\Type;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Resources\Cart as ResourcesCart;
+use App\Models\Status;
 
 /**
  * @author Xanders
@@ -181,7 +182,7 @@ class CartController extends BaseController
         }
 
         if ($type->getTranslation('type_name', 'fr') == 'Wishlist') {
-            $cart = Cart::where([['user_id', $user->id], ['type_id', $type->id]])->first();
+            $cart = Cart::where([['type_id', $type->id], ['user_id', $user_id]])->first();
 
             if (is_null($cart)) {
                 $cart = Cart::create([
@@ -193,9 +194,21 @@ class CartController extends BaseController
             return $this->handleResponse(new ResourcesCart($cart), __('notifications.find_cart_success'));
 
         } else {
-            $carts = Cart::where([['user_id', $user_id], ['type_id', $type->id]])->get();
+            $status = Status::where('alias', 'on_order')->first();
 
-            return $this->handleResponse(ResourcesCart::collection($carts), __('notifications.find_all_carts_success'));
+            if (is_null($status)) {
+                return $this->handleError(__('notifications.find_status_404'));
+            }
+
+            $cart = Cart::where([['type_id', $type->id], ['status_id', $status->id], ['user_id', $user_id]])->first();
+            $carts = Cart::where([['type_id', $type->id], ['user_id', $user_id]])->get();
+
+            $object = new stdClass();
+
+            $object->current_cart = new ResourcesCart($cart);
+            $object->archives = ResourcesCart::collection($carts);
+
+            return $this->handleResponse($object, __('notifications.find_all_carts_success'));
         }
     }
 
@@ -227,7 +240,7 @@ class CartController extends BaseController
             return $this->handleError(__('notifications.find_type_404'));
         }
 
-        $cart = Cart::where([['user_id', $user->id], ['type_id', $type->id]])->first();
+        $cart = Cart::where([['type_id', $type->id], ['user_id', $user_id]])->first();
 
         if (inArrayR($post->id, $cart->orders, 'post_id')) {
             return $this->handleResponse(true, __('notifications.find_post_success'), null);
@@ -266,12 +279,24 @@ class CartController extends BaseController
             return $this->handleError(__('notifications.find_type_404'));
         }
 
-        $cart = Cart::where([['user_id', $user->id], ['type_id', $type->id]])->first();
+        $status = Status::where('alias', 'on_order')->first();
+
+        if (is_null($status)) {
+            return $this->handleError(__('notifications.find_status_404'));
+        }
+
+        $cart = $type->getTranslation('type_name', 'fr') == 'Wishlist' 
+                    ? Cart::where([['type_id', $type->id], ['user_id', $user_id]])->first() 
+                    : Cart::where([['type_id', $type->id], ['status_id', $status->id], ['user_id', $user_id]])->first();
 
         if ($cart != null) {
             Order::create([
                 'post_id' => $post->id,
                 'cart_id' => $cart->id
+            ]);
+
+            $cart->update([
+                'updated_at' => now()
             ]);
 
             return $this->handleResponse(new ResourcesCart($cart), __('notifications.find_cart_success'));

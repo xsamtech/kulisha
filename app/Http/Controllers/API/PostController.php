@@ -30,6 +30,8 @@ use App\Http\Resources\History as ResourcesHistory;
 use App\Http\Resources\Post as ResourcesPost;
 use App\Http\Resources\Session as ResourcesSession;
 use App\Http\Resources\SentReaction as ResourcesSentReaction;
+use App\Models\Community;
+use App\Models\Event;
 use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
 
@@ -46,7 +48,7 @@ class PostController extends BaseController
      */
     public function index()
     {
-        $posts = Post::orderByDesc('created_at')->paginate(50);
+        $posts = Post::orderByDesc('created_at')->paginate(10);
         $count_posts = Post::count();
 
         return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.find_all_posts_success'), $posts->lastPage(), $count_posts);
@@ -86,6 +88,7 @@ class PostController extends BaseController
         $new_link_type = Type::where([['type_name->fr', 'Nouveau lien'], ['group_id', $notification_type_group->id]])->first();
         $comment_on_post_type = Type::where([['type_name->fr', 'Commentaire sur publication'], ['group_id', $notification_type_group->id]])->first();
         $anonymous_question_type = Type::where([['type_name->fr', 'Question anonyme'], ['group_id', $notification_type_group->id]])->first();
+        $connection_suggestion_type = Type::where([['type_name->fr', 'Suggestion de connexion'], ['group_id', $notification_type_group->id]])->first();
         // Visibility
         $everybody_visibility = Visibility::where([['visibility_name->fr', 'Tout le monde'], ['group_id', $posts_visibility_group->id]])->first();
         $everybody_except_visibility = Visibility::where([['visibility_name->fr', 'Tout le monde, sauf ...'], ['group_id', $posts_visibility_group->id]])->first();
@@ -341,6 +344,7 @@ class PostController extends BaseController
                     return $this->handleError(__('notifications.find_post_parent_404'));
                 }
 
+                // Anonymous question
                 if ($parent_post->type_id != $request_for_anonymous_question_type->id) {
                     $notification = Notification::create([
                         'type_id' => $anonymous_question_type->id,
@@ -359,6 +363,7 @@ class PostController extends BaseController
                         'for_notification_id' => $notification->id
                     ]);
 
+                // Answer for a post
                 } else {
                     $notification = Notification::create([
                         'type_id' => $comment_on_post_type->id,
@@ -375,6 +380,19 @@ class PostController extends BaseController
                         'to_user_id' => $parent_post->user_id,
                         'post_id' => $post->id,
                         'for_notification_id' => $notification->id
+                    ]);
+                }
+
+                $subscription = Subscription::where([['user_id', $parent_post->user_id], ['subscriber_id', $post->user_id]])
+                                                ->orWhere([['user_id', $post->user_id], ['subscriber_id', $parent_post->user_id]])->first();
+
+
+                if (is_null($subscription)) {
+                    Notification::create([
+                        'type_id' => $connection_suggestion_type->id,
+                        'status_id' => $unread_notification_status->id,
+                        'from_user_id' => $parent_post->user_id,
+                        'to_user_id' => $post->user_id
                     ]);
                 }
 
@@ -1042,7 +1060,7 @@ class PostController extends BaseController
     {
         $post->delete();
 
-        $posts = Post::orderByDesc('created_at')->paginate(50);
+        $posts = Post::orderByDesc('created_at')->paginate(10);
         $count_posts = Post::count();
         $notifications = Notification::where('post_id', $post->id)->get();
         $histories = History::where('post_id', $post->id)->get();
@@ -1087,49 +1105,248 @@ class PostController extends BaseController
      * @param  int $user_id
      * @return \Illuminate\Http\Response
      */
-    public function news_feed($type_aliases, $user_id = null)
+    public function newsFeed($type_aliases, $user_id)
     {
-        // Convertir la chaîne de caractères en tableau d'IDs
+        // Groups
+        $post_or_community_status_group = Group::where('group_name->fr', 'Etat du post ou de la communauté')->first();
+        $posts_visibility_group = Group::where('group_name->fr', 'Visibilité pour les posts')->first();
+        $reaction_on_member_or_post_group = Group::where('group_name->fr', 'Réaction sur membre ou post')->first();
+        // Statuses
+        $operational_status = Status::where([['status_name->fr', 'Opérationnel'], ['group_id', $post_or_community_status_group->id]])->first();
+        $boosted_status = Status::where([['status_name->fr', 'Boosté'], ['group_id', $post_or_community_status_group->id]])->first();
+        // Visibilities
+        $everybody_visibility = Visibility::where([['visibility_name->fr', 'Tout le monde'], ['group_id', $posts_visibility_group->id]])->first();
+        $nobody_except_visibility = Visibility::where([['visibility_name->fr', 'Personne, sauf …'], ['group_id', $posts_visibility_group->id]])->first();
+        // Reaction
+        $muted_reaction = Reaction::where([['reaction_name->fr', 'En sourdine'], ['group_id', $reaction_on_member_or_post_group->id]])->first();
+        $reported_reaction = Reaction::where([['reaction_name->fr', 'Signalé'], ['group_id', $reaction_on_member_or_post_group->id]])->first();
+        // Requests
+        // Convert comma separated aliases to an array of aliases
         $aliases = explode(',', $type_aliases);
 
+        if (count($aliases) == 0) {
+            return $this->handleError(__('validation.custom.type.required'));
+        }
+
+        // By the array of aliases, find array of IDs
         $types_ids = Type::whereIn('alias', $aliases)->pluck('id')->toArray();
 
         if (count($types_ids) == 0) {
             return $this->handleError(__('notifications.find_type_404'));
         }
 
-        // Groups
-        $post_or_community_status_group = Group::where('group_name->fr', 'Etat du post ou de la communauté')->first();
-        // Statuses
-        $operational_status = Status::where([['status_name->fr', 'Opérationnel'], ['group_id', $post_or_community_status_group->id]])->first();
+        // If the user is unknown, only show operational or boosted posts that are visible to everybody
+        if ($user_id == 0) {
+            $posts = Post::whereIn('posts.type_id', $types_ids)
+                            ->where(function ($query) use ($operational_status, $boosted_status) {
+                                $query->where('posts.status_id', $operational_status->id)
+                                        ->orWhere('posts.status_id', $boosted_status->id);
+                            })->where('posts.visibility_id', $everybody_visibility->id)->orderByDesc('posts.created_at')->paginate(10);
 
-        // If the user is unknown, only show posts visible to everyone
-        if ($user_id == null) {
-            $posts = Post::whereIn([['posts.type_id', $types_ids], ['posts.status_id', $operational_status->id]])->orderByDesc('posts.created_at')->paginate(50);
-            $count_posts = Post::whereIn([['posts.type_id', $types_ids], ['posts.status_id', $operational_status->id]])->count();
+            return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.find_all_posts_success'), $posts->lastPage());
 
-            return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.find_all_posts_success'), $posts->lastPage(), $count_posts);
-        }
+        // Otherwise, to show each post, check some constraints such as:
+        // -> The post belongs neither to a community, nor to an event;
+        // -> The user did not report the post or the post owner;
+        // -> The user has not muted the post or the post owner.
+        } else {
+            $current_user = User::find($user_id);
 
-        if ($user_id != null) {
-            $posts = Post::with(['users', 'visibilities', 'restrictions', 'reactions'])
-                        ->whereHas('comments', function ($query) {
-                                $query->where('content', 'like', '%important%');
-                            })->whereIn([['posts.type_id', $types_ids], ['posts.status_id', $operational_status->id]])->orderByDesc('posts.created_at')->paginate(50);
-            $count_posts = Post::whereIn([['posts.type_id', $types_ids], ['posts.status_id', $operational_status->id]])->count();
+            if (is_null($current_user)) {
+                return $this->handleError(__('notifications.find_user_404'));
+            }
 
-            return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.find_all_posts_success'), $posts->lastPage(), $count_posts);
+            // Get the IDs of the posts or users that are muted or reported by the current user
+            $with_sent_reactions_post_ids = SentReaction::where([['reaction_id', $muted_reaction->id], ['user_id', $current_user->id]])
+                                                        ->orWhere([['reaction_id', $reported_reaction->id], ['user_id', $current_user->id]])
+                                                        ->pluck('to_post_id')->toArray();
+            $with_sent_reactions_post_ids = $with_sent_reactions_post_ids != null ? $with_sent_reactions_post_ids : [0];
+            $with_sent_reactions_user_ids = SentReaction::where([['reaction_id', $muted_reaction->id], ['user_id', $current_user->id]])
+                                                        ->orWhere([['reaction_id', $reported_reaction->id], ['user_id', $current_user->id]])
+                                                        ->pluck('to_user_id')->toArray();
+            $with_sent_reactions_user_ids = $with_sent_reactions_user_ids != null ? $with_sent_reactions_user_ids : [0];
+            // THE MAIN QUERY STATEMENT
+            $posts = Post::whereNull('posts.community_id')->whereNull('posts.event_id')
+                            ->whereNotIn('posts.id', $with_sent_reactions_post_ids)->whereNotIn('posts.user_id', $with_sent_reactions_user_ids)
+                            ->whereIn('posts.type_id', $types_ids)
+                            ->where(function ($query) use ($operational_status, $boosted_status) {
+                                $query->where('posts.status_id', $operational_status->id)
+                                        ->orWhere('posts.status_id', $boosted_status->id);
+                            })
+                            ->where(function ($query) use ($everybody_visibility, $nobody_except_visibility) {
+                                $query->where('posts.visibility_id', $everybody_visibility->id)
+                                        ->orWhere('posts.visibility_id', $nobody_except_visibility->id);
+                            })->whereHas('restrictions', function ($query) use ($current_user, $nobody_except_visibility) {
+                                $query->where([
+                                    ['restrictions.user_id', $current_user->id],
+                                    ['restrictions.visibility_id', $nobody_except_visibility->id]
+                                ]);
+                            })->orderByDesc('posts.created_at')->paginate(10);
+
+            return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.find_all_posts_success'), $posts->lastPage());
         }
     }
 
     /**
-     * Search a member
+     * News feed in community.
+     *
+     * @param  string $type_aliases
+     * @param  int $user_id
+     * @return \Illuminate\Http\Response
+     */
+    public function newsFeedCommunity($type_aliases, $user_id)
+    {
+        // Groups
+        $post_or_community_status_group = Group::where('group_name->fr', 'Etat du post ou de la communauté')->first();
+        $posts_visibility_group = Group::where('group_name->fr', 'Visibilité pour les posts')->first();
+        $reaction_on_member_or_post_group = Group::where('group_name->fr', 'Réaction sur membre ou post')->first();
+        // Statuses
+        $operational_status = Status::where([['status_name->fr', 'Opérationnel'], ['group_id', $post_or_community_status_group->id]])->first();
+        $boosted_status = Status::where([['status_name->fr', 'Boosté'], ['group_id', $post_or_community_status_group->id]])->first();
+        // Visibilities
+        $everybody_visibility = Visibility::where([['visibility_name->fr', 'Tout le monde'], ['group_id', $posts_visibility_group->id]])->first();
+        $nobody_except_visibility = Visibility::where([['visibility_name->fr', 'Personne, sauf …'], ['group_id', $posts_visibility_group->id]])->first();
+        // Reaction
+        $muted_reaction = Reaction::where([['reaction_name->fr', 'En sourdine'], ['group_id', $reaction_on_member_or_post_group->id]])->first();
+        $reported_reaction = Reaction::where([['reaction_name->fr', 'Signalé'], ['group_id', $reaction_on_member_or_post_group->id]])->first();
+        // Requests
+        // Convert comma separated aliases to an array of aliases
+        $aliases = explode(',', $type_aliases);
+
+        if (count($aliases) == 0) {
+            return $this->handleError(__('validation.custom.type.required'));
+        }
+
+        // By the array of aliases, find array of IDs
+        $types_ids = Type::whereIn('alias', $aliases)->pluck('id')->toArray();
+
+        if (count($types_ids) == 0) {
+            return $this->handleError(__('notifications.find_type_404'));
+        }
+
+        // To show each post, check some constraints such as:
+        // -> The post belongs to a community;
+        // -> The user did not report the post or the post owner;
+        // -> The user has not muted the post or the post owner.
+        $current_user = User::find($user_id);
+
+        if (is_null($current_user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        // Get the IDs of the posts or users that are muted or reported by the current user
+        $with_sent_reactions_post_ids = SentReaction::where([['reaction_id', $muted_reaction->id], ['user_id', $current_user->id]])
+                                                    ->orWhere([['reaction_id', $reported_reaction->id], ['user_id', $current_user->id]])
+                                                    ->pluck('to_post_id')->toArray();
+        $with_sent_reactions_post_ids = $with_sent_reactions_post_ids != null ? $with_sent_reactions_post_ids : [0];
+        $with_sent_reactions_user_ids = SentReaction::where([['reaction_id', $muted_reaction->id], ['user_id', $current_user->id]])
+                                                    ->orWhere([['reaction_id', $reported_reaction->id], ['user_id', $current_user->id]])
+                                                    ->pluck('to_user_id')->toArray();
+        $with_sent_reactions_user_ids = $with_sent_reactions_user_ids != null ? $with_sent_reactions_user_ids : [0];
+        // THE MAIN QUERY STATEMENT
+        $posts = Post::whereNotNull('posts.community_id')->whereNotIn('posts.id', $with_sent_reactions_post_ids)
+                        ->whereNotIn('posts.user_id', $with_sent_reactions_user_ids)->whereIn('posts.type_id', $types_ids)
+                        ->where(function ($query) use ($operational_status, $boosted_status) {
+                            $query->where('posts.status_id', $operational_status->id)
+                                    ->orWhere('posts.status_id', $boosted_status->id);
+                        })
+                        ->where(function ($query) use ($everybody_visibility, $nobody_except_visibility) {
+                            $query->where('posts.visibility_id', $everybody_visibility->id)
+                                    ->orWhere('posts.visibility_id', $nobody_except_visibility->id);
+                        })->whereHas('restrictions', function ($query) use ($current_user, $nobody_except_visibility) {
+                            $query->where([
+                                ['restrictions.user_id', $current_user->id],
+                                ['restrictions.visibility_id', $nobody_except_visibility->id]
+                            ]);
+                        })->orderByDesc('posts.created_at')->paginate(10);
+
+        return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.find_all_posts_success'), $posts->lastPage());
+    }
+
+    /**
+     * News feed in event.
+     *
+     * @param  string $type_aliases
+     * @param  int $user_id
+     * @return \Illuminate\Http\Response
+     */
+    public function newsFeedEvent($type_aliases, $user_id)
+    {
+        // Groups
+        $post_or_community_status_group = Group::where('group_name->fr', 'Etat du post ou de la communauté')->first();
+        $posts_visibility_group = Group::where('group_name->fr', 'Visibilité pour les posts')->first();
+        $reaction_on_member_or_post_group = Group::where('group_name->fr', 'Réaction sur membre ou post')->first();
+        // Statuses
+        $operational_status = Status::where([['status_name->fr', 'Opérationnel'], ['group_id', $post_or_community_status_group->id]])->first();
+        $boosted_status = Status::where([['status_name->fr', 'Boosté'], ['group_id', $post_or_community_status_group->id]])->first();
+        // Visibilities
+        $everybody_visibility = Visibility::where([['visibility_name->fr', 'Tout le monde'], ['group_id', $posts_visibility_group->id]])->first();
+        $nobody_except_visibility = Visibility::where([['visibility_name->fr', 'Personne, sauf …'], ['group_id', $posts_visibility_group->id]])->first();
+        // Reaction
+        $muted_reaction = Reaction::where([['reaction_name->fr', 'En sourdine'], ['group_id', $reaction_on_member_or_post_group->id]])->first();
+        $reported_reaction = Reaction::where([['reaction_name->fr', 'Signalé'], ['group_id', $reaction_on_member_or_post_group->id]])->first();
+        // Requests
+        // Convert comma separated aliases to an array of aliases
+        $aliases = explode(',', $type_aliases);
+
+        if (count($aliases) == 0) {
+            return $this->handleError(__('validation.custom.type.required'));
+        }
+
+        // By the array of aliases, find array of IDs
+        $types_ids = Type::whereIn('alias', $aliases)->pluck('id')->toArray();
+
+        if (count($types_ids) == 0) {
+            return $this->handleError(__('notifications.find_type_404'));
+        }
+
+        // To show each post, check some constraints such as:
+        // -> The post belongs to an event;
+        // -> The user did not report the post or the post owner;
+        // -> The user has not muted the post or the post owner.
+        $current_user = User::find($user_id);
+
+        if (is_null($current_user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        // Get the IDs of the posts or users that are muted or reported by the current user
+        $with_sent_reactions_post_ids = SentReaction::where([['reaction_id', $muted_reaction->id], ['user_id', $current_user->id]])
+                                                    ->orWhere([['reaction_id', $reported_reaction->id], ['user_id', $current_user->id]])
+                                                    ->pluck('to_post_id')->toArray();
+        $with_sent_reactions_post_ids = $with_sent_reactions_post_ids != null ? $with_sent_reactions_post_ids : [0];
+        $with_sent_reactions_user_ids = SentReaction::where([['reaction_id', $muted_reaction->id], ['user_id', $current_user->id]])
+                                                    ->orWhere([['reaction_id', $reported_reaction->id], ['user_id', $current_user->id]])
+                                                    ->pluck('to_user_id')->toArray();
+        $with_sent_reactions_user_ids = $with_sent_reactions_user_ids != null ? $with_sent_reactions_user_ids : [0];
+        // THE MAIN QUERY STATEMENT
+        $posts = Post::whereNotNull('posts.event_id')->whereNotIn('posts.id', $with_sent_reactions_post_ids)
+                        ->whereNotIn('posts.user_id', $with_sent_reactions_user_ids)->whereIn('posts.type_id', $types_ids)
+                        ->where(function ($query) use ($operational_status, $boosted_status) {
+                            $query->where('posts.status_id', $operational_status->id)
+                                    ->orWhere('posts.status_id', $boosted_status->id);
+                        })
+                        ->where(function ($query) use ($everybody_visibility, $nobody_except_visibility) {
+                            $query->where('posts.visibility_id', $everybody_visibility->id)
+                                    ->orWhere('posts.visibility_id', $nobody_except_visibility->id);
+                        })->whereHas('restrictions', function ($query) use ($current_user, $nobody_except_visibility) {
+                            $query->where([
+                                ['restrictions.user_id', $current_user->id],
+                                ['restrictions.visibility_id', $nobody_except_visibility->id]
+                            ]);
+                        })->orderByDesc('posts.created_at')->paginate(10);
+
+        return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.find_all_posts_success'), $posts->lastPage());
+    }
+
+    /**
+     * Search a post
      *
      * @param  string $data
      * @param  int $visitor_id
      * @return \Illuminate\Http\Response
      */
-    public function search($data, $visitor_id = null)
+    public function search($data, $visitor_id)
     {
         // Groups
         $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
@@ -1139,38 +1356,67 @@ class PostController extends BaseController
         $service_type = Type::where([['type_name->fr', 'Service'], ['group_id', $post_type_group->id]])->first();
         $article_type = Type::where([['type_name->fr', 'Article'], ['group_id', $post_type_group->id]])->first();
         $search_history_type = Type::where([['type_name->fr', 'Historique des recherches'], ['group_id', $history_type_group->id]])->first();
-        // Search request
-        $posts = Post::where([['post_title', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
-                            $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
-                        }])->orWhere([['post_content', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
-                            $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
-                        }])->paginate(30);
-        $count_posts = Post::where([['post_title', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
-                            $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
-                        }])->orWhere([['post_content', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
-                            $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
-                        }])->count();
 
-        if (is_null($posts)) {
-            return $this->handleResponse([], __('miscellaneous.empty_list'));
-        }
-
-        /*
-            HISTORY AND/OR NOTIFICATION MANAGEMENT
-        */
-        if ($visitor_id != null) {
+        if ($visitor_id != 0) {
             $visitor = User::find($visitor_id);
 
-            if (!is_null($visitor)) {
-                History::create([
-                    'search_content' => $data,
-                    'type_id' => $search_history_type->id,
-                    'from_user_id' => $visitor->id,
-                ]);
+            if (is_null($visitor)) {
+                return $this->handleResponse([], __('notifications.find_visitor_404'));
             }
-        }
 
-        return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.find_all_posts_success'), $posts->lastPage(), $count_posts);
+            // Get array of community IDs of the current user
+            $communities_ids = Community::whereHas('users', function($query) use ($visitor) { $query->where('community_user.user_id', $visitor->id); })->pluck('communities.id')->toArray();
+            // Get array of event IDs of the current user
+            $events_ids = Event::whereHas('users', function($query) use ($visitor) { $query->where('event_user.user_id', $visitor->id); })->pluck('events.id')->toArray();
+            // THE MAIN QUERY STATEMENT
+            $posts = Post::whereIn('posts.community_id', $communities_ids)->orWhereIn('posts.event_id', $events_ids)
+                            ->where([['post_title', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
+                                $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
+                            }])->orWhere([['post_content', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
+                                $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
+                            }])->paginate(30);
+            $count_posts = Post::whereIn('posts.community_id', $communities_ids)->orWhereIn('posts.event_id', $events_ids)
+                                    ->where([['post_title', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
+                                        $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
+                                    }])->orWhere([['post_content', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
+                                        $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
+                                    }])->count();
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            History::create([
+                'search_content' => $data,
+                'type_id' => $search_history_type->id,
+                'from_user_id' => $visitor->id,
+            ]);
+
+            if (is_null($posts)) {
+                return $this->handleResponse([], __('miscellaneous.empty_list'));
+            }
+
+            return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.find_all_posts_success'), $posts->lastPage(), $count_posts);
+
+        } else {
+            $posts = Post::whereNull('posts.community_id')->whereNull('posts.event_id')
+                            ->where([['post_title', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
+                                $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
+                            }])->orWhere([['post_content', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
+                                $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
+                            }])->paginate(30);
+            $count_posts = Post::whereNull('posts.community_id')->whereNull('posts.event_id')
+                                    ->where([['post_title', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
+                                        $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
+                                    }])->orWhere([['post_content', 'LIKE', '%' . $data . '%'], function ($query) use ($product_type, $service_type, $article_type) {
+                                        $query->where('type_id', $product_type->id)->orWhere('type_id', $service_type->id)->orWhere('type_id', $article_type->id);
+                                    }])->count();
+
+            if (is_null($posts)) {
+                return $this->handleResponse([], __('miscellaneous.empty_list'));
+            }
+
+            return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.find_all_posts_success'), $posts->lastPage(), $count_posts);
+        }
     }
 
     /**
@@ -1192,6 +1438,7 @@ class PostController extends BaseController
         $i_like_post_reaction = Reaction::where([['reaction_name->fr', 'J’aime'], ['group_id', $reaction_on_post_group->id]])->first();
         $i_support_reaction = Reaction::where([['reaction_name->fr', 'Je soutiens'], ['group_id', $reaction_on_post_group->id]])->first();
         $interesting_reaction = Reaction::where([['reaction_name->fr', 'Intéressant'], ['group_id', $reaction_on_post_group->id]])->first();
+        $disappointing_reaction = Reaction::where([['reaction_name->fr', 'Décevant'], ['group_id', $reaction_on_post_group->id]])->first();
         $i_like_comment_reaction = Reaction::where([['reaction_name->fr', 'J’aime'], ['group_id', $reaction_on_comment_group->id]])->first();
         // Request
         $post = Post::find($post_id);
@@ -1205,10 +1452,7 @@ class PostController extends BaseController
             $likes = SentReaction::where([['to_post_id', $post->id], ['reaction_id', $i_like_comment_reaction->id]])->get();
             $count_all = SentReaction::where([['to_post_id', $post->id], ['reaction_id', $i_like_comment_reaction->id]])->count();
 
-            $object = new stdClass();
-            $object->i_like = ResourcesSentReaction::collection($likes);
-
-            return $this->handleResponse($object, __('notifications.find_all_sent_reactions_success'), null, $count_all);
+            return $this->handleResponse(ResourcesSentReaction::collection($likes), __('notifications.find_all_sent_reactions_success'), null, $count_all);
 
         // Otherwise, find all kinds of reactions
         } else {
@@ -1220,6 +1464,7 @@ class PostController extends BaseController
             $likes = SentReaction::where([['to_post_id', $post->id], ['reaction_id', $i_like_post_reaction->id]])->get();
             $supports = SentReaction::where([['to_post_id', $post->id], ['reaction_id', $i_support_reaction->id]])->get();
             $interests = SentReaction::where([['to_post_id', $post->id], ['reaction_id', $interesting_reaction->id]])->get();
+            $disappoints = SentReaction::where([['to_post_id', $post->id], ['reaction_id', $disappointing_reaction->id]])->get();
 
             $object = new stdClass();
             $object->all_reactions = ResourcesSentReaction::collection($all_reactions);
@@ -1227,6 +1472,7 @@ class PostController extends BaseController
             $object->i_like = ResourcesSentReaction::collection($likes);
             $object->i_support = ResourcesSentReaction::collection($supports);
             $object->interesting = ResourcesSentReaction::collection($interests);
+            $object->disappointing = ResourcesSentReaction::collection($disappoints);
 
             return $this->handleResponse($object, __('notifications.find_all_sent_reactions_success'), null, $count_all);
         }
@@ -1243,7 +1489,7 @@ class PostController extends BaseController
         // Groups
         $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
         // Types
-        $consultation_history_type = !empty($history_type_group) ? Type::where([['type_name->fr', 'Historique des consultations'], ['group_id', $history_type_group->id]])->first() : Type::where('type_name->fr', 'Historique des consultations')->first();
+        $consultation_history_type = Type::where([['type_name->fr', 'Historique des consultations'], ['group_id', $history_type_group->id]])->first();
         // Request
         $post = Post::find($post_id);
 
@@ -1252,7 +1498,7 @@ class PostController extends BaseController
         }
 
         // Members
-        $members = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->paginate(50);
+        $members = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->paginate(10);
         $members_count = History::where([['type_id',  $consultation_history_type->id], ['post_id', $post->id]])->count();
         // Non-identified visitors
         $visitors = Session::whereHas('posts', function($query) { $query->where('post_session.is_visitor', 1); })->get();
