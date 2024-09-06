@@ -2864,11 +2864,19 @@ class UserController extends BaseController
             return $this->handleError(__('notifications.find_user_404'));
         }
 
+        if (count($user->fields) == 1) {
+            return $this->handleError(__('notifications.delete_user_fields_failed'));
+        }
+
         if (isset($request->field_id)) {
             $user->fields()->detach([$request->field_id]);
         }
 
         if (isset($request->fields_ids)) {
+            if ((count($request->fields_ids) - count($user->fields)) < 1) {
+                return $this->handleError(__('notifications.delete_user_fields_failed'));
+            }
+
             $user->fields()->detach($request->fields_ids);
         }
 

@@ -156,6 +156,7 @@ return [
     'confirm_password_error' => 'Please confirm your password',
     'confirm_new_password' => 'Please confirm the new password',
     'delete_user_success' => 'User deleted',
+    'delete_user_fields_failed' => 'You must have at least one field',
     'login_user_success' => 'You are connected',
     'subscribe_user_success' => 'Subscription sent',
     'subscribe_user_accepted' => 'Subscription accepted',

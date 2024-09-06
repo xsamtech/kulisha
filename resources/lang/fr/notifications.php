@@ -156,6 +156,7 @@ return [
     'confirm_password_error' => 'Veuillez confirmer votre mot de passe',
     'confirm_new_password' => 'Veuillez confirmer le nouveau mot de passe',
     'delete_user_success' => 'Utilisateur supprimé',
+    'delete_user_fields_failed' => 'Vous devez avoir au moins un secteur',
     'login_user_success' => 'Vous êtes connecté(e)',
     'subscribe_user_success' => 'Abonnement envoyé',
     'subscribe_user_accepted' => 'Abonnement accepté',
