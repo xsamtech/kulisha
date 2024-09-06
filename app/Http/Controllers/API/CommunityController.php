@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\Community as ResourcesCommunity;
+use App\Http\Resources\User as ResourcesUser;
 
 /**
  * @author Xanders
@@ -399,6 +400,26 @@ class CommunityController extends BaseController
         $count_communities = Community::where('user_id', $user->id)->count();
 
         return $this->handleResponse(ResourcesCommunity::collection($communities), __('notifications.find_all_communities_success'), $communities->lastPage(), $count_communities);
+    }
+
+    /**
+     * Find all community admins.
+     *
+     * @param  int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function findAdmins($id)
+    {
+        $community = Community::find($id);
+
+        if (is_null($community)) {
+            return $this->handleError(__('notifications.find_community_404'));
+        }
+
+        $users = $community->users()->wherePivot('is_admin', 1)->paginate(30);
+        $count_users = $community->users()->wherePivot('is_admin', 1)->count();
+
+        return $this->handleResponse(ResourcesUser::collection($users), __('notifications.find_all_users_success'), $users->lastPage(), $count_users);
     }
 
     /**

@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\Event as ResourcesEvent;
+use App\Http\Resources\User as ResourcesUser;
 
 /**
  * @author Xanders
@@ -517,6 +518,26 @@ class EventController extends BaseController
         $count_events = Event::where('user_id', $user->id)->count();
 
         return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_events_success'), $events->lastPage(), $count_events);
+    }
+
+    /**
+     * Find all event speakers.
+     *
+     * @param  int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function findSpeakers($id)
+    {
+        $event = Event::find($id);
+
+        if (is_null($event)) {
+            return $this->handleError(__('notifications.find_event_404'));
+        }
+
+        $users = $event->users()->wherePivot('is_speaker', 1)->paginate(30);
+        $count_users = $event->users()->wherePivot('is_speaker', 1)->count();
+
+        return $this->handleResponse(ResourcesUser::collection($users), __('notifications.find_all_users_success'), $users->lastPage(), $count_users);
     }
 
     /**

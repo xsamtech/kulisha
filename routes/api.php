@@ -153,6 +153,7 @@ Route::group(['middleware' => ['api', 'auth:sanctum', 'localization']], function
     Route::get('user/find_by_visibility/{alias}', 'App\Http\Controllers\API\UserController@findByVisibility')->name('user.api.find_by_visibility');
     Route::get('user/connections_suggestion/{user_id}', 'App\Http\Controllers\API\UserController@connectionsSuggestion')->name('user.api.connections_suggestion');
     Route::get('user/member_groups/{entity}/{user_id}/{status_id}/{reaction_id}', 'App\Http\Controllers\API\UserController@memberGroups')->name('user.api.member_groups');
+    Route::get('user/is_main_member/{entity}/{entity_id}/{user_id}', 'App\Http\Controllers\API\UserController@isMainMember')->name('user.api.is_main_member');
     Route::put('user/add_connection/{user_id}/{addressee_id}', 'App\Http\Controllers\API\UserController@addConnection')->name('user.api.add_connection');
     Route::put('user/invitation_refusal/{user_id}/{addressee_id}', 'App\Http\Controllers\API\UserController@invitationRefusal')->name('user.api.invitation_refusal');
     Route::post('user/send_external_invitation/{user_id}', 'App\Http\Controllers\API\UserController@sendExternalInvitation')->name('user.api.send_external_invitation');
@@ -202,6 +203,7 @@ Route::group(['middleware' => ['api', 'auth:sanctum', 'localization']], function
     Route::get('event/find_by_type/{locale}/{type_name}', 'App\Http\Controllers\API\EventController@findByType')->name('event.api.find_by_type');
     Route::get('event/find_by_status/{locale}/{status_name}', 'App\Http\Controllers\API\EventController@findByStatus')->name('event.api.find_by_status');
     Route::get('event/find_by_user/{user_id}', 'App\Http\Controllers\API\EventController@findByUser')->name('event.api.find_by_user');
+    Route::get('event/find_speakers/{event_id}', 'App\Http\Controllers\API\EventController@findSpeakers')->name('event.api.find_speakers');
     Route::post('event/filter_for_user', 'App\Http\Controllers\API\EventController@filterForUser')->name('event.api.filter_for_user');
     Route::post('event/filter_for_everybody', 'App\Http\Controllers\API\EventController@filterForEverybody')->name('event.api.filter_for_everybody');
     Route::put('event/add_fields/{event_id}', 'App\Http\Controllers\API\EventController@addFields')->name('event.api.add_fields');
@@ -213,6 +215,7 @@ Route::group(['middleware' => ['api', 'auth:sanctum', 'localization']], function
     Route::get('community/find_by_type/{locale}/{type_name}', 'App\Http\Controllers\API\CommunityController@findByType')->name('community.api.find_by_type');
     Route::get('community/find_by_status/{locale}/{status_name}', 'App\Http\Controllers\API\CommunityController@findByStatus')->name('community.api.find_by_status');
     Route::get('community/find_by_user/{user_id}', 'App\Http\Controllers\API\CommunityController@findByUser')->name('community.api.find_by_user');
+    Route::get('community/find_admins/{community_id}', 'App\Http\Controllers\API\CommunityController@findAdmins')->name('community.api.find_admins');
     Route::post('community/filter_for_user', 'App\Http\Controllers\API\CommunityController@filterForUser')->name('community.api.filter_for_user');
     Route::put('community/update_status/{community_id}/{status_id}', 'App\Http\Controllers\API\CommunityController@updateStatus')->name('community.api.update_status');
     Route::put('community/update_cover/{community_id}', 'App\Http\Controllers\API\CommunityController@updateCover')->name('community.api.update_cover');

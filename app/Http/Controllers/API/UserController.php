@@ -1280,7 +1280,7 @@ class UserController extends BaseController
                 $events = $user->events()->wherePivot('status_id', $status->id)->orderByDesc('created_at')->paginate(30);
                 $count_events = $user->events()->wherePivot('status_id', $status->id)->count();
 
-                return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_communities_success'), $events->lastPage(), $count_events);
+                return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_events_success'), $events->lastPage(), $count_events);
             }
 
         } else {
@@ -1301,7 +1301,62 @@ class UserController extends BaseController
                 $events = $user->events()->wherePivot([['status_id', $status->id], ['reaction_id', $reaction->id]])->orderByDesc('created_at')->paginate(30);
                 $count_events = $user->events()->wherePivot([['status_id', $status->id], ['reaction_id', $reaction->id]])->count();
 
-                return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_communities_success'), $events->lastPage(), $count_events);
+                return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_events_success'), $events->lastPage(), $count_events);
+            }
+        }
+    }
+
+    /**
+     * Check if user is community admin or event speaker.
+     *
+     * @param  string $entity
+     * @param  int $entity_id
+     * @param  int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function isMainMember($entity, $entity_id, $id)
+    {
+        $user = User::find($id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        if ($entity == 'community') {
+            $community = Community::find($entity_id);
+
+            if (is_null($community)) {
+                return $this->handleError(__('notifications.find_community_404'));
+            }
+
+            $users = $community->users()->wherePivot('is_admin', 1)->get();
+            // Check user presence
+            $isUserPresent = $users->contains('id', $user->id);
+
+            if ($isUserPresent) {
+                return $this->handleResponse(true, __('notifications.find_user_success'));
+
+            } else {
+                return $this->handleResponse(false, __('notifications.find_user_404'));
+            }
+        }
+
+        if ($entity == 'event') {
+            $event = Event::find($entity_id);
+
+            if (is_null($event)) {
+                return $this->handleError(__('notifications.find_event_404'));
+            }
+
+            $users = $event->users()->wherePivot('is_speaker', 1)->get();
+            // Check user presence
+            $isUserPresent = $users->contains('id', $user->id);
+
+            if ($isUserPresent) {
+                return $this->handleResponse(true, __('notifications.find_user_success'));
+
+            } else {
+                return $this->handleResponse(false, __('notifications.find_user_404'));
             }
         }
     }
