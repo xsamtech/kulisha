@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\API;
 
 use stdClass;
+use App\Mail\OTPCode;
 use App\Models\Community;
 use App\Models\Event;
+use App\Models\Field;
 use App\Models\File;
 use App\Models\Group;
 use App\Models\History;
@@ -20,21 +22,19 @@ use App\Models\Subscription;
 use App\Models\Type;
 use App\Models\User;
 use App\Models\Visibility;
-use Nette\Utils\Random;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Nette\Utils\Random;
 use App\Http\Resources\Community as ResourcesCommunity;
 use App\Http\Resources\Event as ResourcesEvent;
 use App\Http\Resources\PasswordResetToken as ResourcesPasswordReset;
 use App\Http\Resources\Post as ResourcesPost;
 use App\Http\Resources\Subscription as ResourcesSubscription;
 use App\Http\Resources\User as ResourcesUser;
-use App\Mail\OTPCode;
-use App\Models\Field;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Mail;
 
 /**
  * @author Xanders
