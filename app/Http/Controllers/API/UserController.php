@@ -1248,13 +1248,13 @@ class UserController extends BaseController
      * Find all user communities / events.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  string $group
+     * @param  string $entity
      * @param  int $id
      * @param  int $status_id
      * @param  int $reaction_id
      * @return \Illuminate\Http\Response
      */
-    public function memberGroups($group, $id, $status_id, $reaction_id)
+    public function memberGroups($entity, $id, $status_id, $reaction_id)
     {
         $user = User::find($id);
 
@@ -1269,14 +1269,14 @@ class UserController extends BaseController
         }
 
         if ($reaction_id == 0) {
-            if ($group == 'community') {
+            if ($entity == 'community') {
                 $communities = $user->communities()->wherePivot('status_id', $status->id)->orderByDesc('created_at')->paginate(30);
                 $count_communities = $user->communities()->wherePivot('status_id', $status->id)->count();
 
                 return $this->handleResponse(ResourcesCommunity::collection($communities), __('notifications.find_all_communities_success'), $communities->lastPage(), $count_communities);
             }
 
-            if ($group == 'event') {
+            if ($entity == 'event') {
                 $events = $user->events()->wherePivot('status_id', $status->id)->orderByDesc('created_at')->paginate(30);
                 $count_events = $user->events()->wherePivot('status_id', $status->id)->count();
 
@@ -1290,14 +1290,14 @@ class UserController extends BaseController
                 return $this->handleError(__('notifications.find_reaction_404'));
             }
 
-            if ($group == 'community') {
+            if ($entity == 'community') {
                 $communities = $user->communities()->wherePivot([['status_id', $status->id], ['reaction_id', $reaction->id]])->orderByDesc('created_at')->paginate(30);
                 $count_communities = $user->communities()->wherePivot([['status_id', $status->id], ['reaction_id', $reaction->id]])->count();
 
                 return $this->handleResponse(ResourcesCommunity::collection($communities), __('notifications.find_all_communities_success'), $communities->lastPage(), $count_communities);
             }
 
-            if ($group == 'event') {
+            if ($entity == 'event') {
                 $events = $user->events()->wherePivot([['status_id', $status->id], ['reaction_id', $reaction->id]])->orderByDesc('created_at')->paginate(30);
                 $count_events = $user->events()->wherePivot([['status_id', $status->id], ['reaction_id', $reaction->id]])->count();
 
