@@ -3,8 +3,15 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\BlockedUser;
+use App\Models\Group;
+use App\Models\ReactionReason;
+use App\Models\Status;
+use App\Models\Type;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\BlockedUser as ResourcesBlockedUser;
+use Carbon\Carbon;
 
 /**
  * @author Xanders
@@ -39,6 +46,16 @@ class BlockedUserController extends BaseController
             'reaction_reason_id' => $request->reaction_reason_id,
             'status_id' => $request->status_id
         ];
+
+        $validator = Validator::make($inputs, [
+            'user_id' => ['required'],
+            'reaction_reason_id' => ['required'],
+            'status_id' => ['required']
+        ]);
+
+        if ($validator->fails()) {
+            return $this->handleError($validator->errors());       
+        }
 
         $blocked_user = BlockedUser::create($inputs);
 
@@ -126,6 +143,39 @@ class BlockedUserController extends BaseController
      */
     public function unlockUser($user_id)
     {
-        // TODO 
+        // Groups
+        $member_status_group = Group::where('group_name->fr', 'Etat du membre')->first();
+        $blocked_member_status_group = Group::where('group_name->fr', 'Etat du membre bloqué')->first();
+        $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
+        $notification_type_group = Group::where('group_name->fr', 'Type de notification')->first();
+        // Statuses
+        $activated_member_status = Status::where([['status_name->fr', 'Activé'], ['group_id', $member_status_group->id]])->first();
+        $in_progress_blocking_status = Status::where([['status_name->fr', 'Blocage en cours'], ['group_id', $blocked_member_status_group->id]])->first();
+        $finished_blocking_status = Status::where([['status_name->fr', 'Blocage terminé'], ['group_id', $blocked_member_status_group->id]])->first();
+        $unread_notification_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first();
+        // Types
+        $imminent_account_blocking_type = Type::where([['type_name->fr', 'Blocage de compte imminent'], ['group_id', $notification_type_group->id]])->first();
+        $blocked_account_type = Type::where([['type_name->fr', 'Compte bloqué'], ['group_id', $notification_type_group->id]])->first();
+        $reaction_type = Type::where([['type_name->fr', 'Réaction'], ['group_id', $notification_type_group->id]])->first();
+        $connection_suggestion_type = Type::where([['type_name->fr', 'Suggestion de connexion'], ['group_id', $notification_type_group->id]])->first();
+        // Requests
+        $blocked_user = BlockedUser::where([['user_id', $user_id], ['status_id', $in_progress_blocking_status->id]])->first();
+
+        if (is_null($blocked_user)) {
+            return $this->handleError(__('notifications.find_blocked_user_404'));
+        }
+
+        $reaction_reason = ReactionReason::find($blocked_user->reaction_reason_id);
+
+        if (is_null($reaction_reason)) {
+            return $this->handleError(__('notifications.find_reaction_reason_404'));
+        }
+
+        // Create two date instances
+        $current_date = date('Y-m-d');
+        $blocking_date = $blocked_user->created_at->format('Y-m-d');
+        $current_date_instance = Carbon::parse($current_date);
+        $blocking_date_instance = Carbon::parse($blocking_date);
+
     }
 }
