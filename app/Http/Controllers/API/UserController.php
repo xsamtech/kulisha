@@ -32,6 +32,7 @@ use App\Http\Resources\Post as ResourcesPost;
 use App\Http\Resources\Subscription as ResourcesSubscription;
 use App\Http\Resources\User as ResourcesUser;
 use App\Mail\OTPCode;
+use App\Models\Field;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 
@@ -62,6 +63,10 @@ class UserController extends BaseController
      */
     public function store(Request $request)
     {
+        // Role
+        $member_role = Role::where('role_name->fr', 'Membre')->first();
+        // Field
+        $agriculture_field = Field::where('field_name->fr', 'Agriculture')->first();
         // Groups
         $member_status_group = Group::where('group_name->fr', 'Etat du membre')->first();
         $notification_status_group = Group::where('group_name->fr', 'Etat de la notification')->first();
@@ -97,8 +102,8 @@ class UserController extends BaseController
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => !isset($request->password) ? null : Hash::make($request->password),
-            'prefered_theme' => $request->prefered_theme,
-            'prefered_language' => $request->prefered_language,
+            'prefered_theme' => !isset($request->prefered_theme) ? 'Light' : $request->prefered_theme,
+            'prefered_language' => !isset($request->prefered_language) ? app()->getLocale() : $request->prefered_language,
             'status_id' => is_null($activated_status) ? (isset($request->status_id) ? $request->status_id : null) : $activated_status->id,
             'type_id' => is_null($ordinary_member_type) ? (isset($request->type_id) ? $request->type_id : null) : $ordinary_member_type->id,
             'visibility_id' => isset($request->visibility_id) ? $request->visibility_id : (!is_null($everybody_on_kulisha_visibility) ? $everybody_on_kulisha_visibility->id : null)
@@ -281,10 +286,16 @@ class UserController extends BaseController
 
         if ($request->role_id != null) {
             $user->roles()->attach([$request->role_id]);
+
+        } else {
+            $user->roles()->attach([$member_role->id]);
         }
 
         if ($request->fields_ids != null) {
             $user->fields()->sync($request->fields_ids);
+
+        } else {
+            $user->fields()->sync([$agriculture_field->id]);
         }
 
         if ($request->image_64 != null) {
@@ -461,6 +472,7 @@ class UserController extends BaseController
         $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
         // Get inputs
         $inputs = [
+            'id' => $request->id,
             'firstname' => $request->firstname,
             'lastname' => $request->lastname,
             'surname' => $request->surname,
@@ -1117,7 +1129,7 @@ class UserController extends BaseController
     }
 
     /**
-     * Search all users having a specific role
+     * Search all users Having a specific role
      *
      * @param  string $locale
      * @param  string $role_name
@@ -1151,12 +1163,18 @@ class UserController extends BaseController
     /**
      * Search all users having specific status.
      *
-     * @param  string $status_id
+     * @param  string $alias
      * @return \Illuminate\Http\Response
      */
-    public function findByStatus($status_id)
+    public function findByStatus($alias)
     {
-        $users = User::where('status_id', $status_id)->orderByDesc('created_at')->get();
+        $status = Status::where('alias', $alias)->first();
+
+        if (is_null($status)) {
+            return $this->handleError(__('notifications.find_status_404'));
+        }
+
+        $users = User::where('status_id', $status->id)->orderByDesc('created_at')->get();
 
         return $this->handleResponse(ResourcesUser::collection($users), __('notifications.find_all_users_success'));
     }
@@ -1164,12 +1182,18 @@ class UserController extends BaseController
     /**
      * Search all users having specific visibility.
      *
-     * @param  string $visibility_id
+     * @param  string $alias
      * @return \Illuminate\Http\Response
      */
-    public function findByVisibility($visibility_id)
+    public function findByVisibility($alias)
     {
-        $users = User::where('visibility_id', $visibility_id)->orderByDesc('created_at')->get();
+        $visibility = Visibility::where('alias', $alias)->first();
+
+        if (is_null($visibility)) {
+            return $this->handleError(__('notifications.find_visibility_404'));
+        }
+
+        $users = User::where('visibility_id', $visibility->id)->orderByDesc('created_at')->get();
 
         return $this->handleResponse(ResourcesUser::collection($users), __('notifications.find_all_users_success'));
     }
@@ -1218,6 +1242,68 @@ class UserController extends BaseController
                         })->orderByDesc('users.created_at')->get();
 
         return $this->handleResponse(ResourcesUser::collection($users), __('notifications.find_all_users_success'));
+    }
+
+    /**
+     * Find all user communities / events.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  string $group
+     * @param  int $id
+     * @param  int $status_id
+     * @param  int $reaction_id
+     * @return \Illuminate\Http\Response
+     */
+    public function memberGroups($group, $id, $status_id, $reaction_id)
+    {
+        $user = User::find($id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        $status = Status::find($status_id);
+
+        if (is_null($status)) {
+            return $this->handleError(__('notifications.find_status_404'));
+        }
+
+        if ($reaction_id == 0) {
+            if ($group == 'community') {
+                $communities = $user->communities()->wherePivot('status_id', $status->id)->orderByDesc('created_at')->paginate(30);
+                $count_communities = $user->communities()->wherePivot('status_id', $status->id)->count();
+
+                return $this->handleResponse(ResourcesCommunity::collection($communities), __('notifications.find_all_communities_success'), $communities->lastPage(), $count_communities);
+            }
+
+            if ($group == 'event') {
+                $events = $user->events()->wherePivot('status_id', $status->id)->orderByDesc('created_at')->paginate(30);
+                $count_events = $user->events()->wherePivot('status_id', $status->id)->count();
+
+                return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_communities_success'), $events->lastPage(), $count_events);
+            }
+
+        } else {
+            $reaction = Reaction::find($reaction_id);
+
+            if (is_null($reaction)) {
+                return $this->handleError(__('notifications.find_reaction_404'));
+            }
+
+            if ($group == 'community') {
+                $communities = $user->communities()->wherePivot([['status_id', $status->id], ['reaction_id', $reaction->id]])->orderByDesc('created_at')->paginate(30);
+                $count_communities = $user->communities()->wherePivot([['status_id', $status->id], ['reaction_id', $reaction->id]])->count();
+
+                return $this->handleResponse(ResourcesCommunity::collection($communities), __('notifications.find_all_communities_success'), $communities->lastPage(), $count_communities);
+            }
+
+            if ($group == 'event') {
+                $events = $user->events()->wherePivot([['status_id', $status->id], ['reaction_id', $reaction->id]])->orderByDesc('created_at')->paginate(30);
+                $count_events = $user->events()->wherePivot([['status_id', $status->id], ['reaction_id', $reaction->id]])->count();
+
+                return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_communities_success'), $events->lastPage(), $count_events);
+            }
+        }
     }
 
     /**
@@ -1273,7 +1359,7 @@ class UserController extends BaseController
                     Session::create([
                         'id' => Str::random(255),
                         'ip_address' =>  $request->header('X-ip-address'),
-                        'user_agent' => $request->header('X-user-agent'),
+                        'user_agent' => $request->hasHeader('X-user-agent') ? $request->header('X-user-agent') : null,
                         'user_id' => $user->id
                     ]);
                 }
@@ -1285,7 +1371,7 @@ class UserController extends BaseController
                 if (is_null($session)) {
                     Session::create([
                         'id' => Str::random(255),
-                        'ip_address' =>  $request->header('X-ip-address'),
+                        'ip_address' => $request->hasHeader('X-ip-address') ? $request->header('X-ip-address') : null,
                         'user_agent' => $request->header('X-user-agent'),
                         'user_id' => $user->id
                     ]);
@@ -1325,7 +1411,7 @@ class UserController extends BaseController
                     Session::create([
                         'id' => Str::random(255),
                         'ip_address' =>  $request->header('X-ip-address'),
-                        'user_agent' => $request->header('X-user-agent'),
+                        'user_agent' => $request->hasHeader('X-user-agent') ? $request->header('X-user-agent') : null,
                         'user_id' => $user->id
                     ]);
                 }
@@ -1338,7 +1424,7 @@ class UserController extends BaseController
                     Session::create([
                         'id' => Str::random(255),
                         'ip_address' =>  $request->header('X-ip-address'),
-                        'user_agent' => $request->header('X-user-agent'),
+                        'user_agent' => $request->hasHeader('X-ip-address') ? $request->header('X-user-agent') : null,
                         'user_id' => $user->id
                     ]);
                 }

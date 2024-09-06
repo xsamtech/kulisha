@@ -59,7 +59,7 @@ Route::group(['middleware' => ['api', 'localization']], function () {
     Route::resource('category', 'App\Http\Controllers\API\CategoryController')->except(['index', 'store', 'show', 'update', 'destroy']);
     Route::resource('visibility', 'App\Http\Controllers\API\VisibilityController')->except(['index', 'store', 'show', 'update', 'destroy']);
     Route::resource('field', 'App\Http\Controllers\API\FieldController')->except(['index', 'store', 'show', 'update', 'destroy']);
-    Route::resource('coverage_area', 'App\Http\Controllers\API\CoverageAreaController')->except(['index', 'store', 'show', 'update', 'destroy']);
+    Route::resource('coverage_area', 'App\Http\Controllers\API\CoverageAreaController')->except(['store', 'show', 'update', 'destroy']);
     Route::resource('user', 'App\Http\Controllers\API\UserController')->except(['index', 'store', 'show', 'update', 'destroy']);
     Route::resource('password_reset', 'App\Http\Controllers\API\PasswordResetTokenController')->except(['index', 'store', 'show', 'update', 'destroy']);
     Route::resource('payment', 'App\Http\Controllers\API\PaymentController')->except(['index', 'store', 'show', 'update', 'destroy']);
@@ -149,9 +149,10 @@ Route::group(['middleware' => ['api', 'auth:sanctum', 'localization']], function
     // User
     Route::get('user/find_by_role/{locale}/{role_name}', 'App\Http\Controllers\API\UserController@findByRole')->name('user.api.find_by_role');
     Route::get('user/find_by_not_role/{locale}/{role_name}', 'App\Http\Controllers\API\UserController@findByNotRole')->name('user.api.find_by_not_role');
-    Route::get('user/find_by_status/{status_id}', 'App\Http\Controllers\API\UserController@findByStatus')->name('user.api.find_by_status');
-    Route::get('user/find_by_visibility/{visibility_id}', 'App\Http\Controllers\API\UserController@findByVisibility')->name('user.api.find_by_visibility');
+    Route::get('user/find_by_status/{alias}', 'App\Http\Controllers\API\UserController@findByStatus')->name('user.api.find_by_status');
+    Route::get('user/find_by_visibility/{alias}', 'App\Http\Controllers\API\UserController@findByVisibility')->name('user.api.find_by_visibility');
     Route::get('user/connections_suggestion/{user_id}', 'App\Http\Controllers\API\UserController@connectionsSuggestion')->name('user.api.connections_suggestion');
+    Route::get('user/member_groups/{entity}/{user_id}/{status_id}/{reaction_id}', 'App\Http\Controllers\API\UserController@memberGroups')->name('user.api.member_groups');
     Route::put('user/add_connection/{user_id}/{addressee_id}', 'App\Http\Controllers\API\UserController@addConnection')->name('user.api.add_connection');
     Route::put('user/invitation_refusal/{user_id}/{addressee_id}', 'App\Http\Controllers\API\UserController@invitationRefusal')->name('user.api.invitation_refusal');
     Route::post('user/send_external_invitation/{user_id}', 'App\Http\Controllers\API\UserController@sendExternalInvitation')->name('user.api.send_external_invitation');
