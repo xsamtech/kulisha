@@ -47,6 +47,8 @@ return [
     'transaction_waiting' => 'Veuillez valider le message de votre opérateur sur votre téléphone. Ensuite appuyez sur le bouton ci-dessous.',
     'transaction_done' => 'Votre opération est terminée !',
     'transaction_failed' => 'L’envoi de votre paiement a échoué',
+    'transaction_request_failed' => 'Une erreur lors du traitement de votre requête',
+    'transaction_push_failed' => 'Impossible de traiter la demande, veuillez réessayer echec envoie du push',
     'transaction_type_error' => 'Veuillez choisir le type de transaction',
     'new_partner_message' => 'Vous pouvez maintenant vous connecter en tant que partenaire avec votre n° de téléphone. Mot de passe temportaire :',
     'reaction_sent' => 'Réaction envoyée',

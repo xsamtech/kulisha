@@ -47,6 +47,8 @@ return [
     'transaction_waiting' => 'Please confirm the message from your operator on your phone. Then press the button below.',
     'transaction_done' => 'Your transaction is complete!',
     'transaction_failed' => 'Failed to send your payment.',
+    'transaction_request_failed' => 'An error occurred while processing your request.',
+    'transaction_push_failed' => 'Unable to process request, please try again push sending failed',
     'transaction_type_error' => 'Please select transaction type',
     'new_partner_message' => 'You can now log in as a partner with your phone number. Temporary password:',
     'reaction_sent' => 'Reaction sent',
