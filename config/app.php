@@ -200,6 +200,7 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\FortifyServiceProvider::class,
         App\Providers\JetstreamServiceProvider::class,
+        Aneeskhan47\PaginationMerge\PaginationMergeServiceProvider::class, //--- Pagination Merge
     ])->toArray(),
 
     /*
@@ -215,6 +216,7 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
+        'PaginationMerge' => Aneeskhan47\PaginationMerge\Facades\PaginationMerge::class, //--- Pagination Merge
     ])->toArray(),
 
 ];

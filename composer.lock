@@ -4,8 +4,77 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d50a0e464d688ee47007ebe149050960",
+    "content-hash": "347c35fa1442b2408508ffe76ec36ac1",
     "packages": [
+        {
+            "name": "aneeskhan47/laravel-pagination-merge",
+            "version": "v1.0.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/aneeskhan47/laravel-pagination-merge.git",
+                "reference": "4eccdc9c8ecdfb460e39243cab7b20a0dbdf68df"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/aneeskhan47/laravel-pagination-merge/zipball/4eccdc9c8ecdfb460e39243cab7b20a0dbdf68df",
+                "reference": "4eccdc9c8ecdfb460e39243cab7b20a0dbdf68df",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/pagination": "~5|^6|^7|^8|^9|^10|^11.0",
+                "illuminate/support": "~5|^6|^7|^8|^9|^10|^11.0",
+                "php": "^7.2|^8.0|^8.1|^8.2"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.8",
+                "orchestra/testbench": "^3.0|^4.0|^5.0|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
+                "phpunit/phpunit": "^8.5|^9.0|^10.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Aneeskhan47\\PaginationMerge\\PaginationMergeServiceProvider"
+                    ],
+                    "aliases": {
+                        "PaginationMerge": "Aneeskhan47\\PaginationMerge\\Facades\\PaginationMerge"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Aneeskhan47\\PaginationMerge\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Anees Khan",
+                    "email": "kingkhan2388@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Merge multiple laravel paginate instances",
+            "homepage": "https://github.com/aneeskhan47/laravel-pagination-merge",
+            "keywords": [
+                "aneeskhan47",
+                "laravel-pagination-merge"
+            ],
+            "support": {
+                "issues": "https://github.com/aneeskhan47/laravel-pagination-merge/issues",
+                "source": "https://github.com/aneeskhan47/laravel-pagination-merge/tree/v1.0.6"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.com/paypalme/aneeskhan47",
+                    "type": "custom"
+                }
+            ],
+            "time": "2024-03-23T10:28:33+00:00"
+        },
         {
             "name": "bacon/bacon-qr-code",
             "version": "v3.0.0",

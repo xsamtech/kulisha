@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "aneeskhan47/laravel-pagination-merge": "^1.0",
         "guzzlehttp/guzzle": "^7.2",
         "ipinfo/ipinfolaravel": "^2.6",
         "laravel/framework": "^10.10",
