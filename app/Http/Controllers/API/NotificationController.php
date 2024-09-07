@@ -146,10 +146,10 @@ class NotificationController extends BaseController
      * Select all user notifications.
      *
      * @param  int $user_id
-     * @param  null|string $status_alias
+     * @param  string $status_alias
      * @return \Illuminate\Http\Response
      */
-    public function selectByUser($user_id, $status_alias = null)
+    public function selectByUser($user_id, $status_alias)
     {
         // Group
         $reaction_on_post_type_group = Group::where('group_name->fr', 'Réaction sur type de notification')->first();
@@ -167,8 +167,13 @@ class NotificationController extends BaseController
                                                                     ->pluck('to_notification_type_id')->toArray();
         $with_sent_reactions_notification_type_ids = $with_sent_reactions_notification_type_ids != null ? $with_sent_reactions_notification_type_ids : [0];
 
-        if ($status_alias != null) {
+        if ($status_alias != '0') {
             $status = Status::where('alias', $status_alias)->first();
+
+            if (is_null($status)) {
+                return $this->handleError(__('notifications.find_status_404'));
+            }
+
             $notifications = Notification::whereNotIn('type_id', $with_sent_reactions_notification_type_ids)
                                             ->where([['status_id', $status->id], ['to_user_id', $user->id]])
                                             ->orderByDesc('created_at')->orderByDesc('created_at')->paginate(20);

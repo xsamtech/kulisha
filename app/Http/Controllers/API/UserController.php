@@ -1369,6 +1369,10 @@ class UserController extends BaseController
      */
     public function login(Request $request)
     {
+        // Group
+        $member_status_group = Group::where('group_name->fr', 'Etat du membre')->first();
+        // Status
+        $blocked_member_status = !empty($member_status_group) ? Status::where([['status_name->fr', 'Bloqué'], ['group_id', $member_status_group->id]])->first() : Status::where('status_name->fr', 'Bloqué')->first();
         // Get inputs
         $inputs = [
             'username' => $request->username,
@@ -1400,10 +1404,23 @@ class UserController extends BaseController
                 return $this->handleError(new ResourcesPasswordReset($password_reset), __('notifications.unverified_token'), 400);
             }
 
+            if (!empty($blocked_member_status)) {
+                if ($user->status_id == $blocked_member_status->id) {
+                    $blocked_user_controller = new BlockedUserController();
+                    // Try to unlock the blocked user
+                    $unlock_user = json_decode($blocked_user_controller->unlockUser($user->id));
+
+                    if ($unlock_user->success == false) {
+                        return $this->handleError(new ResourcesUser($user), __('notifications.find_member_blocked'), 400);
+                    }
+                }
+            }
+
             $token = $user->createToken('auth_token')->plainTextToken;
 
             $user->update([
                 'api_token' => $token,
+                'last_login_at' => now(),
                 'updated_at' => now(),
             ]);
 
@@ -1452,10 +1469,23 @@ class UserController extends BaseController
                 return $this->handleError(new ResourcesPasswordReset($password_reset), __('notifications.unverified_token'), 400);
             }
 
+            if (!empty($blocked_member_status)) {
+                if ($user->status_id == $blocked_member_status->id) {
+                    $blocked_user_controller = new BlockedUserController();
+                    // Try to unlock the blocked user
+                    $unlock_user = json_decode($blocked_user_controller->unlockUser($user->id));
+
+                    if ($unlock_user->success == false) {
+                        return $this->handleError(new ResourcesUser($user), __('notifications.find_member_blocked'), 400);
+                    }
+                }
+            }
+
             $token = $user->createToken('auth_token')->plainTextToken;
 
             $user->update([
                 'api_token' => $token,
+                'last_login_at' => now(),
                 'updated_at' => now(),
             ]);
 

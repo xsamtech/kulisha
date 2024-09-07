@@ -52,6 +52,23 @@ class ReactionController extends BaseController
                 'tr' => $request->reaction_name_tr,
                 'cs' => $request->reaction_name_cs
             ],
+            'reaction_description' => [
+                'af' => $request->reaction_description_af,
+                'de' => $request->reaction_description_de,
+                'ar' => $request->reaction_description_ar,
+                'zh' => $request->reaction_description_zh,
+                'en' => $request->reaction_description_en,
+                'es' => $request->reaction_description_es,
+                'fr' => $request->reaction_description_fr,
+                'it' => $request->reaction_description_it,
+                'ja' => $request->reaction_description_ja,
+                'ln' => $request->reaction_description_ln,
+                'nl' => $request->reaction_description_nl,
+                'ru' => $request->reaction_description_ru,
+                'sw' => $request->reaction_description_sw,
+                'tr' => $request->reaction_description_tr,
+                'cs' => $request->reaction_description_cs
+            ],
             'alias' => $request->alias,
             'color' => $request->color,
             'icon_font' => $request->icon_font,
@@ -129,6 +146,23 @@ class ReactionController extends BaseController
                 'tr' => $request->reaction_name_tr,
                 'cs' => $request->reaction_name_cs
             ],
+            'reaction_description' => [
+                'af' => $request->reaction_description_af,
+                'de' => $request->reaction_description_de,
+                'ar' => $request->reaction_description_ar,
+                'zh' => $request->reaction_description_zh,
+                'en' => $request->reaction_description_en,
+                'es' => $request->reaction_description_es,
+                'fr' => $request->reaction_description_fr,
+                'it' => $request->reaction_description_it,
+                'ja' => $request->reaction_description_ja,
+                'ln' => $request->reaction_description_ln,
+                'nl' => $request->reaction_description_nl,
+                'ru' => $request->reaction_description_ru,
+                'sw' => $request->reaction_description_sw,
+                'tr' => $request->reaction_description_tr,
+                'cs' => $request->reaction_description_cs
+            ],
             'alias' => $request->alias,
             'color' => $request->color,
             'icon_font' => $request->icon_font,
@@ -152,6 +186,13 @@ class ReactionController extends BaseController
             $reaction->update([
                 'reaction_name' => $inputs['reaction_name'],
                 'updated_at' => now()
+            ]);
+        }
+
+        if ($inputs['reaction_description'] != null) {
+            $reaction->update([
+                'reaction_description' => $inputs['reaction_description'],
+                'updated_at' => now(),
             ]);
         }
 

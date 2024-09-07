@@ -21,6 +21,8 @@ Route::middleware(['auth:sanctum', 'localization'])->group(function () {
     Route::apiResource('role', 'App\Http\Controllers\API\RoleController');
     Route::apiResource('visibility', 'App\Http\Controllers\API\VisibilityController')->except(['findByRealName', 'findByAlias', 'findByGroup']);
     Route::apiResource('restriction', 'App\Http\Controllers\API\RestrictionController');
+    Route::apiResource('reaction', 'App\Http\Controllers\API\ReactionController')->except(['findByRealName', 'findByAlias', 'findByGroup']);
+    Route::apiResource('reaction_reason', 'App\Http\Controllers\API\ReactionReasonController')->except(['findByForPost']);
     Route::apiResource('field', 'App\Http\Controllers\API\FieldController')->except(['findByRealName', 'findByAlias']);
     Route::apiResource('coverage_area', 'App\Http\Controllers\API\CoverageAreaController')->except(['index']);
     Route::apiResource('budget', 'App\Http\Controllers\API\BudgetController');
@@ -28,7 +30,7 @@ Route::middleware(['auth:sanctum', 'localization'])->group(function () {
     Route::apiResource('blocked_user', 'App\Http\Controllers\API\BlockedUserController');
     Route::apiResource('website', 'App\Http\Controllers\API\WebsiteController');
     Route::apiResource('password_reset', 'App\Http\Controllers\API\PasswordResetTokenController')->except(['searchByEmailOrPhone', 'searchByEmail', 'searchByPhone', 'checkToken']);
-    Route::apiResource('personal_access_token', 'App\Http\Controllers\API\PersonalAccessTokenController')->except(['search']);
+    Route::apiResource('personal_access_token', 'App\Http\Controllers\API\PersonalAccessTokenController');
     Route::apiResource('notification', 'App\Http\Controllers\API\NotificationController');
     Route::apiResource('history', 'App\Http\Controllers\API\HistoryController');
     Route::apiResource('message', 'App\Http\Controllers\API\MessageController');
@@ -42,8 +44,6 @@ Route::middleware(['auth:sanctum', 'localization'])->group(function () {
     Route::apiResource('event', 'App\Http\Controllers\API\EventController')->except(['search']);
     Route::apiResource('community', 'App\Http\Controllers\API\CommunityController');
     Route::apiResource('subscription', 'App\Http\Controllers\API\SubscriptionController');
-    Route::apiResource('reaction', 'App\Http\Controllers\API\ReactionController')->except(['findByRealName', 'findByAlias', 'findByGroup']);
-    Route::apiResource('reaction_reason', 'App\Http\Controllers\API\ReactionReasonController')->except(['findByForPost']);
     Route::apiResource('sent_reaction', 'App\Http\Controllers\API\SentReactionController');
     Route::apiResource('file', 'App\Http\Controllers\API\FileController');
     Route::apiResource('session', 'App\Http\Controllers\API\SessionController');
@@ -58,6 +58,8 @@ Route::group(['middleware' => ['api', 'localization']], function () {
     Route::resource('type', 'App\Http\Controllers\API\TypeController')->except(['index', 'store', 'show', 'update', 'destroy']);
     Route::resource('category', 'App\Http\Controllers\API\CategoryController')->except(['index', 'store', 'show', 'update', 'destroy']);
     Route::resource('visibility', 'App\Http\Controllers\API\VisibilityController')->except(['index', 'store', 'show', 'update', 'destroy']);
+    Route::resource('reaction', 'App\Http\Controllers\API\ReactionController')->except(['index', 'store', 'show', 'update', 'destroy']);
+    Route::resource('reaction_reason', 'App\Http\Controllers\API\ReactionReasonController')->except(['index', 'store', 'show', 'update', 'destroy']);
     Route::resource('field', 'App\Http\Controllers\API\FieldController')->except(['index', 'store', 'show', 'update', 'destroy']);
     Route::resource('coverage_area', 'App\Http\Controllers\API\CoverageAreaController')->except(['store', 'show', 'update', 'destroy']);
     Route::resource('user', 'App\Http\Controllers\API\UserController')->except(['index', 'store', 'show', 'update', 'destroy']);
@@ -66,8 +68,6 @@ Route::group(['middleware' => ['api', 'localization']], function () {
     Route::resource('post', 'App\Http\Controllers\API\PostController')->except(['index', 'store', 'show', 'update', 'destroy']);
     Route::resource('hashtag', 'App\Http\Controllers\API\HashtagController')->except(['index', 'store', 'show', 'update', 'destroy']);
     Route::resource('event', 'App\Http\Controllers\API\EventController')->except(['index', 'store', 'show', 'update', 'destroy']);
-    Route::resource('reaction', 'App\Http\Controllers\API\ReactionController')->except(['index', 'store', 'show', 'update', 'destroy']);
-    Route::resource('reaction_reason', 'App\Http\Controllers\API\ReactionReasonController')->except(['index', 'store', 'show', 'update', 'destroy']);
 
     // Status
     Route::get('status/find_by_real_name/{locale}/{data}', 'App\Http\Controllers\API\StatusController@findByRealName')->name('status.api.find_by_real_name');
@@ -84,6 +84,12 @@ Route::group(['middleware' => ['api', 'localization']], function () {
     Route::get('visibility/find_by_real_name/{locale}/{data}', 'App\Http\Controllers\API\VisibilityController@findByRealName')->name('visibility.api.find_by_real_name');
     Route::get('visibility/find_by_alias/{alias}', 'App\Http\Controllers\API\VisibilityController@findByAlias')->name('visibility.api.find_by_alias');
     Route::get('visibility/find_by_group/{locale}/{data}', 'App\Http\Controllers\API\VisibilityController@findByGroup')->name('visibility.api.find_by_group');
+    // Reaction
+    Route::get('reaction/find_by_real_name/{locale}/{data}', 'App\Http\Controllers\API\ReactionController@findByRealName')->name('reaction.api.find_by_real_name');
+    Route::get('reaction/find_by_alias/{alias}', 'App\Http\Controllers\API\ReactionController@findByAlias')->name('reaction.api.find_by_alias');
+    Route::get('reaction/find_by_group/{locale}/{data}', 'App\Http\Controllers\API\ReactionController@findByGroup')->name('reaction.api.find_by_group');
+    // ReactionReason
+    Route::get('reaction_reason/find_by_for_post/{is_for_post}', 'App\Http\Controllers\API\ReactionReasonController@findByForPost')->name('reaction_reason.api.find_by_for_post');
     // Field
     Route::get('field/find_by_real_name/{locale}/{data}', 'App\Http\Controllers\API\FieldController@findByRealName')->name('field.api.find_by_real_name');
     Route::get('field/find_by_alias/{alias}', 'App\Http\Controllers\API\FieldController@findByAlias')->name('field.api.find_by_alias');
@@ -96,10 +102,10 @@ Route::group(['middleware' => ['api', 'localization']], function () {
     Route::get('user/profile/{username}', 'App\Http\Controllers\API\UserController@profile')->name('user.api.profile');
     Route::post('user/login', 'App\Http\Controllers\API\UserController@login')->name('user.api.login');
     // PasswordReset
-    Route::get('password_reset/search_by_email_or_phone/{data}', 'App\Http\Controllers\API\PasswordResetController@searchByEmailOrPhone')->name('password_reset.api.search_by_email_or_phone');
-    Route::get('password_reset/search_by_email/{data}', 'App\Http\Controllers\API\PasswordResetController@searchByEmail')->name('password_reset.api.search_by_email');
-    Route::get('password_reset/search_by_phone/{data}', 'App\Http\Controllers\API\PasswordResetController@searchByPhone')->name('password_reset.api.search_by_phone');
-    Route::post('password_reset/check_token', 'App\Http\Controllers\API\PasswordResetController@checkToken')->name('password_reset.api.check_token');
+    Route::get('password_reset/search_by_email_or_phone/{data}', 'App\Http\Controllers\API\PasswordResetTokenController@searchByEmailOrPhone')->name('password_reset.api.search_by_email_or_phone');
+    Route::get('password_reset/search_by_email/{data}', 'App\Http\Controllers\API\PasswordResetTokenController@searchByEmail')->name('password_reset.api.search_by_email');
+    Route::get('password_reset/search_by_phone/{data}', 'App\Http\Controllers\API\PasswordResetTokenController@searchByPhone')->name('password_reset.api.search_by_phone');
+    Route::post('password_reset/check_token', 'App\Http\Controllers\API\PasswordResetTokenController@checkToken')->name('password_reset.api.check_token');
     // Payment
     Route::post('payment/store', 'App\Http\Controllers\API\PaymentController@store')->name('payment.api.store');
     Route::get('payment/find_by_phone/{phone_number}', 'App\Http\Controllers\API\PaymentController@findByPhone')->name('payment.api.find_by_phone');
@@ -114,18 +120,13 @@ Route::group(['middleware' => ['api', 'localization']], function () {
     Route::get('hashtag/trends/{year}', 'App\Http\Controllers\API\HashtagController@trends')->name('hashtag.api.trends');
     // Event
     Route::get('event/search/{data}/{visitor_id}', 'App\Http\Controllers\API\EventController@search')->name('event.api.search');
-    // Reaction
-    Route::get('reaction/find_by_real_name/{locale}/{data}', 'App\Http\Controllers\API\ReactionController@findByRealName')->name('reaction.api.find_by_real_name');
-    Route::get('reaction/find_by_alias/{alias}', 'App\Http\Controllers\API\ReactionController@findByAlias')->name('reaction.api.find_by_alias');
-    Route::get('reaction/find_by_group/{locale}/{data}', 'App\Http\Controllers\API\ReactionController@findByGroup')->name('reaction.api.find_by_group');
-    // ReactionReason
-    Route::get('reaction_reason/find_by_for_post/{is_for_post}', 'App\Http\Controllers\API\ReactionReasonController@findByForPost')->name('reaction_reason.api.find_by_for_post');
 });
 Route::group(['middleware' => ['api', 'auth:sanctum', 'localization']], function () {
     Route::resource('category', 'App\Http\Controllers\API\CategoryController')->except(['findByRealName', 'findByFieldType']);
     Route::resource('cart', 'App\Http\Controllers\API\CartController');
     Route::resource('budget', 'App\Http\Controllers\API\BudgetController');
     Route::resource('user', 'App\Http\Controllers\API\UserController')->except(['store', 'show', 'search', 'profile', 'login']);
+    Route::resource('blocked_user', 'App\Http\Controllers\API\BlockedUserController');
     Route::resource('notification', 'App\Http\Controllers\API\NotificationController');
     Route::resource('history', 'App\Http\Controllers\API\HistoryController');
     Route::resource('message', 'App\Http\Controllers\API\MessageController');
@@ -172,6 +173,8 @@ Route::group(['middleware' => ['api', 'auth:sanctum', 'localization']], function
     Route::put('user/update_avatar_picture/{user_id}', 'App\Http\Controllers\API\UserController@updateAvatarPicture')->name('user.api.update_avatar_picture');
     Route::put('user/update_cover/{user_id}', 'App\Http\Controllers\API\UserController@updateCover')->name('user.api.update_cover');
     Route::put('user/upload_file/{user_id}', 'App\Http\Controllers\API\UserController@uploadFile')->name('user.api.upload_file');
+    // BlockedUser
+    Route::put('blocked_user/unlock_user/{user_id}', 'App\Http\Controllers\API\BlockedUserController@unlockUser')->name('blocked_user.api.unlock_user');
     // Notification
     Route::get('notification/select_by_user/{user_id}/{status_alias}', 'App\Http\Controllers\API\NotificationController@selectByUser')->name('notification.api.select_by_user');
     Route::put('notification/switch_status/{notification_id}/{status_alias}', 'App\Http\Controllers\API\NotificationController@switchStatus')->name('notification.api.switch_status');
@@ -186,10 +189,11 @@ Route::group(['middleware' => ['api', 'auth:sanctum', 'localization']], function
     Route::get('message/chat_with_user/{locale}/{type_name}/{sender_id}/{addressee_user_id}', 'App\Http\Controllers\API\MessageController@chatWithUser')->name('message.api.chat_with_user');
     Route::get('message/chat_with_group/{entity}/{entity_id}', 'App\Http\Controllers\API\MessageController@chatWithGroup')->name('message.api.chat_with_group');
     Route::get('message/members_with_message_status/{status_alias}/{message_id}', 'App\Http\Controllers\API\MessageController@membersWithMessageStatus')->name('message.api.members_with_message_status');
-    Route::get('message/delete_for_myself/{user_id}/{message_id}/{entity}', 'App\Http\Controllers\API\MessageController@deleteForMyself')->name('message.api.delete_for_myself');
-    Route::get('message/delete_for_everybody/{message_id}', 'App\Http\Controllers\API\MessageController@deleteForEverybody')->name('message.api.delete_for_everybody');
-    Route::get('message/mark_all_read_user/{locale}/{type_name}/{sender_id}/{addressee_user_id}', 'App\Http\Controllers\API\MessageController@markAllReadUser')->name('message.api.mark_all_read_user');
-    Route::get('message/upload_file/{message_id}', 'App\Http\Controllers\API\MessageController@uploadFile')->name('message.api.upload_file');
+    Route::put('message/delete_for_myself/{user_id}/{message_id}/{entity}', 'App\Http\Controllers\API\MessageController@deleteForMyself')->name('message.api.delete_for_myself');
+    Route::put('message/delete_for_everybody/{message_id}', 'App\Http\Controllers\API\MessageController@deleteForEverybody')->name('message.api.delete_for_everybody');
+    Route::put('message/mark_all_read_user/{locale}/{type_name}/{sender_id}/{addressee_user_id}', 'App\Http\Controllers\API\MessageController@markAllReadUser')->name('message.api.mark_all_read_user');
+    Route::put('message/mark_all_read_group/{user_id}/{entity}/{entity_id}', 'App\Http\Controllers\API\MessageController@markAllReadGroup')->name('message.api.mark_all_read_group');
+    Route::put('message/upload_file/{message_id}', 'App\Http\Controllers\API\MessageController@uploadFile')->name('message.api.upload_file');
     // Post
     Route::get('post/news_feed_community/{type_aliases}/{user_id}', 'App\Http\Controllers\API\PostController@newsFeedCommunity')->name('post.api.news_feed_community');
     Route::get('post/news_feed_event/{type_aliases}/{user_id}', 'App\Http\Controllers\API\PostController@newsFeedEvent')->name('post.api.news_feed_event');

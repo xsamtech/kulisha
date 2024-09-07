@@ -360,7 +360,8 @@ class MessageController extends BaseController
             return $this->handleError(__('notifications.find_addressee_404'));
         }
 
-        $messages = Message::where([['message_content', 'LIKE', '%' . $data . '%'], ['type_id', $message_type->id], ['user_id', $sender->id], ['addressee_user_id', $addressee->id]])->orWhere([['message_content', 'LIKE', '%' . $data . '%'], ['type_id', $message_type->id], ['user_id', $addressee->id], ['addressee_user_id', $sender->id]])->get();
+        $messages = Message::where([['message_content', 'LIKE', '%' . $data . '%'], ['type_id', $message_type->id], ['user_id', $sender->id], ['addressee_user_id', $addressee->id]])->orWhere([['message_content', 'LIKE', '%' . $data . '%'], ['type_id', $message_type->id], ['user_id', $addressee->id], ['addressee_user_id', $sender->id]])->orderByDesc('created_at')->paginate(30);
+        $count_messages = Message::where([['message_content', 'LIKE', '%' . $data . '%'], ['type_id', $message_type->id], ['user_id', $sender->id], ['addressee_user_id', $addressee->id]])->orWhere([['message_content', 'LIKE', '%' . $data . '%'], ['type_id', $message_type->id], ['user_id', $addressee->id], ['addressee_user_id', $sender->id]])->count();
 
         if (is_null($messages)) {
             return $this->handleResponse(null, __('miscellaneous.empty_list'));
@@ -375,7 +376,7 @@ class MessageController extends BaseController
             'from_user_id' => $sender->id,
         ]);
 
-        return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'));
+        return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'), $messages->lastPage(), $count_messages);
     }
 
     /**
@@ -407,7 +408,8 @@ class MessageController extends BaseController
                 return $this->handleError(__('notifications.find_community_404'));
             }
 
-            $messages = Message::where([['message_content', 'LIKE', '%' . $data . '%'], ['addressee_community_id', $community->id]])->get();
+            $messages = Message::where([['message_content', 'LIKE', '%' . $data . '%'], ['addressee_community_id', $community->id]])->orderByDesc('created_at')->paginate(30);
+            $count_messages = Message::where([['message_content', 'LIKE', '%' . $data . '%'], ['addressee_community_id', $community->id]])->count();
 
             if (is_null($messages)) {
                 return $this->handleResponse(null, __('miscellaneous.empty_list'));
@@ -422,7 +424,7 @@ class MessageController extends BaseController
                 'from_user_id' => $member->id,
             ]);
 
-            return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'));
+            return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'), $messages->lastPage(), $count_messages);
         }
 
         if ($entity == 'team') {
@@ -432,7 +434,8 @@ class MessageController extends BaseController
                 return $this->handleError(__('notifications.find_team_404'));
             }
 
-            $messages = Message::where([['message_content', 'LIKE', '%' . $data . '%'], ['addressee_team_id', $team->id]])->get();
+            $messages = Message::where([['message_content', 'LIKE', '%' . $data . '%'], ['addressee_team_id', $team->id]])->orderByDesc('created_at')->paginate(30);
+            $count_messages = Message::where([['message_content', 'LIKE', '%' . $data . '%'], ['addressee_team_id', $team->id]])->count();
 
             if (is_null($messages)) {
                 return $this->handleResponse(null, __('miscellaneous.empty_list'));
@@ -447,7 +450,7 @@ class MessageController extends BaseController
                 'from_user_id' => $member->id,
             ]);
 
-            return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'));
+            return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'), $messages->lastPage(), $count_messages);
         }
     }
 
@@ -480,9 +483,10 @@ class MessageController extends BaseController
             return $this->handleError(__('notifications.find_addressee_404'));
         }
 
-        $messages = Message::where([['type_id', $type->id], ['user_id', $sender->id], ['addressee_user_id', $addressee->id]])->orWhere([['type_id', $type->id], ['user_id', $addressee->id], ['addressee_user_id', $sender->id]])->get();
+        $messages = Message::where([['type_id', $type->id], ['user_id', $sender->id], ['addressee_user_id', $addressee->id]])->orWhere([['type_id', $type->id], ['user_id', $addressee->id], ['addressee_user_id', $sender->id]])->orderByDesc('created_at')->paginate(30);
+        $count_messages = Message::where([['type_id', $type->id], ['user_id', $sender->id], ['addressee_user_id', $addressee->id]])->orWhere([['type_id', $type->id], ['user_id', $addressee->id], ['addressee_user_id', $sender->id]])->count();
 
-        return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'));
+        return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'), $messages->lastPage(), $count_messages);
     }
 
     /**
@@ -501,9 +505,10 @@ class MessageController extends BaseController
                 return $this->handleError(__('notifications.find_community_404'));
             }
 
-            $messages = Message::where('addressee_community_id', $community->id)->get();
+            $messages = Message::where('addressee_community_id', $community->id)->orderByDesc('created_at')->paginate(30);
+            $count_messages = Message::where('addressee_community_id', $community->id)->count();
 
-            return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'));
+            return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'), $messages->lastPage(), $count_messages);
         }
 
         if ($entity == 'team') {
@@ -513,9 +518,10 @@ class MessageController extends BaseController
                 return $this->handleError(__('notifications.find_team_404'));
             }
 
-            $messages = Message::where('addressee_team_id', $team->id)->get();
+            $messages = Message::where('addressee_team_id', $team->id)->orderByDesc('created_at')->paginate(30);
+            $count_messages = Message::where('addressee_team_id', $team->id)->count();
 
-            return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'));
+            return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'), $messages->lastPage(), $count_messages);
         }
     }
 
@@ -528,38 +534,25 @@ class MessageController extends BaseController
      */
     public function membersWithMessageStatus($status_alias, $message_id)
     {
-        $message_status_group = Group::where('group_name->fr', 'Etat du message')->first();
+        // Group
+        $group = Group::where('group_name->fr', 'Etat du message')->first();
+        // Status
+        $status = Status::where([['alias', $status_alias], ['group_id', $group->id]])->first();
+
+        if (is_null($status)) {
+            return $this->handleError(__('notifications.find_status_404'));
+        }
+
         $message = Message::find($message_id);
 
         if (is_null($message)) {
             return $this->handleError(__('notifications.find_message_404'));
         }
 
-        // All community/team members who saw the message
-        if ($status_alias == 'message_read') {
-            $read_message_status = Status::where([['alias', 'message_read'], ['group_id', $message_status_group->id]])->first();
+        $users = $message->users()->wherePivot('status_id', $status->id)->orderByDesc('created_at')->paginate(30);
+        $count_users = $message->users()->wherePivot('status_id', $status->id)->count();
 
-            if (is_null($read_message_status)) {
-                return $this->handleError(__('notifications.find_status_404'));
-            }
-
-            $users = $message->users()->wherePivot('status_id', $read_message_status->id)->get();
-
-            return $this->handleResponse(ResourcesUser::collection($users), __('notifications.find_all_users_success'));
-        }
-
-        // All community/team members who deleted the message
-        if ($status_alias == 'message_deleted') {
-            $deleted_message_status = Status::where([['alias', 'message_deleted'], ['group_id', $message_status_group->id]])->first();
-
-            if (is_null($deleted_message_status)) {
-                return $this->handleError(__('notifications.find_status_404'));
-            }
-
-            $users = $message->users()->wherePivot('status_id', $deleted_message_status->id)->get();
-
-            return $this->handleResponse(ResourcesUser::collection($users), __('notifications.find_all_users_success'));
-        }
+        return $this->handleResponse(ResourcesUser::collection($users), __('notifications.find_all_users_success'), $users->lastPage(), $count_users);
     }
 
     /**
@@ -660,16 +653,18 @@ class MessageController extends BaseController
             return $this->handleError(__('notifications.find_addressee_404'));
         }
 
-        $messages = Message::where([['type_id', $type->id], ['user_id', $sender->id], ['addressee_user_id', $addressee->id]])->get();
+        $all_messages = Message::where([['type_id', $type->id], ['user_id', $sender->id], ['addressee_user_id', $addressee->id]])->get();
+        $messages = Message::where([['type_id', $type->id], ['user_id', $sender->id], ['addressee_user_id', $addressee->id]])->orderByDesc('created_at')->paginate(30);
+        $count_messages = Message::where([['type_id', $type->id], ['user_id', $sender->id], ['addressee_user_id', $addressee->id]])->count();
 
-        foreach ($messages as $message) {
+        foreach ($all_messages as $message) {
             $message->update([
                 'status_id' => $read_message_status->id,
                 'updated_at' => now()
             ]);
         }
 
-        return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'));
+        return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'), $messages->lastPage(), $count_messages);
     }
 
     /**
@@ -700,9 +695,11 @@ class MessageController extends BaseController
                 return $this->handleError(__('notifications.find_community_404'));
             }
 
-            $messages = Message::where('addressee_community_id', $community->id)->get();
+            $all_messages = Message::where('addressee_community_id', $community->id)->get();
+            $messages = Message::where('addressee_community_id', $community->id)->orderByDesc('created_at')->paginate(30);
+            $count_messages = Message::where('addressee_community_id', $community->id)->count();
 
-            foreach ($messages as $message) {
+            foreach ($all_messages as $message) {
                 if (count($message->users) == 0) {
                     $message->users()->syncWithPivotValues([$user->id], ['status_id' => $read_message_status->id]);
                 }
@@ -712,7 +709,7 @@ class MessageController extends BaseController
                 }
             }
 
-            return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'));
+            return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'), $messages->lastPage(), $count_messages);
         }
 
         if ($entity == 'team') {
@@ -722,9 +719,11 @@ class MessageController extends BaseController
                 return $this->handleError(__('notifications.find_team_404'));
             }
 
-            $messages = Message::where('addressee_team_id', $team->id)->get();
+            $all_messages = Message::where('addressee_team_id', $team->id)->get();
+            $messages = Message::where('addressee_team_id', $team->id)->orderByDesc('created_at')->paginate(30);
+            $count_messages = Message::where('addressee_team_id', $team->id)->count();
 
-            foreach ($messages as $message) {
+            foreach ($all_messages as $message) {
                 if (count($message->users) == 0) {
                     $message->users()->syncWithPivotValues([$user->id], ['status_id' => $read_message_status->id]);
                 }
@@ -734,7 +733,7 @@ class MessageController extends BaseController
                 }
             }
 
-            return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'));
+            return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'), $messages->lastPage(), $count_messages);
         }
     }
 

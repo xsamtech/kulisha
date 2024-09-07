@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Models\BlockedUser;
 use App\Models\Group;
+use App\Models\Notification;
 use App\Models\ReactionReason;
 use App\Models\Status;
 use App\Models\Type;
@@ -154,12 +155,15 @@ class BlockedUserController extends BaseController
         $finished_blocking_status = Status::where([['status_name->fr', 'Blocage terminé'], ['group_id', $blocked_member_status_group->id]])->first();
         $unread_notification_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $notification_status_group->id]])->first();
         // Types
-        $imminent_account_blocking_type = Type::where([['type_name->fr', 'Blocage de compte imminent'], ['group_id', $notification_type_group->id]])->first();
-        $blocked_account_type = Type::where([['type_name->fr', 'Compte bloqué'], ['group_id', $notification_type_group->id]])->first();
-        $reaction_type = Type::where([['type_name->fr', 'Réaction'], ['group_id', $notification_type_group->id]])->first();
-        $connection_suggestion_type = Type::where([['type_name->fr', 'Suggestion de connexion'], ['group_id', $notification_type_group->id]])->first();
+        $unlocked_account_type = Type::where([['type_name->fr', 'Compte débloqué'], ['group_id', $notification_type_group->id]])->first();
         // Requests
-        $blocked_user = BlockedUser::where([['user_id', $user_id], ['status_id', $in_progress_blocking_status->id]])->first();
+        $user = User::find($user_id);
+
+        if (is_null($user)) {
+            return $this->handleError(__('notifications.find_user_404'));
+        }
+
+        $blocked_user = BlockedUser::where([['user_id', $user->id], ['status_id', $in_progress_blocking_status->id]])->first();
 
         if (is_null($blocked_user)) {
             return $this->handleError(__('notifications.find_blocked_user_404'));
@@ -176,6 +180,33 @@ class BlockedUserController extends BaseController
         $blocking_date = $blocked_user->created_at->format('Y-m-d');
         $current_date_instance = Carbon::parse($current_date);
         $blocking_date_instance = Carbon::parse($blocking_date);
+        // Determine the difference between dates
+        $diffInDays = $current_date_instance->diffInDays($blocking_date_instance);
 
+        if ($diffInDays < $reaction_reason->number_of_days) {
+            return $this->handleError(new ResourcesBlockedUser($blocked_user), __('notifications.sanction_period_not_exhausted'), 401);
+
+        } else {
+            $blocked_user->update([
+                'status_id' => $finished_blocking_status->id,
+                'updated_at' => now(),
+            ]);
+
+            $user->update([
+                'status_id' => $activated_member_status->id,
+                'updated_at' => now(),
+            ]);
+
+            /*
+                HISTORY AND/OR NOTIFICATION MANAGEMENT
+            */
+            Notification::create([
+                'type_id' => $unlocked_account_type->id,
+                'status_id' => $unread_notification_status->id,
+                'to_user_id' => $user->id
+            ]);
+
+            return $this->handleResponse(new ResourcesBlockedUser($blocked_user), __('notifications.update_blocked_user_success'));
+        }
     }
 }

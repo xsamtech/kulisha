@@ -104,12 +104,12 @@ class PasswordResetTokenController extends BaseController
     {
         // Get inputs
         $inputs = [
-            'id' => $request->id,
             'email' => $request->email,
             'phone' => $request->phone,
             'token' => $request->token,
             'former_password' => $request->former_password
         ];
+
         if ($inputs['email'] != null) {
             // Select all password resets and a specific password reset to check constraint
             $password_resets = PasswordResetToken::all();

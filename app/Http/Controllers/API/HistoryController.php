@@ -145,10 +145,10 @@ class HistoryController extends BaseController
      * Select all user histories.
      *
      * @param  int $user_id
-     * @param  null|string $status_alias
+     * @param  string $status_alias
      * @return \Illuminate\Http\Response
      */
-    public function selectByUser($user_id, $status_alias = null)
+    public function selectByUser($user_id, $status_alias)
     {
         $user = User::find($user_id);
 
@@ -156,8 +156,13 @@ class HistoryController extends BaseController
             return $this->handleError(__('notifications.find_user_404'));
         }
 
-        if ($status_alias != null) {
+        if ($status_alias != '0') {
             $status = Status::where('alias', $status_alias)->first();
+
+            if (is_null($status)) {
+                return $this->handleError(__('notifications.find_status_404'));
+            }
+
             $histories = History::where([['status_id', $status->id], ['to_user_id', $user->id]])->orderByDesc('created_at')->get();
 
             return $this->handleResponse(ResourcesHistory::collection($histories), __('notifications.find_all_histories_success'));

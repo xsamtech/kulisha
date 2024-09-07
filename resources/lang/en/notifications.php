@@ -119,6 +119,20 @@ return [
     'create_restriction_success' => 'Restriction created',
     'update_restriction_success' => 'Restriction updated',
     'delete_restriction_success' => 'Restriction deleted',
+    // Reaction
+    'find_all_reactions_success' => 'Reactions found',
+    'find_reaction_success' => 'Reaction found',
+    'find_reaction_404' => 'Reaction not found',
+    'create_reaction_success' => 'Reaction created',
+    'update_reaction_success' => 'Reaction updated',
+    'delete_reaction_success' => 'Reaction deleted',
+    // ReactionReason
+    'find_all_reactions_reasons_success' => 'Reactions reasons found',
+    'find_reaction_reason_success' => 'Reaction reason found',
+    'find_reaction_reason_404' => 'Reaction reason not found',
+    'create_reaction_reason_success' => 'Reaction reason created',
+    'update_reaction_reason_success' => 'Reaction reason updated',
+    'delete_reaction_reason_success' => 'Reaction reason deleted',
     // Field
     'find_all_fields_success' => 'Fields found',
     'find_field_success' => 'Field found',
@@ -151,6 +165,7 @@ return [
     'find_sender_404' => 'Sender not found',
     'find_addressee_404' => 'Addressee not found',
     'find_member_404' => 'Member not found',
+    'find_member_blocked' => 'This member is blocked',
     'create_user_success' => 'User created',
     'create_user_SMS_failed' => 'There is a problem with the SMS service',
     'update_user_success' => 'User updated',
@@ -170,6 +185,7 @@ return [
     'create_blocked_user_success' => 'Blocked member created',
     'update_blocked_user_success' => 'Blocked member updated',
     'delete_blocked_user_success' => 'Blocked member deleted',
+    'sanction_period_not_exhausted' => 'This member’s sanction period is not yet exhausted',
     // Website
     'find_all_websites_success' => 'Websites found',
     'find_website_success' => 'Website found',
@@ -295,20 +311,6 @@ return [
     'create_subscription_success' => 'Subscription created',
     'update_subscription_success' => 'Subscription updated',
     'delete_subscription_success' => 'Subscription deleted',
-    // Reaction
-    'find_all_reactions_success' => 'Reactions found',
-    'find_reaction_success' => 'Reaction found',
-    'find_reaction_404' => 'Reaction not found',
-    'create_reaction_success' => 'Reaction created',
-    'update_reaction_success' => 'Reaction updated',
-    'delete_reaction_success' => 'Reaction deleted',
-    // ReactionReason
-    'find_all_reactions_reasons_success' => 'Reactions reasons found',
-    'find_reaction_reason_success' => 'Reaction reason found',
-    'find_reaction_reason_404' => 'Reaction reason not found',
-    'create_reaction_reason_success' => 'Reaction reason created',
-    'update_reaction_reason_success' => 'Reaction reason updated',
-    'delete_reaction_reason_success' => 'Reaction reason deleted',
     // SentReaction
     'find_all_sent_reactions_success' => 'Sending reactions found',
     'find_sent_reaction_success' => 'Sending reaction found',
@@ -515,8 +517,9 @@ return [
     // Account
     'welcome' => 'Welcome <strong><a href="/users/:to_user_id">:to_user_names</a></strong>. Click here to get a complete overview of your network.',
     'welcome_back' => 'Welcome back <strong><a href="/users/:to_user_id">:to_user_names</a></strong>. Click here to see what’s new in your network.',
-    'your_account_blocked' => 'Your account was blocked on <strong>:date</strong> at <strong>:hour</strong>, because you did not respect our conditions.',
     'will_be_blocked_soon' => 'We are already on the <strong>:nth_personne</strong> person who has reported your <strong>:subject</strong> as « <strong>:reason</strong> ». <strong>:persons_count</strong> more and you’ll soon be blocked.',
+    'your_account_blocked' => 'Your account was blocked on <strong>:date</strong> at <strong>:hour</strong>, because you did not respect our conditions.',
+    'your_account_unlocked' => '<strong>Your account is finally unlocked.<strong> We ask you to respect our conditions so as not to be blocked again.',
     'before_definitive_delete' => 'Your account has been removed since <strong>:date</strong> at <strong>:hour</strong>.<br><br>You can still cancel this action before 15 days, in case you change the mind.<br><br>After <strong>:after_date</strong>, your account will be deleted definitively.',
     'member_certified' => 'Your account is now certified. From now on, you too are able to sell our products or offer your services. Click here to see how it works.',
     'member_premium' => 'Now that you have a premium account, you are able to use our services to make you talk about you. Click here to see how it works.',
