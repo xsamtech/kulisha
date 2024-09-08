@@ -41,6 +41,11 @@ class SessionController extends BaseController
             'user_agent' => $request->user_agent,
             'payload' => $request->payload,
             'last_activity' => $request->last_activity,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'city' => $request->city,
+            'region' => $request->region,
+            'country' => $request->country,
             'user_id' => $request->user_id
         ];
 
@@ -89,6 +94,11 @@ class SessionController extends BaseController
             'user_agent' => $request->user_agent,
             'payload' => $request->payload,
             'last_activity' => $request->last_activity,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'city' => $request->city,
+            'region' => $request->region,
+            'country' => $request->country,
             'user_id' => $request->user_id
         ];
 
@@ -113,6 +123,41 @@ class SessionController extends BaseController
         if ($inputs['last_activity'] != null) {
             $session->update([
                 'last_activity' => $request->last_activity
+            ]);
+        }
+
+        if ($inputs['latitude'] != null) {
+            $session->update([
+                'latitude' => $inputs['latitude'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['longitude'] != null) {
+            $session->update([
+                'longitude' => $inputs['longitude'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['city'] != null) {
+            $session->update([
+                'city' => $inputs['city'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['region'] != null) {
+            $session->update([
+                'region' => $inputs['region'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['country'] != null) {
+            $session->update([
+                'country' => $inputs['country'],
+                'updated_at' => now(),
             ]);
         }
 

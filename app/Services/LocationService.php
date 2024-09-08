@@ -30,6 +30,7 @@ class LocationService
                 'region' => $details->region,
                 'country' => $details->country
             ];
+
         } catch (IPinfoException $e) {
             return null;
         }

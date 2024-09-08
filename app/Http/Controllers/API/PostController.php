@@ -103,6 +103,11 @@ class PostController extends BaseController
             'currency' => $request->currency,
             'quantity' => $request->quantity,
             'answered_for' => $request->answered_for,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'city' => $request->city,
+            'region' => $request->region,
+            'country' => $request->country,
             'type_id' => $request->type_id,
             'category_id' => $request->category_id,
             'status_id' => isset($request->status_id) ? $request->status_id : $operational_status->id,
@@ -819,6 +824,11 @@ class PostController extends BaseController
             'currency' => $request->currency,
             'quantity' => $request->quantity,
             'answered_for' => $request->answered_for,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'city' => $request->city,
+            'region' => $request->region,
+            'country' => $request->country,
             'type_id' => $request->type_id,
             'category_id' => $request->category_id,
             'status_id' => $request->status_id,
@@ -954,6 +964,41 @@ class PostController extends BaseController
         if ($inputs['answered_for'] != null) {
             $post->update([
                 'answered_for' => $inputs['answered_for'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['latitude'] != null) {
+            $post->update([
+                'latitude' => $inputs['latitude'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['longitude'] != null) {
+            $post->update([
+                'longitude' => $inputs['longitude'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['city'] != null) {
+            $post->update([
+                'city' => $inputs['city'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['region'] != null) {
+            $post->update([
+                'region' => $inputs['region'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['country'] != null) {
+            $post->update([
+                'country' => $inputs['country'],
                 'updated_at' => now(),
             ]);
         }
