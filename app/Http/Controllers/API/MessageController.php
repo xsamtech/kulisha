@@ -88,6 +88,8 @@ class MessageController extends BaseController
             return $this->handleError(__('notifications.find_sender_404'));
         }
 
+        $message = Message::create($inputs);
+
         // If the message is sent to a user
         if ($inputs['addressee_user_id'] != null) {
             $addressee_user = User::find($inputs['addressee_user_id']);
@@ -98,7 +100,6 @@ class MessageController extends BaseController
 
             // Check if it's the first discussion before send
             $chat_with_addressee = Message::where([['user_id', $message_sender->id], ['addressee_user_id', $addressee_user->id]])->orWhere([['user_id', $addressee_user->id], ['addressee_user_id', $message_sender->id]])->get();
-            $message = Message::create($inputs);
 
             /*
                 HISTORY AND/OR NOTIFICATION MANAGEMENT
@@ -119,18 +120,21 @@ class MessageController extends BaseController
                     'for_notification_id' => $notification->id
                 ]);
             }
-
-            return $this->handleResponse(new ResourcesMessage($message), __('notifications.create_message_success'));
+        }
 
         // If the message is sent to the community, notify to all community members
-        } else if ($inputs['addressee_community_id'] != null) {
+        if ($inputs['addressee_community_id'] != null) {
+            $message = Message::create($inputs);
+
             $addressee_community = Community::find($inputs['addressee_community_id']);
+            $community_users = $addressee_community->users;
+            $users_ids = $community_users->pluck('id');
+
+            $message->users()->syncWithPivotValues($users_ids, ['status_id' => $unread_message_status->id]);
 
             if (is_null($addressee_community)) {
                 return $this->handleError(__('notifications.find_community_404'));
             }
-
-            $message = Message::create($inputs);
 
             /*
                 HISTORY AND/OR NOTIFICATION MANAGEMENT
@@ -156,18 +160,15 @@ class MessageController extends BaseController
                     'for_notification_id' => $notification->id
                 ]);
             }
-
-            return $this->handleResponse(new ResourcesMessage($message), __('notifications.create_message_success'));
+        }
 
         // If the message is an answer
-        } else if ($inputs['answered_for'] != null) {
+        if ($inputs['answered_for'] != null) {
             $originating_message = Message::find($inputs['answered_for']);
 
             if (is_null($originating_message)) {
                 return $this->handleError(__('notifications.find_originating_message_404'));
             }
-
-            $message = Message::create($inputs);
 
             /*
                 HISTORY AND/OR NOTIFICATION MANAGEMENT
@@ -179,14 +180,9 @@ class MessageController extends BaseController
                 'to_user_id' => $originating_message->user_id,
                 'message_id' => $message->id
             ]);
-
-            return $this->handleResponse(new ResourcesMessage($message), __('notifications.create_message_success'));
-
-        } else {
-            $message = Message::create($inputs);
-
-            return $this->handleResponse(new ResourcesMessage($message), __('notifications.create_message_success'));
         }
+
+        return $this->handleResponse(new ResourcesMessage($message), __('notifications.create_message_success'));
     }
 
     /**
@@ -215,13 +211,7 @@ class MessageController extends BaseController
                 $user = User::find($request->header('X-user-id'));
 
                 if (!is_null($user)) {
-                    if (count($message->users) == 0) {
-                        $message->users()->syncWithPivotValues([$user->id], ['status_id' => $read_message_status->id]);
-                    }
-
-                    if (count($message->users) > 0) {
-                        $message->users()->syncWithoutDetaching([$user->id], ['status_id' => $read_message_status->id]);
-                    }
+                    $message->users()->updateExistingPivot($user->id, ['status_id' => $read_message_status->id]);
                 }
             }
         }
@@ -587,13 +577,7 @@ class MessageController extends BaseController
         }
 
         if ($entity == 'group') {
-            if (count($message->users) == 0) {
-                $message->users()->syncWithPivotValues([$user->id], ['status_id' => $deleted_message_status->id]);
-            }
-
-            if (count($message->users) > 0) {
-                $message->users()->syncWithoutDetaching([$user->id => ['status_id' => $deleted_message_status->id]]);
-            }
+            $message->users()->updateExistingPivot($user->id, ['status_id' => $deleted_message_status->id]);
         }
 
         return $this->handleResponse(new ResourcesMessage($message), __('notifications.find_message_success'));
@@ -700,13 +684,7 @@ class MessageController extends BaseController
             $count_messages = Message::where('addressee_community_id', $community->id)->count();
 
             foreach ($all_messages as $message) {
-                if (count($message->users) == 0) {
-                    $message->users()->syncWithPivotValues([$user->id], ['status_id' => $read_message_status->id]);
-                }
-
-                if (count($message->users) > 0) {
-                    $message->users()->syncWithoutDetaching([$user->id => ['status_id' => $read_message_status->id]]);
-                }
+                $message->users()->updateExistingPivot($user->id, ['status_id' => $read_message_status->id]);
             }
 
             return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'), $messages->lastPage(), $count_messages);
@@ -724,13 +702,7 @@ class MessageController extends BaseController
             $count_messages = Message::where('addressee_team_id', $team->id)->count();
 
             foreach ($all_messages as $message) {
-                if (count($message->users) == 0) {
-                    $message->users()->syncWithPivotValues([$user->id], ['status_id' => $read_message_status->id]);
-                }
-
-                if (count($message->users) > 0) {
-                    $message->users()->syncWithoutDetaching([$user->id => ['status_id' => $read_message_status->id]]);
-                }
+                $message->users()->updateExistingPivot($user->id, ['status_id' => $read_message_status->id]);
             }
 
             return $this->handleResponse(ResourcesMessage::collection($messages), __('notifications.find_all_messages_success'), $messages->lastPage(), $count_messages);
