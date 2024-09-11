@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\API;
 
 use stdClass;
+use App\Mail\ShortMail;
+use App\Models\Community;
+use App\Models\Event;
 use App\Models\File;
 use App\Models\Group;
 use App\Models\Hashtag;
@@ -24,14 +27,12 @@ use App\Models\Visibility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\ApiClientManager;
 use App\Http\Resources\History as ResourcesHistory;
 use App\Http\Resources\Post as ResourcesPost;
 use App\Http\Resources\Session as ResourcesSession;
 use App\Http\Resources\SentReaction as ResourcesSentReaction;
-use App\Models\Community;
-use App\Models\Event;
 use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
 
@@ -1153,15 +1154,18 @@ class PostController extends BaseController
     public function newsFeed($type_aliases, $user_id)
     {
         // Groups
+        $member_status_group = Group::where('group_name->fr', 'Etat du membre')->first();
         $post_or_community_status_group = Group::where('group_name->fr', 'Etat du post ou de la communauté')->first();
         $posts_visibility_group = Group::where('group_name->fr', 'Visibilité pour les posts')->first();
         $reaction_on_member_or_post_group = Group::where('group_name->fr', 'Réaction sur membre ou post')->first();
         // Statuses
+        $blocked_member_status = Status::where([['status_name->fr', 'Bloqué'], ['group_id', $member_status_group->id]])->first();
         $operational_status = Status::where([['status_name->fr', 'Opérationnel'], ['group_id', $post_or_community_status_group->id]])->first();
         $boosted_status = Status::where([['status_name->fr', 'Boosté'], ['group_id', $post_or_community_status_group->id]])->first();
         // Visibilities
         $everybody_visibility = Visibility::where([['visibility_name->fr', 'Tout le monde'], ['group_id', $posts_visibility_group->id]])->first();
         $nobody_except_visibility = Visibility::where([['visibility_name->fr', 'Personne, sauf …'], ['group_id', $posts_visibility_group->id]])->first();
+        $connections_only_visibility = Visibility::where([['visibility_name->fr', 'Mes connexions uniquement'], ['group_id', $posts_visibility_group->id]])->first();
         // Reaction
         $muted_reaction = Reaction::where([['reaction_name->fr', 'En sourdine'], ['group_id', $reaction_on_member_or_post_group->id]])->first();
         $reported_reaction = Reaction::where([['reaction_name->fr', 'Signalé'], ['group_id', $reaction_on_member_or_post_group->id]])->first();
@@ -1180,9 +1184,17 @@ class PostController extends BaseController
             return $this->handleError(__('notifications.find_type_404'));
         }
 
-        // If the user is unknown, only show operational or boosted posts that are visible to everybody
+        // If the user is unknown, show each post, check some constraints such as:
+        // -> The post belongs neither to a community, nor to an event;
+        // -> The post doesn't belong to blocked user;
+        // -> The post is operational or boosted
+        // -> The post is visible to everybody
         if ($user_id == 0) {
-            $posts = Post::whereIn('posts.type_id', $types_ids)
+            $posts = Post::whereNull('posts.community_id')->whereNull('posts.event_id')
+                            ->whereIn('posts.type_id', $types_ids)
+                            ->whereHas('users', function ($query) use ($blocked_member_status) {
+                                $query->where('users.status_id', '<>', $blocked_member_status->id);
+                            })
                             ->where(function ($query) use ($operational_status, $boosted_status) {
                                 $query->where('posts.status_id', $operational_status->id)
                                         ->orWhere('posts.status_id', $boosted_status->id);
@@ -1193,7 +1205,11 @@ class PostController extends BaseController
         // Otherwise, to show each post, check some constraints such as:
         // -> The post belongs neither to a community, nor to an event;
         // -> The user did not report the post or the post owner;
-        // -> The user has not muted the post or the post owner.
+        // -> The user has not muted the post or the post owner;
+        // -> The post is operational or boosted
+        // -> The post doesn't belong to blocked user;
+        // -> The post is visible to everybody, or the owner has reserved it for his connections of which the user is a part, 
+        //    or rather the user is one of the only people who can see this post
         } else {
             $current_user = User::find($user_id);
 
@@ -1203,13 +1219,19 @@ class PostController extends BaseController
 
             // Get the IDs of the posts or users that are muted or reported by the current user
             $with_sent_reactions_post_ids = SentReaction::where([['reaction_id', $muted_reaction->id], ['user_id', $current_user->id]])
-                                                        ->orWhere([['reaction_id', $reported_reaction->id], ['user_id', $current_user->id]])
-                                                        ->pluck('to_post_id')->toArray();
+                                                            ->orWhere([['reaction_id', $reported_reaction->id], ['user_id', $current_user->id]])
+                                                            ->pluck('to_post_id')->toArray();
             $with_sent_reactions_post_ids = $with_sent_reactions_post_ids != null ? $with_sent_reactions_post_ids : [0];
             $with_sent_reactions_user_ids = SentReaction::where([['reaction_id', $muted_reaction->id], ['user_id', $current_user->id]])
-                                                        ->orWhere([['reaction_id', $reported_reaction->id], ['user_id', $current_user->id]])
-                                                        ->pluck('to_user_id')->toArray();
+                                                            ->orWhere([['reaction_id', $reported_reaction->id], ['user_id', $current_user->id]])
+                                                            ->pluck('to_user_id')->toArray();
             $with_sent_reactions_user_ids = $with_sent_reactions_user_ids != null ? $with_sent_reactions_user_ids : [0];
+            // Get the IDs of the users whose current user is subscribed
+            $with_subscriptions_user_ids = Subscription::where('subscriber_id', $current_user->id)->pluck('user_id')->toArray();
+            // Get the IDs of the users who are subscribed to the current user
+            $with_subscriptions_subscriber_ids = Subscription::where('user_id', $current_user->id)->pluck('subscriber_id')->toArray();
+            // Get the IDs of the users connected to the current user
+            $connected_users_ids = User::whereIn('id', $with_subscriptions_user_ids)->orWhereIn('id', $with_subscriptions_subscriber_ids)->pluck('id')->toArray();
             // THE MAIN QUERY STATEMENT
             $posts = Post::whereNull('posts.community_id')->whereNull('posts.event_id')
                             ->whereNotIn('posts.id', $with_sent_reactions_post_ids)->whereNotIn('posts.user_id', $with_sent_reactions_user_ids)
@@ -1218,14 +1240,32 @@ class PostController extends BaseController
                                 $query->where('posts.status_id', $operational_status->id)
                                         ->orWhere('posts.status_id', $boosted_status->id);
                             })
-                            ->where(function ($query) use ($everybody_visibility, $nobody_except_visibility) {
+                            ->whereHas('users', function ($query) use ($blocked_member_status) {
+                                $query->where('users.status_id', '<>', $blocked_member_status->id);
+                            })
+                            ->where(function ($query) use ($current_user, $everybody_visibility, $nobody_except_visibility, $connections_only_visibility, $connected_users_ids) {
                                 $query->where('posts.visibility_id', $everybody_visibility->id)
-                                        ->orWhere('posts.visibility_id', $nobody_except_visibility->id);
-                            })->whereHas('restrictions', function ($query) use ($current_user, $nobody_except_visibility) {
-                                $query->where([
-                                    ['restrictions.user_id', $current_user->id],
-                                    ['restrictions.visibility_id', $nobody_except_visibility->id]
-                                ]);
+                                        ->orWhere(function ($q1) use ($current_user, $nobody_except_visibility) {
+                                            $q1->where('posts.visibility_id', $nobody_except_visibility->id)
+                                                ->whereHas('restrictions', function ($q2) use ($current_user, $nobody_except_visibility) {
+                                                    $q2->where([
+                                                        ['restrictions.user_id', $current_user->id],
+                                                        ['restrictions.visibility_id', $nobody_except_visibility->id]
+                                                    ]);
+                                                });
+                                            })
+                                            ->orWhere(function ($q1) use ($current_user, $connections_only_visibility, $connected_users_ids) {
+                                                $q1->where('posts.visibility_id', $connections_only_visibility->id)
+                                                    ->whereHas('subscriptions', function ($q2) use ($current_user, $connected_users_ids) {
+                                                        $q2->where(function ($q3) use ($current_user, $connected_users_ids) {
+                                                            $q3->where('subscriptions.user_id', $current_user->id)
+                                                                ->whereIn('subscriptions.subscriber_id', $connected_users_ids);
+                                                        })->orWhere(function ($q3) use ($current_user, $connected_users_ids) {
+                                                            $q3->where('subscriptions.subscriber_id', $current_user->id)
+                                                                ->whereIn('subscriptions.user_id', $connected_users_ids);
+                                                        });
+                                                    });
+                                                });
                             })->orderByDesc('posts.created_at')->paginate(10);
 
             return $this->handleResponse(ResourcesPost::collection($posts), __('notifications.find_all_posts_success'), $posts->lastPage());
@@ -1242,10 +1282,12 @@ class PostController extends BaseController
     public function newsFeedCommunity($type_aliases, $user_id)
     {
         // Groups
+        $member_status_group = Group::where('group_name->fr', 'Etat du membre')->first();
         $post_or_community_status_group = Group::where('group_name->fr', 'Etat du post ou de la communauté')->first();
         $posts_visibility_group = Group::where('group_name->fr', 'Visibilité pour les posts')->first();
         $reaction_on_member_or_post_group = Group::where('group_name->fr', 'Réaction sur membre ou post')->first();
         // Statuses
+        $blocked_member_status = Status::where([['status_name->fr', 'Bloqué'], ['group_id', $member_status_group->id]])->first();
         $operational_status = Status::where([['status_name->fr', 'Opérationnel'], ['group_id', $post_or_community_status_group->id]])->first();
         $boosted_status = Status::where([['status_name->fr', 'Boosté'], ['group_id', $post_or_community_status_group->id]])->first();
         // Visibilities
@@ -1295,6 +1337,9 @@ class PostController extends BaseController
                             $query->where('posts.status_id', $operational_status->id)
                                     ->orWhere('posts.status_id', $boosted_status->id);
                         })
+                        ->whereHas('users', function ($query) use ($blocked_member_status) {
+                            $query->where('users.status_id', '<>', $blocked_member_status->id);
+                        })
                         ->where(function ($query) use ($everybody_visibility, $nobody_except_visibility) {
                             $query->where('posts.visibility_id', $everybody_visibility->id)
                                     ->orWhere('posts.visibility_id', $nobody_except_visibility->id);
@@ -1318,10 +1363,12 @@ class PostController extends BaseController
     public function newsFeedEvent($type_aliases, $user_id)
     {
         // Groups
+        $member_status_group = Group::where('group_name->fr', 'Etat du membre')->first();
         $post_or_community_status_group = Group::where('group_name->fr', 'Etat du post ou de la communauté')->first();
         $posts_visibility_group = Group::where('group_name->fr', 'Visibilité pour les posts')->first();
         $reaction_on_member_or_post_group = Group::where('group_name->fr', 'Réaction sur membre ou post')->first();
         // Statuses
+        $blocked_member_status = Status::where([['status_name->fr', 'Bloqué'], ['group_id', $member_status_group->id]])->first();
         $operational_status = Status::where([['status_name->fr', 'Opérationnel'], ['group_id', $post_or_community_status_group->id]])->first();
         $boosted_status = Status::where([['status_name->fr', 'Boosté'], ['group_id', $post_or_community_status_group->id]])->first();
         // Visibilities
@@ -1370,6 +1417,9 @@ class PostController extends BaseController
                         ->where(function ($query) use ($operational_status, $boosted_status) {
                             $query->where('posts.status_id', $operational_status->id)
                                     ->orWhere('posts.status_id', $boosted_status->id);
+                        })
+                        ->whereHas('users', function ($query) use ($blocked_member_status) {
+                            $query->where('users.status_id', '<>', $blocked_member_status->id);
                         })
                         ->where(function ($query) use ($everybody_visibility, $nobody_except_visibility) {
                             $query->where('posts.visibility_id', $everybody_visibility->id)
@@ -2083,8 +2133,10 @@ class PostController extends BaseController
      */
     public function boost(Request $request, $id)
     {
-        // Manage API Client
-        $api_manager = new ApiClientManager();
+        // Group
+        $payment_status_group = Group::where('group_name->fr', 'Etat du paiement')->first();
+        // Status
+        $done_payment_status = Status::where([['status_name->fr', 'Effectué'], ['group_id', $payment_status_group->id]])->first();
         // FlexPay accessing data
         $gateway_mobile = config('services.flexpay.gateway_mobile');
         $gateway_card = config('services.flexpay.gateway_card_v2');
@@ -2139,7 +2191,7 @@ class PostController extends BaseController
                 $reference_code = 'REF-' . ((string) random_int(10000000, 99999999)) . '-' . $current_user->id;
 
                 // Create response by sending request to FlexPay
-                $jsonRes = $api_manager::call('POST', $gateway_mobile, config('services.flexpay.api_token'), [
+                $data = array(
                     'merchant' => 'KULISHA',
                     'type' => $request->transaction_type_id,
                     'phone' => $request->other_phone,
@@ -2147,23 +2199,47 @@ class PostController extends BaseController
                     'amount' => $budget->amount,
                     'currency' => 'USD',
                     'callbackUrl' => getApiURL() . '/payment/store'
-                ], null, null, true);
+                );
+                $data = json_encode($data);
+                $ch = curl_init();
 
-                if (!empty($jsonRes->error)) {
-                    return $this->handleError($jsonRes->error, $jsonRes->message, $jsonRes->status);
+                curl_setopt($ch, CURLOPT_URL, $gateway_mobile);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, Array(
+                    'Content-Type: application/json',
+                    'Authorization: Bearer ' . config('services.flexpay.api_token')
+                ));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 300);
+
+                $response = curl_exec($ch);
+
+                if (curl_errno($ch)) {
+                    return $this->handleError(curl_errno($ch), __('notifications.transaction_request_failed'), 400);
 
                 } else {
-                    $code = $jsonRes->code;
+                    curl_close($ch); 
+
+                    $jsonRes = json_decode($response); 
+                    $code = $jsonRes->code; // Push sending status
 
                     if ($code != '0') {
-                        // try {
-                        //     $client->sms()->send(new \Vonage\SMS\Message\SMS($current_user->phone, 'Kulisha', __('notifications.process_failed')));
+                        if (!empty($current_user->email)) {
+                            Mail::to($current_user->email)->send(new ShortMail(null, 'payment', __('notifications.transaction_push_failed')));
+                        }
 
-                        // } catch (\Throwable $th) {
-                        //     return $this->handleError($th->getMessage(), __('notifications.process_failed'), 500);
+                        // if (!empty($current_user->phone)) {
+                        //     try {
+                        //         $client->sms()->send(new \Vonage\SMS\Message\SMS($current_user->phone, 'Kulisha', __('notifications.transaction_push_failed')));
+
+                        //     } catch (\Throwable $th) {
+                        //         return $this->handleError($th->getMessage(), __('notifications.process_failed'), 500);
+                        //     }
                         // }
 
-                        return $this->handleError($jsonRes->code, $jsonRes->message, 400);
+                        return $this->handleError(__('miscellaneous.error_label'), __('notifications.transaction_push_failed'), 400);
 
                     } else {
                         $object = new stdClass();
@@ -2198,11 +2274,24 @@ class PostController extends BaseController
                                 'phone' => $request->other_phone,
                                 'currency' => 'USD',
                                 'type_id' => $request->transaction_type_id,
-                                'status_id' => $code,
+                                'status_id' => $done_payment_status->id,
                                 'subject_url' => $request->subject_url,
                                 'user_id' => $current_user->id
                             ]);
                         }
+
+                        if (!empty($current_user->email)) {
+                            Mail::to($current_user->email)->send(new ShortMail(null, 'payment', __('notifications.boost_post_success')));
+                        }
+
+                        // if (!empty($current_user->phone)) {
+                        //     try {
+                        //         $client->sms()->send(new \Vonage\SMS\Message\SMS($current_user->phone, 'Kulisha', __('notifications.boost_post_success')));
+
+                        //     } catch (\Throwable $th) {
+                        //         return $this->handleError($th->getMessage(), __('notifications.process_failed'), 500);
+                        //     }
+                        // }
 
                         return $this->handleResponse($object, __('notifications.boost_post_success'));
                     }
@@ -2221,40 +2310,60 @@ class PostController extends BaseController
                 $reference_code = 'REF-' . ((string) random_int(10000000, 99999999)) . '-' . $current_user->id;
 
                 // Create response by sending request to FlexPay
-                $jsonRes = $api_manager::call('POST', $gateway_card, config('services.flexpay.api_token'), [
+                $body = json_encode(array(
+                    'authorization' => 'Bearer ' . config('services.flexpay.api_token'),
                     'merchant' => 'KULISHA',
                     'reference' => $reference_code,
                     'amount' => $budget->amount,
-                    'description' => __('miscellaneous.bank_transaction_description'),
                     'currency' => 'USD',
-                    'callbackUrl' => getApiURL() . '/payment/store',
+                    'description' => __('miscellaneous.bank_transaction_description'),
+                    'callback_url' => getApiURL() . '/payment/store',
                     'approve_url' => $request->app_url . '/boosted/' . $budget->amount . '/USD/0/' . $current_user->id,
                     'cancel_url' => $request->app_url . '/boosted/' . $budget->amount . '/USD/1/' . $current_user->id,
                     'decline_url' => $request->app_url . '/boosted/' . $budget->amount . '/USD/2/' . $current_user->id,
-                    'language' => app()->getLocale(),
-                ], null, null, true);
+                    'home_url' => $request->app_url . '/posts/' . $post->id,
+                ));
 
-                if (!empty($jsonRes->error)) {
-                    return $this->handleError($jsonRes->error, $jsonRes->message, $jsonRes->status);
+                $curl = curl_init($gateway_card);
+
+                curl_setopt($curl, CURLOPT_POSTFIELDS, $body);
+                curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+                $curlResponse = curl_exec($curl);
+
+                $jsonRes = json_decode($curlResponse,true);
+                $code = $jsonRes['code'];
+                $message = $jsonRes['message'];
+
+                if (!empty($jsonRes['error'])) {
+                    return $this->handleError($jsonRes['error'], $message, $jsonRes['status']);
 
                 } else {
-                    if ($jsonRes->code != '0') {
-                        // try {
-                        //     $client->sms()->send(new \Vonage\SMS\Message\SMS($current_user->phone, 'Kulisha', __('notifications.process_failed')));
+                    if ($code != '0') {
+                        if (!empty($current_user->email)) {
+                            Mail::to($current_user->email)->send(new ShortMail(null, 'payment', $message));
+                        }
 
-                        // } catch (\Throwable $th) {
-                        //     return $this->handleError($th->getMessage(), __('notifications.process_failed'), 500);
+                        // if (!empty($current_user->phone)) {
+                        //     try {
+                        //         $client->sms()->send(new \Vonage\SMS\Message\SMS($current_user->phone, 'Kulisha', $message));
+
+                        //     } catch (\Throwable $th) {
+                        //         return $this->handleError($th->getMessage(), __('notifications.process_failed'), 500);
+                        //     }
                         // }
 
-                        return $this->handleError($jsonRes->code, $jsonRes->message, 400);
+                        return $this->handleError($code, $message, 400);
 
                     } else {
+                        $url = $jsonRes['url'];
+                        $orderNumber = $jsonRes['orderNumber'];
                         $object = new stdClass();
 
                         $object->result_response = [
-                            'message' => $jsonRes->message,
-                            'order_number' => $jsonRes->orderNumber,
-                            'url' => $jsonRes->url
+                            'message' => $message,
+                            'order_number' => $orderNumber,
+                            'url' => $url
                         ];
 
                         // The post is updated only if the processing succeed
@@ -2281,11 +2390,24 @@ class PostController extends BaseController
                                 'amount' => $budget->amount,
                                 'currency' => 'USD',
                                 'type_id' => $request->transaction_type_id,
-                                'status_id' => $jsonRes->code,
+                                'status_id' => $done_payment_status->id,
                                 'subject_url' => $request->subject_url,
                                 'user_id' => $current_user->id
                             ]);
                         }
+
+                        if (!empty($current_user->email)) {
+                            Mail::to($current_user->email)->send(new ShortMail(null, 'payment', __('notifications.boost_post_success')));
+                        }
+
+                        // if (!empty($current_user->phone)) {
+                        //     try {
+                        //         $client->sms()->send(new \Vonage\SMS\Message\SMS($current_user->phone, 'Kulisha', __('notifications.boost_post_success')));
+
+                        //     } catch (\Throwable $th) {
+                        //         return $this->handleError($th->getMessage(), __('notifications.process_failed'), 500);
+                        //     }
+                        // }
 
                         return $this->handleResponse($object, __('notifications.boost_post_success'));
                     }

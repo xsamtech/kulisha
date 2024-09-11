@@ -128,7 +128,7 @@ class MessageController extends BaseController
 
             $addressee_community = Community::find($inputs['addressee_community_id']);
             $community_users = $addressee_community->users;
-            $users_ids = $community_users->pluck('id');
+            $users_ids = $community_users->pluck('id')->toArray();
 
             $message->users()->syncWithPivotValues($users_ids, ['status_id' => $unread_message_status->id]);
 

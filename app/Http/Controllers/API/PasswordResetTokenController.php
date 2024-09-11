@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use stdClass;
-use App\Mail\OTPCode;
+use App\Mail\ShortMail;
 use App\Models\PasswordResetToken;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -272,7 +272,7 @@ class PasswordResetTokenController extends BaseController
                 'updated_at' => now()
             ]);
 
-            Mail::to($password_reset->email)->send(new OTPCode($password_reset->token));
+            Mail::to($password_reset->email)->send(new ShortMail($password_reset->token));
         }
 
         $object = new stdClass();

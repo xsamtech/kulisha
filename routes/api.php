@@ -119,7 +119,7 @@ Route::group(['middleware' => ['api', 'localization']], function () {
     // Hashtag
     Route::get('hashtag/trends/{year}', 'App\Http\Controllers\API\HashtagController@trends')->name('hashtag.api.trends');
     // Event
-    Route::get('event/search/{data}/{visitor_id}', 'App\Http\Controllers\API\EventController@search')->name('event.api.search');
+    Route::post('event/search/{data}/{visitor_id}', 'App\Http\Controllers\API\EventController@search')->name('event.api.search');
 });
 Route::group(['middleware' => ['api', 'auth:sanctum', 'localization']], function () {
     Route::resource('category', 'App\Http\Controllers\API\CategoryController')->except(['findByRealName', 'findByFieldType']);

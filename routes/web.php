@@ -24,6 +24,8 @@ Route::get('/symlink', function () { return view('symlink'); })->name('generate_
 // Home
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/language/{locale}', [HomeController::class, 'changeLanguage'])->name('change_language');
+Route::get('/posts', [HomeController::class, 'post'])->name('post.home');
+Route::get('/posts/{id}', [HomeController::class, 'postDatas'])->whereNumber('id')->name('post.datas');
 Route::get('/notifications', [HomeController::class, 'notification'])->name('notification.home');
 Route::get('/notifications/{entity}', [HomeController::class, 'notificationEntity'])->name('notification.entity');
 Route::get('/discover', [HomeController::class, 'discover'])->name('discover.home');

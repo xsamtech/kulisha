@@ -23,6 +23,7 @@ class Order extends JsonResource
             'id' => $this->id,
             'quantity' => $this->quantity,
             'current_unit_price' => $this->current_unit_price,
+            'currency' => $this->currency,
             'type' => Type::make($this->type),
             'post' => Post::make($this->post),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),

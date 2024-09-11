@@ -385,6 +385,10 @@ class EventController extends BaseController
             ]);
         }
 
+        if ($request->filled('fields_ids')) {
+            $event->fields()->sync($request->fields_ids);
+        }
+
         return $this->handleResponse(new ResourcesEvent($event), __('notifications.update_event_success'));
     }
 
@@ -408,11 +412,12 @@ class EventController extends BaseController
     /**
      * Search a event by its title.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @param  string $data
      * @param  int $visitor_id
      * @return \Illuminate\Http\Response
      */
-    public function search($data, $visitor_id )
+    public function search(Request $request, $visitor_id)
     {
         // Group
         $history_type_group = Group::where('group_name->fr', 'Type d’historique')->first();
@@ -428,33 +433,53 @@ class EventController extends BaseController
                 return $this->handleResponse([], __('notifications.find_visitor_404'));
             }
 
-            $events = Event::where('event_title', 'LIKE', '%' . $data . '%')->orderByDesc('created_at')->paginate(30);
-            $count_events = Event::where('event_title', 'LIKE', '%' . $data . '%')->count();
+            if (isset($request->date_from) OR isset($request->date_to)) {
+                $events = Event::whereBetween('created_at', [$request->date_from, $request->date_to])->orderByDesc('created_at')->paginate(30);
+                $count_events = Event::whereBetween('created_at', [$request->date_from, $request->date_to])->count();
 
-            if (is_null($events)) {
-                return $this->handleResponse([], __('miscellaneous.empty_list'));
+                if (is_null($events)) {
+                    return $this->handleResponse([], __('miscellaneous.empty_list'));
+                }
+
+                return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_events_success'), $events->lastPage(), $count_events);
+
+            } else {
+                $events = Event::where('event_title', 'LIKE', '%' . $request->data . '%')->orderByDesc('created_at')->paginate(30);
+                $count_events = Event::where('event_title', 'LIKE', '%' . $request->data . '%')->count();
+
+                if (is_null($events)) {
+                    return $this->handleResponse([], __('miscellaneous.empty_list'));
+                }
+
+                /*
+                    HISTORY AND/OR NOTIFICATION MANAGEMENT
+                */
+                History::create([
+                    'search_content' => $request->data,
+                    'type_id' => $search_history_type->id,
+                    'from_user_id' => $visitor->id
+                ]);
+
+                return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_events_success'), $events->lastPage(), $count_events);
             }
 
-            /*
-                HISTORY AND/OR NOTIFICATION MANAGEMENT
-            */
-            History::create([
-                'search_content' => $data,
-                'type_id' => $search_history_type->id,
-                'from_user_id' => $visitor->id
-            ]);
-
-            return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_events_success'), $events->lastPage(), $count_events);
- 
         } else {
-            $events = Event::where([['event_title', 'LIKE', '%' . $data . '%'], ['type_id', $public_type->id]])->orderByDesc('created_at')->paginate(30);
-            $count_events = Event::where([['event_title', 'LIKE', '%' . $data . '%'], ['type_id', $public_type->id]])->count();
+            if (isset($request->date_from) OR isset($request->date_to)) {
+                $events = Event::where('type_id', $public_type->id)->whereBetween('created_at', [$request->date_from, $request->date_to])->orderByDesc('created_at')->paginate(30);
+                $count_events = Event::where('type_id', $public_type->id)->whereBetween('created_at', [$request->date_from, $request->date_to])->count();
 
-            if (is_null($events)) {
-                return $this->handleResponse([], __('miscellaneous.empty_list'));
+                if (is_null($events)) {
+                    return $this->handleResponse([], __('miscellaneous.empty_list'));
+                }
+
+                return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_events_success'), $events->lastPage(), $count_events);
+
+            } else {
+                $events = Event::where(['event_title', 'LIKE', '%' . $request->data . '%'], ['type_id', $public_type->id])->orderByDesc('created_at')->paginate(30);
+                $count_events = Event::where(['event_title', 'LIKE', '%' . $request->data . '%'], ['type_id', $public_type->id])->count();
+
+                return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_events_success'), $events->lastPage(), $count_events);
             }
-
-            return $this->handleResponse(ResourcesEvent::collection($events), __('notifications.find_all_events_success'), $events->lastPage(), $count_events);
         }
     }
 

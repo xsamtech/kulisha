@@ -3,16 +3,18 @@
 namespace App\Http\Controllers\API;
 
 use stdClass;
-use App\Http\Controllers\ApiClientManager;
+use App\Mail\ShortMail;
 use App\Models\Cart;
+use App\Models\Group;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Post;
+use App\Models\Status;
 use App\Models\Type;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Resources\Cart as ResourcesCart;
-use App\Models\Status;
 
 /**
  * @author Xanders
@@ -352,8 +354,10 @@ class CartController extends BaseController
      */
     public function purchase(Request $request, $id)
     {
-        // Manage API Client
-        $api_manager = new ApiClientManager();
+        // Group
+        $payment_status_group = Group::where('group_name->fr', 'Etat du paiement')->first();
+        // Status
+        $done_payment_status = Status::where([['status_name->fr', 'Effectué'], ['group_id', $payment_status_group->id]])->first();
         // FlexPay accessing data
         $gateway_mobile = config('services.flexpay.gateway_mobile');
         $gateway_card = config('services.flexpay.gateway_card_v2');
@@ -369,6 +373,7 @@ class CartController extends BaseController
 
         // Total orders price
         $total_price = Order::where('cart_id', $cart->id)->join('posts', 'orders.post_id', '=', 'posts.id')->sum('posts.price');
+        $currency = Order::where('cart_id', $cart->id)->first()->currency;
 
         // Mobile money type
         $mobile_money_type = Type::where('type_name->fr', 'Mobile money')->first();
@@ -397,31 +402,55 @@ class CartController extends BaseController
                 $reference_code = 'REF-' . ((string) random_int(10000000, 99999999)) . '-' . $current_user->id;
 
                 // Create response by sending request to FlexPay
-                $jsonRes = $api_manager::call('POST', $gateway_mobile, config('services.flexpay.api_token'), [
+                $data = array(
                     'merchant' => 'KULISHA',
                     'type' => $request->transaction_type_id,
                     'phone' => $request->other_phone,
                     'reference' => $reference_code,
                     'amount' => $total_price,
-                    'currency' => 'USD',
+                    'currency' => $currency,
                     'callbackUrl' => getApiURL() . '/payment/store'
-                ], null, null, true);
+                );
+                $data = json_encode($data);
+                $ch = curl_init();
 
-                if (!empty($jsonRes->error)) {
-                    return $this->handleError($jsonRes->error, $jsonRes->message, $jsonRes->status);
+                curl_setopt($ch, CURLOPT_URL, $gateway_mobile);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, Array(
+                    'Content-Type: application/json',
+                    'Authorization: Bearer ' . config('services.flexpay.api_token')
+                ));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 300);
+
+                $response = curl_exec($ch);
+
+                if (curl_errno($ch)) {
+                    return $this->handleError(curl_errno($ch), __('notifications.transaction_request_failed'), 400);
 
                 } else {
-                    $code = $jsonRes->code;
+                    curl_close($ch); 
+
+                    $jsonRes = json_decode($response); 
+                    $code = $jsonRes->code; // Push sending status
 
                     if ($code != '0') {
-                        // try {
-                        //     $client->sms()->send(new \Vonage\SMS\Message\SMS($current_user->phone, 'Kulisha', __('notifications.process_failed')));
+                        if (!empty($current_user->email)) {
+                            Mail::to($current_user->email)->send(new ShortMail(null, 'payment', __('notifications.transaction_push_failed')));
+                        }
 
-                        // } catch (\Throwable $th) {
-                        //     return $this->handleError($th->getMessage(), __('notifications.process_failed'), 500);
+                        // if (!empty($current_user->phone)) {
+                        //     try {
+                        //         $client->sms()->send(new \Vonage\SMS\Message\SMS($current_user->phone, 'Kulisha', __('notifications.transaction_push_failed')));
+
+                        //     } catch (\Throwable $th) {
+                        //         return $this->handleError($th->getMessage(), __('notifications.process_failed'), 500);
+                        //     }
                         // }
 
-                        return $this->handleError($jsonRes->code, $jsonRes->message, 400);
+                        return $this->handleError(__('miscellaneous.error_label'), __('notifications.transaction_push_failed'), 400);
 
                     } else {
                         $object = new stdClass();
@@ -453,13 +482,26 @@ class CartController extends BaseController
                                 'phone' => $request->other_phone,
                                 'currency' => 'USD',
                                 'type_id' => $request->transaction_type_id,
-                                'status_id' => $code,
+                                'status_id' => $done_payment_status->id,
                                 'subject_url' => $request->subject_url,
                                 'user_id' => $current_user->id
                             ]);
                         }
 
-                        return $this->handleResponse($object, __('notifications.boost_post_success'));
+                        if (!empty($current_user->email)) {
+                            Mail::to($current_user->email)->send(new ShortMail(null, 'payment', __('notifications.purchase_complete')));
+                        }
+
+                        // if (!empty($current_user->phone)) {
+                        //     try {
+                        //         $client->sms()->send(new \Vonage\SMS\Message\SMS($current_user->phone, 'Kulisha', __('notifications.purchase_complete')));
+
+                        //     } catch (\Throwable $th) {
+                        //         return $this->handleError($th->getMessage(), __('notifications.process_failed'), 500);
+                        //     }
+                        // }
+
+                        return $this->handleResponse($object, __('notifications.purchase_complete'));
                     }
                 }
 
@@ -476,40 +518,60 @@ class CartController extends BaseController
                 $reference_code = 'REF-' . ((string) random_int(10000000, 99999999)) . '-' . $current_user->id;
 
                 // Create response by sending request to FlexPay
-                $jsonRes = $api_manager::call('POST', $gateway_card, config('services.flexpay.api_token'), [
+                $body = json_encode(array(
+                    'authorization' => 'Bearer ' . config('services.flexpay.api_token'),
                     'merchant' => 'KULISHA',
                     'reference' => $reference_code,
                     'amount' => $total_price,
+                    'currency' => $currency,
                     'description' => __('miscellaneous.bank_transaction_description'),
-                    'currency' => 'USD',
-                    'callbackUrl' => getApiURL() . '/payment/store',
-                    'approve_url' => $request->app_url . '/boosted/' . $total_price . '/USD/0/' . $current_user->id,
-                    'cancel_url' => $request->app_url . '/boosted/' . $total_price . '/USD/1/' . $current_user->id,
-                    'decline_url' => $request->app_url . '/boosted/' . $total_price . '/USD/2/' . $current_user->id,
-                    'language' => app()->getLocale(),
-                ], null, null, true);
+                    'callback_url' => getApiURL() . '/payment/store',
+                    'approve_url' => $request->app_url . '/bought/' . $total_price . '/' . $currency . '/0/' . $current_user->id,
+                    'cancel_url' => $request->app_url . '/bought/' . $total_price . '/' . $currency . '/1/' . $current_user->id,
+                    'decline_url' => $request->app_url . '/bought/' . $total_price . '/' . $currency . '/2/' . $current_user->id,
+                    'home_url' => $request->app_url . '/cart',
+                ));
 
-                if (!empty($jsonRes->error)) {
-                    return $this->handleError($jsonRes->error, $jsonRes->message, $jsonRes->status);
+                $curl = curl_init($gateway_card);
+
+                curl_setopt($curl, CURLOPT_POSTFIELDS, $body);
+                curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+                $curlResponse = curl_exec($curl);
+
+                $jsonRes = json_decode($curlResponse,true);
+                $code = $jsonRes['code'];
+                $message = $jsonRes['message'];
+
+                if (!empty($jsonRes['error'])) {
+                    return $this->handleError($jsonRes['error'], $message, $jsonRes['status']);
 
                 } else {
-                    if ($jsonRes->code != '0') {
-                        // try {
-                        //     $client->sms()->send(new \Vonage\SMS\Message\SMS($current_user->phone, 'Kulisha', __('notifications.process_failed')));
+                    if ($code != '0') {
+                        if (!empty($current_user->email)) {
+                            Mail::to($current_user->email)->send(new ShortMail(null, 'payment', $message));
+                        }
 
-                        // } catch (\Throwable $th) {
-                        //     return $this->handleError($th->getMessage(), __('notifications.process_failed'), 500);
+                        // if (!empty($current_user->phone)) {
+                        //     try {
+                        //         $client->sms()->send(new \Vonage\SMS\Message\SMS($current_user->phone, 'Kulisha', $message));
+
+                        //     } catch (\Throwable $th) {
+                        //         return $this->handleError($th->getMessage(), __('notifications.process_failed'), 500);
+                        //     }
                         // }
 
-                        return $this->handleError($jsonRes->code, $jsonRes->message, 400);
+                        return $this->handleError($code, $message, 400);
 
                     } else {
+                        $url = $jsonRes['url'];
+                        $orderNumber = $jsonRes['orderNumber'];
                         $object = new stdClass();
 
                         $object->result_response = [
-                            'message' => $jsonRes->message,
-                            'order_number' => $jsonRes->orderNumber,
-                            'url' => $jsonRes->url
+                            'message' => $message,
+                            'order_number' => $orderNumber,
+                            'url' => $url
                         ];
 
                         // The cart is updated only if the processing succeed
@@ -533,13 +595,26 @@ class CartController extends BaseController
                                 'amount' => $total_price,
                                 'currency' => 'USD',
                                 'type_id' => $request->transaction_type_id,
-                                'status_id' => $jsonRes->code,
+                                'status_id' => $done_payment_status->id,
                                 'subject_url' => $request->subject_url,
                                 'user_id' => $current_user->id
                             ]);
                         }
 
-                        return $this->handleResponse($object, __('notifications.boost_post_success'));
+                        if (!empty($current_user->email)) {
+                            Mail::to($current_user->email)->send(new ShortMail(null, 'payment', __('notifications.purchase_complete')));
+                        }
+
+                        // if (!empty($current_user->phone)) {
+                        //     try {
+                        //         $client->sms()->send(new \Vonage\SMS\Message\SMS($current_user->phone, 'Kulisha', __('notifications.purchase_complete')));
+
+                        //     } catch (\Throwable $th) {
+                        //         return $this->handleError($th->getMessage(), __('notifications.process_failed'), 500);
+                        //     }
+                        // }
+
+                        return $this->handleResponse($object, __('notifications.purchase_complete'));
                     }
                 }
 

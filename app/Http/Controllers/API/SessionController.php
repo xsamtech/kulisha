@@ -83,7 +83,7 @@ class SessionController extends BaseController
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Notification  $notification
+     * @param  \App\Models\Session  $session
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Session $session)
@@ -175,17 +175,11 @@ class SessionController extends BaseController
     /**
      * Remove the specified resource from storage.
      *
-     * @param  string $ip_address
+     * @param  \App\Models\Session  $session
      * @return \Illuminate\Http\Response
      */
-    public function destroy($ip_address)
+    public function destroy(Session $session)
     {
-        $session = Session::where('ip_address', $ip_address)->first();
-
-        if (is_null($session)) {
-            return $this->handleError(__('notifications.find_session_404'));
-        }
-
         $session->delete();
 
         $sessions = Session::all();

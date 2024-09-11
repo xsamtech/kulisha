@@ -27,7 +27,7 @@ return [
     'all_right_reserved' => 'Tous droits réservés',
     'follow_us' => 'Suivez-nous :',
     'call_us' => 'Appelez-nous :',
-    'bank_transaction_description' => 'Transaction bancaire depuis l’application Kulisha',
+    'bank_transaction_description' => 'Kulisha transaction d’argent',
     'theme' => 'Mode',
     'found_value' => 'Valeur trouvée :',
     'description' => 'Description',

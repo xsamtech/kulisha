@@ -58,6 +58,7 @@ class OrderController extends BaseController
 
         // Set the current unit price of the product/service
         $inputs['current_unit_price'] = $post->price;
+        $inputs['currency'] = $post->currency;
         $order = Order::create($inputs);
 
         return $this->handleResponse(new ResourcesOrder($order), __('notifications.create_order_success'));
@@ -94,7 +95,8 @@ class OrderController extends BaseController
             'cart_id' => $request->cart_id,
             'post_id' => $request->post_id,
             'quantity' => $request->quantity,
-            'current_unit_price' => $request->current_unit_price
+            'current_unit_price' => $request->current_unit_price,
+            'currency' => $request->currency
         ];
 
         if ($inputs['cart_id'] != null) {
@@ -121,6 +123,13 @@ class OrderController extends BaseController
         if ($inputs['current_unit_price'] != null) {
             $order->update([
                 'current_unit_price' => $inputs['current_unit_price'],
+                'updated_at' => now(),
+            ]);
+        }
+
+        if ($inputs['currency'] != null) {
+            $order->update([
+                'currency' => $inputs['currency'],
                 'updated_at' => now(),
             ]);
         }

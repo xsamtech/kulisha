@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Models\Group;
 use App\Models\Payment;
 use App\Models\Status;
 use Illuminate\Http\Request;
@@ -30,6 +31,15 @@ class PaymentController extends BaseController
      */
     public function store(Request $request)
     {
+        // Group
+        $payment_status_group = Group::where('group_name->fr', 'Etat du paiement')->first();
+        // Status
+        $done_payment_status = Status::where([['status_name->fr', 'Effectué'], ['group_id', $payment_status_group->id]])->first();
+        $in_progress_payment_status = Status::where([['status_name->fr', 'En cours'], ['group_id', $payment_status_group->id]])->first();
+        $failed_payment_status = Status::where([['status_name->fr', 'Echoué'], ['group_id', $payment_status_group->id]])->first();
+        // Requests
+        $code = $request->code == 0 OR $request->code == '0' ? $done_payment_status->id : 
+                ($request->code == 1 OR $request->code == '1' ? $in_progress_payment_status->id : $failed_payment_status);
         $user_id = is_numeric(explode('-', $request->reference)[2]) ? (int) explode('-', $request->reference)[2] : null;
         // Check if payment already exists
         $payment = Payment::where('order_number', $request->orderNumber)->first();
@@ -47,7 +57,7 @@ class PaymentController extends BaseController
                 'channel' => $request->channel,
                 'subject_url' => $request->subject_url,
                 'type_id' => $request->type,
-                'status_id' => $request->code,
+                'status_id' => $code,
                 'user_id' => $user_id,
                 'updated_at' => now()
             ]);
@@ -68,7 +78,7 @@ class PaymentController extends BaseController
                 'subject_url' => $request->subject_url,
                 'created_at' => $request->createdAt,
                 'type_id' => $request->type,
-                'status_id' => $request->code,
+                'status_id' => $code,
                 'user_id' => $user_id
             ]);
 

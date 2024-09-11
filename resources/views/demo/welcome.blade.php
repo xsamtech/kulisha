@@ -81,7 +81,7 @@
 											</li>
 											<li class="nav-item">
 												<a class="nav-link" href="{{ route('profile.entity', ['username' => 'tonystark', 'entity' => 'products']) }}">
-													<i class="fa-solid fa-seedling me-3 fs-5 align-middle text-success-emphasis"></i>
+													<i class="fa-solid fa-basket-shopping me-3 fs-5 align-middle text-success-emphasis"></i>
 													<span>@lang('miscellaneous.menu.public.profile.products')</span>
 												</a>
 											</li>

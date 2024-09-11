@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use stdClass;
-use App\Mail\OTPCode;
+use App\Mail\ShortMail;
 use App\Models\Community;
 use App\Models\Event;
 use App\Models\Field;
@@ -22,8 +22,8 @@ use App\Models\Subscription;
 use App\Models\Type;
 use App\Models\User;
 use App\Models\Visibility;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -112,11 +112,11 @@ class UserController extends BaseController
         // $basic = new \Vonage\Client\Credentials\Basic(config('vonage.api_key'), config('vonage.api_secret'));
         // $client = new \Vonage\Client($basic);
 
-        $request->validate([
-            'email' => ['string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
-            'phone' => ['string', 'phone', 'max:45', 'unique:' . User::class],
-            'username' => ['string', 'lowercase', 'username', 'max:255', 'unique:' . User::class],
-        ]);
+        // $request->validate([
+        //     'email' => ['string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+        //     'phone' => ['string', 'phone', 'max:45', 'unique:' . User::class],
+        //     'username' => ['string', 'lowercase', 'username', 'max:255', 'unique:' . User::class],
+        // ]);
 
         if (trim($inputs['email']) == null AND trim($inputs['phone']) == null) {
             return $this->handleError(__('validation.custom.email_or_phone.required'));
@@ -191,7 +191,7 @@ class UserController extends BaseController
                     'former_password' => $request->password
                 ]);
 
-                Mail::to($inputs['email'])->send(new OTPCode($password_reset->token));
+                // Mail::to($inputs['email'])->send(new ShortMail($password_reset->token));
 
                 // try {
                 //     $client->sms()->send(new \Vonage\SMS\Message\SMS($password_reset->phone, 'Kulisha', (string) $password_reset->token));
@@ -208,7 +208,7 @@ class UserController extends BaseController
                         'former_password' => $request->password
                     ]);
 
-                    Mail::to($inputs['email'])->send(new OTPCode($password_reset->token));
+                    // Mail::to($inputs['email'])->send(new ShortMail($password_reset->token));
                 }
 
                 if ($inputs['phone'] != null) {
@@ -241,7 +241,7 @@ class UserController extends BaseController
 
                 $inputs['password'] = Hash::make($password_reset->former_password);
 
-                Mail::to($inputs['email'])->send(new OTPCode($password_reset->token));
+                // Mail::to($inputs['email'])->send(new ShortMail($password_reset->token));
 
                 // try {
                 //     $client->sms()->send(new \Vonage\SMS\Message\SMS($password_reset->phone, 'Kulisha', (string) $password_reset->token));
@@ -260,7 +260,7 @@ class UserController extends BaseController
 
                     $inputs['password'] = Hash::make($password_reset->former_password);
 
-                    Mail::to($inputs['email'])->send(new OTPCode($password_reset->token));
+                    // Mail::to($inputs['email'])->send(new ShortMail($password_reset->token));
                 }
 
                 if ($inputs['phone'] != null) {
@@ -288,14 +288,18 @@ class UserController extends BaseController
             $user->roles()->attach([$request->role_id]);
 
         } else {
-            $user->roles()->attach([$member_role->id]);
+            if (!empty($member_role)) {
+                $user->roles()->attach([$member_role->id]);
+            }
         }
 
         if ($request->fields_ids != null) {
             $user->fields()->sync($request->fields_ids);
 
         } else {
-            $user->fields()->sync([$agriculture_field->id]);
+            if ($agriculture_field) {
+                $user->fields()->sync([$agriculture_field->id]);
+            }
         }
 
         if ($request->image_64 != null) {
@@ -326,18 +330,20 @@ class UserController extends BaseController
         /*
             HISTORY AND/OR NOTIFICATION MANAGEMENT
         */
-        $notification = Notification::create([
-            'type_id' => is_null($new_account_type) ? null : $new_account_type->id,
-            'status_id' => is_null($unread_notification_status) ? null : $unread_notification_status->id,
-            'to_user_id' => $user->id
-        ]);
+        if (!empty($activities_history_type)) {
+            $notification = Notification::create([
+                'type_id' => is_null($new_account_type) ? null : $new_account_type->id,
+                'status_id' => is_null($unread_notification_status) ? null : $unread_notification_status->id,
+                'to_user_id' => $user->id
+            ]);
 
-        History::create([
-            'type_id' => $activities_history_type->id,
-            'status_id' => is_null($unread_history_status) ? null : $unread_history_status->id,
-            'to_user_id' => $user->id,
-            'for_notification_id' => $notification->id
-        ]);
+            History::create([
+                'type_id' => $activities_history_type->id,
+                'status_id' => is_null($unread_history_status) ? null : $unread_history_status->id,
+                'to_user_id' => $user->id,
+                'for_notification_id' => $notification->id
+            ]);
+        }
 
         $object = new stdClass();
         $object->password_reset = new ResourcesPasswordReset($password_reset);
@@ -1768,7 +1774,7 @@ class UserController extends BaseController
                     'status_id' => $on_hold_status->id
                 ]);
 
-                Mail::to($email)->send(new OTPCode(null, __('miscellaneous.app_invitation.message', ['from_user_id' => $user->id])));
+                // Mail::to($email)->send(new ShortMail(null, __('miscellaneous.app_invitation.message', ['from_user_id' => $user->id])));
             }
 
             $subscription = Subscription::where([['email', $email], ['subscriber_id', $user->id]])->first();
@@ -1793,7 +1799,7 @@ class UserController extends BaseController
                 'status_id' => $on_hold_status->id
             ]);
 
-            Mail::to($request->email)->send(new OTPCode(null, __('miscellaneous.app_invitation.message', ['from_user_id' => $user->id])));
+            // Mail::to($request->email)->send(new ShortMail(null, __('miscellaneous.app_invitation.message', ['from_user_id' => $user->id])));
 
             /*
                 HISTORY AND/OR NOTIFICATION MANAGEMENT

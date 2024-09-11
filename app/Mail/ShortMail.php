@@ -13,14 +13,14 @@ use Illuminate\Queue\SerializesModels;
  * @author Xanders
  * @see https://team.xsamtech.com/xanderssamoth
  */
-class OTPCode extends Mailable
+class ShortMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(private $token = null, private $message = null)
+    public function __construct(private $token = null, private $ref = null, private $message = null)
     {
         //
     }
@@ -31,9 +31,25 @@ class OTPCode extends Mailable
     public function envelope(): Envelope
     {
         if ($this->token == null) {
-            return new Envelope(
-                subject: __('miscellaneous.app_invitation.title'),
-            );
+            switch ($this->ref) {
+                case 'invitation':
+                    return new Envelope(
+                        subject: __('miscellaneous.app_invitation.title'),
+                    );
+                    break;
+
+                case 'payment':
+                    return new Envelope(
+                        subject: __('miscellaneous.bank_transaction_description'),
+                    );
+                    break;
+
+                default:
+                    return new Envelope(
+                        subject: __('miscellaneous.app_invitation.title'),
+                    );
+                    break;
+            }
 
         } else {
             return new Envelope(

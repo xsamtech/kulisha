@@ -161,7 +161,7 @@ class SubscriptionController extends BaseController
 
     // ==================================== CUSTOM METHODS ====================================
     /**
-     * Invite a contact by mail or phone
+     * Change invited contact to a member
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int $visitor_id

@@ -24,14 +24,16 @@ class Field extends JsonResource
             'field_name' => $this->field_name,
             'field_name_fr' => $this->getTranslation('field_name', 'fr'),
             'field_name_en' => $this->getTranslation('field_name', 'en'),
+            'field_name_ln' => $this->getTranslation('field_name', 'ln'),
             'field_description' => $this->field_description,
             'field_description_fr' => $this->getTranslation('field_description', 'fr'),
             'field_description_en' => $this->getTranslation('field_description', 'en'),
+            'field_description_ln' => $this->getTranslation('field_description', 'ln'),
             'alias' => $this->alias,
             'color' => $this->color,
             'icon_font' => $this->icon_font,
             'icon_svg' => $this->icon_svg,
-            'image_url' => !empty($this->image_url) ? getWebURL() . '/storage/' . $this->image_url : null,
+            'image_url' => !empty($this->image_url) ? getWebURL() . '/' . $this->image_url : null,
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s')
         ];

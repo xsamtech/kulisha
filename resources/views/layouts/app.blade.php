@@ -404,6 +404,9 @@
                                         <li>
                                             <a role="button" class="dropdown-item nobody_except"><i class="fa-solid fa-user-gear me-2"></i>Personne, sauf …</a>
                                         </li>
+                                        <li>
+                                            <a role="button" class="dropdown-item connections_only"><i class="fa-solid fa-user-check me-2"></i>Mes connexions uniquement</a>
+                                        </li>
                                     </ul>
                                 </div>
                             </div>

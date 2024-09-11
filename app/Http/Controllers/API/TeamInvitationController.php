@@ -82,7 +82,6 @@ class TeamInvitationController extends BaseController
     {
         // Get inputs
         $inputs = [
-            'id' => $request->id,
             'phone' => $request->phone,
             'email' => $request->email,
             'role' => $request->role,

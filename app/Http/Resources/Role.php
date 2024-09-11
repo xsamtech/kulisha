@@ -24,13 +24,15 @@ class Role extends JsonResource
             'role_name' => $this->role_name,
             'role_name_fr' => $this->getTranslation('role_name', 'fr'),
             'role_name_en' => $this->getTranslation('role_name', 'en'),
+            'role_name_ln' => $this->getTranslation('role_name', 'ln'),
             'role_description' => $this->role_description,
-            'role_description' => $this->getTranslation('role_description', 'fr'),
-            'role_description' => $this->getTranslation('role_description', 'en'),
+            'role_description_fr' => $this->getTranslation('role_description', 'fr'),
+            'role_description_en' => $this->getTranslation('role_description', 'en'),
+            'role_description_ln' => $this->getTranslation('role_description', 'ln'),
             'color' => $this->color,
             'icon_font' => $this->icon_font,
             'icon_svg' => $this->icon_svg,
-            'image_url' => !empty($this->image_url) ? getWebURL() . '/storage/' . $this->image_url : null,
+            'image_url' => !empty($this->image_url) ? getWebURL() . '/' . $this->image_url : null,
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s')
         ];

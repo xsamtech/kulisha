@@ -24,6 +24,7 @@ class ReactionReason extends JsonResource
             'reason_content' => $this->reason_content,
             'reason_content_fr' => $this->getTranslation('reason_content', 'fr'),
             'reason_content_en' => $this->getTranslation('reason_content', 'en'),
+            'reason_content_ln' => $this->getTranslation('reason_content', 'ln'),
             'report_count' => $this->report_count,
             'number_of_days' => $this->number_of_days,
             'is_for_post' => $this->is_for_post,
