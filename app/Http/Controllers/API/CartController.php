@@ -354,17 +354,30 @@ class CartController extends BaseController
      */
     public function purchase(Request $request, $id)
     {
-        // Group
-        $payment_status_group = Group::where('group_name->fr', 'Etat du paiement')->first();
-        // Status
-        $done_payment_status = Status::where([['status_name->fr', 'Effectué'], ['group_id', $payment_status_group->id]])->first();
         // FlexPay accessing data
         $gateway_mobile = config('services.flexpay.gateway_mobile');
         $gateway_card = config('services.flexpay.gateway_card_v2');
         // Vonage accessing data
         // $basic  = new \Vonage\Client\Credentials\Basic(config('vonage.api_key'), config('vonage.api_secret'));
         // $client = new \Vonage\Client($basic);
-        // Requests
+        // Groups
+        $transaction_status_group = Group::where('group_name->fr', 'Etat de la transaction')->first();
+        $transaction_type_group = Group::where('group_name->fr', 'Type de transaction')->first();
+        // Status
+        $done_transaction_status = Status::where([['status_name->fr', 'Effectué'], ['group_id', $transaction_status_group->id]])->first();
+        // Types
+        $mobile_money_type = Type::where([['type_name->fr', 'Mobile money'], ['group_id', $transaction_type_group->id]])->first();
+        $bank_card_type = Type::where([['type_name->fr', 'Carte bancaire'], ['group_id', $transaction_type_group->id]])->first();
+
+        if (is_null($mobile_money_type)) {
+            return $this->handleError(__('miscellaneous.public.home.posts.boost.transaction_type.mobile_money'), __('notifications.find_type_404'), 404);
+        }
+
+        if (is_null($bank_card_type)) {
+            return $this->handleError(__('miscellaneous.public.home.posts.boost.transaction_type.bank_card'), __('notifications.find_type_404'), 404);
+        }
+
+        // Request
         $cart = Cart::find($id);
 
         if (is_null($cart)) {
@@ -374,20 +387,6 @@ class CartController extends BaseController
         // Total orders price
         $total_price = Order::where('cart_id', $cart->id)->join('posts', 'orders.post_id', '=', 'posts.id')->sum('posts.price');
         $currency = Order::where('cart_id', $cart->id)->first()->currency;
-
-        // Mobile money type
-        $mobile_money_type = Type::where('type_name->fr', 'Mobile money')->first();
-
-        if (is_null($mobile_money_type)) {
-            return $this->handleError(__('miscellaneous.public.home.posts.boost.transaction_type.mobile_money'), __('notifications.find_type_404'), 404);
-        }
-
-        // Bank card
-        $bank_card_type = Type::where('type_name->fr', 'Carte bancaire')->first();
-
-        if (is_null($bank_card_type)) {
-            return $this->handleError(__('miscellaneous.public.home.posts.boost.transaction_type.bank_card'), __('notifications.find_type_404'), 404);
-        }
 
         // Validations
         if ($request->transaction_type_id == null OR !is_numeric($request->transaction_type_id)) {
@@ -482,7 +481,7 @@ class CartController extends BaseController
                                 'phone' => $request->other_phone,
                                 'currency' => 'USD',
                                 'type_id' => $request->transaction_type_id,
-                                'status_id' => $done_payment_status->id,
+                                'status_id' => $done_transaction_status->id,
                                 'subject_url' => $request->subject_url,
                                 'user_id' => $current_user->id
                             ]);
@@ -595,7 +594,7 @@ class CartController extends BaseController
                                 'amount' => $total_price,
                                 'currency' => 'USD',
                                 'type_id' => $request->transaction_type_id,
-                                'status_id' => $done_payment_status->id,
+                                'status_id' => $done_transaction_status->id,
                                 'subject_url' => $request->subject_url,
                                 'user_id' => $current_user->id
                             ]);

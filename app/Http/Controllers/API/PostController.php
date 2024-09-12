@@ -2133,35 +2133,34 @@ class PostController extends BaseController
      */
     public function boost(Request $request, $id)
     {
-        // Group
-        $payment_status_group = Group::where('group_name->fr', 'Etat du paiement')->first();
-        // Status
-        $done_payment_status = Status::where([['status_name->fr', 'Effectué'], ['group_id', $payment_status_group->id]])->first();
         // FlexPay accessing data
         $gateway_mobile = config('services.flexpay.gateway_mobile');
         $gateway_card = config('services.flexpay.gateway_card_v2');
         // Vonage accessing data
         // $basic  = new \Vonage\Client\Credentials\Basic(config('vonage.api_key'), config('vonage.api_secret'));
         // $client = new \Vonage\Client($basic);
-        // Requests
-        $post = Post::find($id);
-
-        if (is_null($post)) {
-            return $this->handleError(__('notifications.find_post_404'));
-        }
-
-        // Mobile money type
-        $mobile_money_type = Type::where('type_name->fr', 'Mobile money')->first();
+        // Groups
+        $transaction_status_group = Group::where('group_name->fr', 'Etat de la transaction')->first();
+        $transaction_type_group = Group::where('group_name->fr', 'Type de transaction')->first();
+        // Status
+        $done_transaction_status = Status::where([['status_name->fr', 'Effectué'], ['group_id', $transaction_status_group->id]])->first();
+        // Types
+        $mobile_money_type = Type::where([['type_name->fr', 'Mobile money'], ['group_id', $transaction_type_group->id]])->first();
+        $bank_card_type = Type::where([['type_name->fr', 'Carte bancaire'], ['group_id', $transaction_type_group->id]])->first();
 
         if (is_null($mobile_money_type)) {
             return $this->handleError(__('miscellaneous.public.home.posts.boost.transaction_type.mobile_money'), __('notifications.find_type_404'), 404);
         }
 
-        // Bank card
-        $bank_card_type = Type::where('type_name->fr', 'Carte bancaire')->first();
-
         if (is_null($bank_card_type)) {
             return $this->handleError(__('miscellaneous.public.home.posts.boost.transaction_type.bank_card'), __('notifications.find_type_404'), 404);
+        }
+
+        // Request
+        $post = Post::find($id);
+
+        if (is_null($post)) {
+            return $this->handleError(__('notifications.find_post_404'));
         }
 
         // Validations
@@ -2274,7 +2273,7 @@ class PostController extends BaseController
                                 'phone' => $request->other_phone,
                                 'currency' => 'USD',
                                 'type_id' => $request->transaction_type_id,
-                                'status_id' => $done_payment_status->id,
+                                'status_id' => $done_transaction_status->id,
                                 'subject_url' => $request->subject_url,
                                 'user_id' => $current_user->id
                             ]);
@@ -2390,7 +2389,7 @@ class PostController extends BaseController
                                 'amount' => $budget->amount,
                                 'currency' => 'USD',
                                 'type_id' => $request->transaction_type_id,
-                                'status_id' => $done_payment_status->id,
+                                'status_id' => $done_transaction_status->id,
                                 'subject_url' => $request->subject_url,
                                 'user_id' => $current_user->id
                             ]);

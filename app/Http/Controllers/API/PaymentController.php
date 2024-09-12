@@ -32,14 +32,14 @@ class PaymentController extends BaseController
     public function store(Request $request)
     {
         // Group
-        $payment_status_group = Group::where('group_name->fr', 'Etat du paiement')->first();
+        $transaction_status_group = Group::where('group_name->fr', 'Etat de la transaction')->first();
         // Status
-        $done_payment_status = Status::where([['status_name->fr', 'Effectué'], ['group_id', $payment_status_group->id]])->first();
-        $in_progress_payment_status = Status::where([['status_name->fr', 'En cours'], ['group_id', $payment_status_group->id]])->first();
-        $failed_payment_status = Status::where([['status_name->fr', 'Echoué'], ['group_id', $payment_status_group->id]])->first();
+        $done_transaction_status = Status::where([['status_name->fr', 'Effectué'], ['group_id', $transaction_status_group->id]])->first();
+        $in_progress_transaction_status = Status::where([['status_name->fr', 'En cours'], ['group_id', $transaction_status_group->id]])->first();
+        $failed_transaction_status = Status::where([['status_name->fr', 'Echoué'], ['group_id', $transaction_status_group->id]])->first();
         // Requests
-        $code = $request->code == 0 OR $request->code == '0' ? $done_payment_status->id : 
-                ($request->code == 1 OR $request->code == '1' ? $in_progress_payment_status->id : $failed_payment_status);
+        $code = $request->code == 0 OR $request->code == '0' ? $done_transaction_status->id : 
+                ($request->code == 1 OR $request->code == '1' ? $in_progress_transaction_status->id : $failed_transaction_status);
         $user_id = is_numeric(explode('-', $request->reference)[2]) ? (int) explode('-', $request->reference)[2] : null;
         // Check if payment already exists
         $payment = Payment::where('order_number', $request->orderNumber)->first();
