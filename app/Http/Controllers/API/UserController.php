@@ -1874,7 +1874,7 @@ class UserController extends BaseController
         $public_type = Type::where([['type_name->fr', 'Public'], ['group_id' => $access_type_group->id]])->first();
         $private_type = Type::where([['type_name->fr', 'Privé'], ['group_id' => $access_type_group->id]])->first();
         $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
-        $subscription_request_type = Type::where([['type_name->fr', 'Demande d’abonnement'], ['group_id', $notification_type_group->id]])->first();
+        $subscription_request_type = Type::where([['type_name->fr', 'Demande d’intégration'], ['group_id', $notification_type_group->id]])->first();
         $invitation_type = Type::where([['type_name->fr', 'Invitation'], ['group_id', $notification_type_group->id]])->first();
         // Reactions
         $i_accept_reaction = Reaction::where([['reaction_name->fr', 'J’y serai'], ['group_id', $reaction_on_invitation_group->id]])->first();
@@ -2389,7 +2389,7 @@ class UserController extends BaseController
         $unread_history_status = Status::where([['status_name->fr', 'Non lue'], ['group_id', $history_status_group->id]])->first();
         // Types
         $activities_history_type = Type::where([['type_name->fr', 'Historique des activités'], ['group_id', $history_type_group->id]])->first();
-        $subscription_accepted_type = Type::where([['type_name->fr', 'Abonnement accepté'], ['group_id', $notification_type_group->id]])->first();
+        $subscription_accepted_type = Type::where([['type_name->fr', 'Intégration acceptée'], ['group_id', $notification_type_group->id]])->first();
         // Requests
         $user = User::find($id);
 

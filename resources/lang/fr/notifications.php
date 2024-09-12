@@ -177,7 +177,7 @@ return [
     'delete_user_fields_failed' => 'Vous devez avoir au moins un secteur',
     'login_user_success' => 'Vous êtes connecté(e)',
     'subscribe_user_success' => 'Abonnement envoyé',
-    'subscribe_user_accepted' => 'Abonnement accepté',
+    'subscribe_user_accepted' => 'Intégration acceptée',
     'unsubscribe_user_success' => 'Désabonnement effectué',
     // BlockedUser
     'find_all_blocked_users_success' => 'Membres bloqués trouvés',
