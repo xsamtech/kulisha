@@ -28,7 +28,7 @@ class Reaction extends Model
      *
      * @var array<int, string>
      */
-    protected $translatable = ['reaction_name'];
+    protected $translatable = ['reaction_name', 'reaction_description'];
 
     /**
      * ONE-TO-MANY
