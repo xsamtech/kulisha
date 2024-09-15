@@ -139,7 +139,7 @@ class ReactionReasonController extends BaseController
             endforeach;
 
             $reaction_reason->update([
-                'reaction_name' => $inputs['reaction_name'],
+                'reason_content' => $inputs['reason_content'],
                 'updated_at' => now()
             ]);
         }
