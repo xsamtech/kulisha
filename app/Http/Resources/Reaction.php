@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Group as ModelGroup;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,6 +20,8 @@ class Reaction extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $group = ModelGroup::find($this->group_id);
+
         return [
             'id' => $this->id,
             'reaction_name' => $this->reaction_name,
@@ -31,7 +34,7 @@ class Reaction extends JsonResource
             'reaction_description_ln' => $this->getTranslation('reaction_description', 'ln'),
             'alias' => $this->alias,
             'color' => $this->color,
-            'icon_font' => $this->icon_font,
+            'icon_font' => !empty($this->icon_font) ? (!empty($group) ? ($group->getTranslation('group_name', 'fr') == 'Réaction sur post' ? getWebURL() . '/' . $this->icon_font : $this->icon_font) : $this->icon_font) : null,
             'icon_svg' => $this->icon_svg,
             'image_url' => !empty($this->image_url) ? getWebURL() . '/' . $this->image_url : null,
             'group' => Group::make($this->group),
