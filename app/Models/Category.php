@@ -39,7 +39,7 @@ class Category extends Model
      */
     public function fields(): BelongsToMany
     {
-        return $this->belongsToMany(Field::class)->orderByPivot('created_at', 'desc');
+        return $this->belongsToMany(Field::class, 'field_category')->orderByPivot('created_at', 'desc');
     }
 
     /**

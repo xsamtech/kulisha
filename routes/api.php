@@ -94,7 +94,7 @@ Route::group(['middleware' => ['api', 'localization']], function () {
     Route::get('field/find_by_real_name/{locale}/{data}', 'App\Http\Controllers\API\FieldController@findByRealName')->name('field.api.find_by_real_name');
     Route::get('field/find_by_alias/{alias}', 'App\Http\Controllers\API\FieldController@findByAlias')->name('field.api.find_by_alias');
     // CoverageArea
-    Route::post('coverage_area', 'App\Http\Controllers\API\CoverageAreaController@index')->name('coverage_area.api.index');
+    Route::get('coverage_area', 'App\Http\Controllers\API\CoverageAreaController@index')->name('coverage_area.api.index');
     // User
     Route::post('user', 'App\Http\Controllers\API\UserController@store')->name('user.api.store');
     Route::get('user/{user_id}', 'App\Http\Controllers\API\UserController@show')->name('user.api.show');

@@ -64,6 +64,8 @@ class SentReactionController extends BaseController
         $connection_suggestion_type = Type::where([['type_name->fr', 'Suggestion de connexion'], ['group_id', $notification_type_group->id]])->first();
         // Reactions
         $reported_reaction = Reaction::where([['reaction_name->fr', 'Signalé'], ['group_id', $reaction_on_member_or_post_group->id]])->first();
+        // Reaction reason
+        $other_reaction_reason = ReactionReason::where('reaction_name->fr', 'Autre motif')->first();
         // Get inputs
         $inputs = [
             'reaction_description' => $request->reaction_description,
@@ -71,7 +73,7 @@ class SentReactionController extends BaseController
             'to_post_id' => $request->to_post_id,
             'to_notification_type_id' => $request->to_notification_type_id,
             'reaction_id' => $request->reaction_id,
-            'reaction_reason_id' => $request->reaction_reason_id,
+            'reaction_reason_id' => isset($request->reaction_reason_id) ? $request->reaction_reason_id : $other_reaction_reason->id,
             'user_id' => $request->user_id
         ];
 
@@ -115,37 +117,39 @@ class SentReactionController extends BaseController
                 $count_reaction = SentReaction::where(['to_user_id', $to_current_user->id], ['reaction_id', $reported_reaction->id])->count();
                 $reaction_reason = ReactionReason::find($inputs['reaction_reason_id']);
 
-                if ($count_reaction == $reaction_reason->report_count) {
-                    BlockedUser::create([
-                        'user_id' => $to_current_user->id,
-                        'reaction_reason_id' => $inputs['reaction_reason_id'],
-                        'status_id' => $in_progress_blocking_status->id,
-                    ]);
+                if (!empty($reaction_reason->report_count)) {
+                    if ($count_reaction == $reaction_reason->report_count) {
+                        BlockedUser::create([
+                            'user_id' => $to_current_user->id,
+                            'reaction_reason_id' => $inputs['reaction_reason_id'],
+                            'status_id' => $in_progress_blocking_status->id,
+                        ]);
 
-                    $to_current_user->update([
-                        'status_id' => $blocked_member_status->id,
-                        'updated_at' => now()
-                    ]);
+                        $to_current_user->update([
+                            'status_id' => $blocked_member_status->id,
+                            'updated_at' => now()
+                        ]);
 
-                    Notification::create([
-                        'days_before_blocking' => $count_reaction,
-                        'type_id' => $imminent_account_blocking_type->id,
-                        'status_id' => $unread_notification_status->id,
-                        'from_user_id' => $from_current_user->id,
-                        'to_user_id' => $to_current_user->id,
-                        'reaction_id' => $reaction->id
-                    ]);
-                }
+                        Notification::create([
+                            'days_before_blocking' => $count_reaction,
+                            'type_id' => $imminent_account_blocking_type->id,
+                            'status_id' => $unread_notification_status->id,
+                            'from_user_id' => $from_current_user->id,
+                            'to_user_id' => $to_current_user->id,
+                            'reaction_id' => $reaction->id
+                        ]);
+                    }
 
-                if ($count_reaction >= ($reaction_reason->report_count - 5) AND $count_reaction < $reaction_reason->report_count) {
-                    Notification::create([
-                        'days_before_blocking' => $count_reaction,
-                        'type_id' => $imminent_account_blocking_type->id,
-                        'status_id' => $unread_notification_status->id,
-                        'from_user_id' => $from_current_user->id,
-                        'to_user_id' => $to_current_user->id,
-                        'reaction_id' => $reaction->id
-                    ]);
+                    if ($count_reaction >= ($reaction_reason->report_count - 5) AND $count_reaction < $reaction_reason->report_count) {
+                        Notification::create([
+                            'days_before_blocking' => $count_reaction,
+                            'type_id' => $imminent_account_blocking_type->id,
+                            'status_id' => $unread_notification_status->id,
+                            'from_user_id' => $from_current_user->id,
+                            'to_user_id' => $to_current_user->id,
+                            'reaction_id' => $reaction->id
+                        ]);
+                    }
                 }
             }
 
@@ -158,37 +162,39 @@ class SentReactionController extends BaseController
                 $count_reaction = SentReaction::where(['to_post_id', $to_post->id], ['reaction_id', $reported_reaction->id])->count();
                 $reaction_reason = ReactionReason::find($inputs['reaction_reason_id']);
 
-                if ($count_reaction == $reaction_reason->report_count) {
-                    BlockedUser::create([
-                        'user_id' => $to_current_user->id,
-                        'reaction_reason_id' => $inputs['reaction_reason_id'],
-                        'status_id' => $in_progress_blocking_status->id,
-                    ]);
+                if (!empty($reaction_reason->report_count)) {
+                    if ($count_reaction == $reaction_reason->report_count) {
+                        BlockedUser::create([
+                            'user_id' => $to_current_user->id,
+                            'reaction_reason_id' => $inputs['reaction_reason_id'],
+                            'status_id' => $in_progress_blocking_status->id,
+                        ]);
 
-                    $to_current_user->update([
-                        'status_id' => $blocked_member_status->id,
-                        'updated_at' => now()
-                    ]);
+                        $to_current_user->update([
+                            'status_id' => $blocked_member_status->id,
+                            'updated_at' => now()
+                        ]);
 
-                    Notification::create([
-                        'days_before_blocking' => $count_reaction,
-                        'type_id' => $blocked_account_type->id,
-                        'status_id' => $unread_notification_status->id,
-                        'from_user_id' => $from_current_user->id,
-                        'to_user_id' => $to_current_user->id,
-                        'reaction_id' => $reaction->id
-                    ]);
-                }
+                        Notification::create([
+                            'days_before_blocking' => $count_reaction,
+                            'type_id' => $blocked_account_type->id,
+                            'status_id' => $unread_notification_status->id,
+                            'from_user_id' => $from_current_user->id,
+                            'to_user_id' => $to_current_user->id,
+                            'reaction_id' => $reaction->id
+                        ]);
+                    }
 
-                if ($count_reaction >= ($reaction_reason->report_count - 5) AND $count_reaction < $reaction_reason->report_count) {
-                    Notification::create([
-                        'days_before_blocking' => $count_reaction,
-                        'type_id' => $imminent_account_blocking_type->id,
-                        'status_id' => $unread_notification_status->id,
-                        'from_user_id' => $from_current_user->id,
-                        'to_user_id' => $to_current_user->id,
-                        'reaction_id' => $reaction->id
-                    ]);
+                    if ($count_reaction >= ($reaction_reason->report_count - 5) AND $count_reaction < $reaction_reason->report_count) {
+                        Notification::create([
+                            'days_before_blocking' => $count_reaction,
+                            'type_id' => $imminent_account_blocking_type->id,
+                            'status_id' => $unread_notification_status->id,
+                            'from_user_id' => $from_current_user->id,
+                            'to_user_id' => $to_current_user->id,
+                            'reaction_id' => $reaction->id
+                        ]);
+                    }
                 }
             }
 

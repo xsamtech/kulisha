@@ -32,7 +32,7 @@ class Category extends JsonResource
             'color' => $this->color,
             'icon_font' => $this->icon_font,
             'icon_svg' => $this->icon_svg,
-            'image_url' => $this->image_url,
+            'image_url' => !empty($this->image_url) ? getWebURL() . '/' . $this->image_url : null,
             'type' => Type::make($this->type),
             'fields' => Field::collection($this->fields),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
