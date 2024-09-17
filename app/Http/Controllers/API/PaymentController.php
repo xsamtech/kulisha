@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Models\Group;
 use App\Models\Payment;
 use App\Models\Status;
+use App\Models\Type;
 use Illuminate\Http\Request;
 use App\Http\Resources\Payment as ResourcesPayment;
 
@@ -33,10 +34,14 @@ class PaymentController extends BaseController
     {
         // Group
         $transaction_status_group = Group::where('group_name->fr', 'Etat de la transaction')->first();
+        $transaction_type_group = Group::where('group_name->fr', 'Type de transaction')->first();
         // Status
         $done_transaction_status = Status::where([['status_name->fr', 'Effectué'], ['group_id', $transaction_status_group->id]])->first();
         $in_progress_transaction_status = Status::where([['status_name->fr', 'En cours'], ['group_id', $transaction_status_group->id]])->first();
         $failed_transaction_status = Status::where([['status_name->fr', 'Echoué'], ['group_id', $transaction_status_group->id]])->first();
+        // Types
+        $mobile_money_type = Type::where([['type_name->fr', 'Mobile money'], ['group_id', $transaction_type_group->id]])->first();
+        $bank_card_type = Type::where([['type_name->fr', 'Carte bancaire'], ['group_id', $transaction_type_group->id]])->first();
         // Requests
         $code = $request->code == 0 OR $request->code == '0' ? $done_transaction_status->id : 
                 ($request->code == 1 OR $request->code == '1' ? $in_progress_transaction_status->id : $failed_transaction_status);
@@ -56,7 +61,7 @@ class PaymentController extends BaseController
                 'currency' => $request->currency,
                 'channel' => $request->channel,
                 'subject_url' => $request->subject_url,
-                'type_id' => $request->type,
+                'type_id' => isset($request->type) ? ($request->type == 1 ? $mobile_money_type->id : $bank_card_type->id) : null,
                 'status_id' => $code,
                 'user_id' => $user_id,
                 'updated_at' => now()
@@ -77,7 +82,7 @@ class PaymentController extends BaseController
                 'channel' => $request->channel,
                 'subject_url' => $request->subject_url,
                 'created_at' => $request->createdAt,
-                'type_id' => $request->type,
+                'type_id' => isset($request->type) ? ($request->type == 1 ? $mobile_money_type->id : $bank_card_type->id) : null,
                 'status_id' => $code,
                 'user_id' => $user_id
             ]);

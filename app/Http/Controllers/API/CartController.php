@@ -402,8 +402,8 @@ class CartController extends BaseController
 
                 // Create response by sending request to FlexPay
                 $data = array(
-                    'merchant' => 'KULISHA',
-                    'type' => $request->transaction_type_id,
+                    'merchant' => config('services.flexpay.merchant'),
+                    'type' => 1,
                     'phone' => $request->other_phone,
                     'reference' => $reference_code,
                     'amount' => $total_price,
@@ -519,7 +519,7 @@ class CartController extends BaseController
                 // Create response by sending request to FlexPay
                 $body = json_encode(array(
                     'authorization' => 'Bearer ' . config('services.flexpay.api_token'),
-                    'merchant' => 'KULISHA',
+                    'merchant' => config('services.flexpay.merchant'),
                     'reference' => $reference_code,
                     'amount' => $total_price,
                     'currency' => $currency,
