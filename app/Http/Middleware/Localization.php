@@ -27,7 +27,7 @@ class Localization
 
         } else {
             // Check header request and determine localization
-            $local = ($request->hasHeader('X-localization')) ? $request->header('X-localization') : 'en';
+            $local = ($request->hasHeader('X-localization')) ? $request->header('X-localization') : 'fr';
 
             App::setLocale($local);
         }
