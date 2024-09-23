@@ -37,73 +37,17 @@
         <!-- Custom CSS -->
         <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/style.custom.css') }}">
 
+@livewireStyles
+
         <title>
 @if (!empty($exception))
             {{ $exception->getStatusCode() . ' - ' . __('notifications.' . $exception->getStatusCode() . '_title') }}
-@else
-    @if (!empty($error_title) || \Session::has('error_message') || \Session::has('error_message_login'))
+@endif
+@if (!empty($view_title))
+            {{ $view_title }}
+@endif
+@if (!empty($error_title) || \Session::has('error_message') || \Session::has('error_message_login'))
             {{ !empty($error_title) ? $error_title : (\Session::has('error_message_login') ? preg_match('/~/', \Session::get('error_message_login')) ? explode(', ', explode('~', \Session::get('error_message_login'))[0])[2] : \Session::get('error_message_login') : (\Session::has('error_message') ? (preg_match('/~/', \Session::get('error_message')) ? explode('-', explode('~', \Session::get('error_message'))[0])[2] : \Session::get('error_message')) : '')) }}
-    @endif
-
-    @if (empty($error_title) && Session::get('error_message') == null)
-        @if (!empty($children))
-            @lang('auth.select-your-profile')
-        @endif
-        @if (Route::is('login'))
-            @if (request()->has('check_param'))
-                @if (request()->get('check_param') == 'email')
-            @lang('auth.verified-email')
-                @endif
-                @if (request()->get('check_param') == 'phone')
-            @lang('auth.verified-phone')
-                @endif
-            @else
-            Kulisha / @lang('miscellaneous.menu.login_register')
-            @endif
-		@endif
-
-		@if (Route::is('register') || !empty($request->temporary_user_id))
-            @if (!empty($token_sent))
-            @lang('auth.otp-code')
-            @else
-                @if (!empty($temporary_user))
-            @lang('miscellaneous.account.personal_infos.title')
-                @else
-                    @if (!empty($request->redirect))
-                        @if (request()->has('check'))
-                            @if (request()->get('check') == 'email')
-            @lang('auth.verify-email')
-                            @endif
-                            @if (request()->get('check') == 'phone')
-            @lang('auth.verify-phone')
-                            @endif
-                        @else
-            @lang('auth.reset-password')
-                        @endif
-                    @else
-            @lang('auth.register')
-                    @endif
-                @endif
-            @endif
-		@endif
-
-		@if (Route::is('password.request') || !empty($former_password))
-            @if (request()->has('check'))
-                @if (request()->get('check') == 'email')
-                    @lang('auth.verify-email')
-                @endif
-                @if (request()->get('check') == 'phone')
-                    @lang('auth.verify-phone')
-                @endif
-            @else
-                @lang('auth.reset-password')
-            @endif
-		@endif
-
-        @if (!empty($token_sent))
-            @lang('auth.otp-code')
-        @endif
-    @endif
 @endif
         </title>
 
@@ -121,6 +65,23 @@
         <main class="py-5">
             <!-- Container START -->
             <div class="container">
+@if ($errors->any())
+                <div class="position-fixed w-100 top-0 start-0 z-index-99">
+                    <div class="row">
+                        <div class="col-lg-5 col-sm-6 col-11 mx-auto">
+                            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                                <i class="bi bi-exclamation-triangle me-3 fs-5"></i>
+                                <div>
+    @foreach ($errors->all() as $error)
+                                    {{ $error }}
+    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+@endif
+
                 <div class="row{{ empty($exception) ? ' d-lg-none' : ''}} mb-4">
                     <div class="col-lg-3 col-sm-4 col-8 mx-auto">
                         <div class="bg-image">
@@ -207,5 +168,6 @@
         <!-- Custom scripts -->
         <script src="{{ asset('assets/js/load-guest-scripts.js') }}"></script>
         <script src="{{ asset('assets/js/script.guest.js') }}"></script>
+@livewireScripts
     </body>
 </html>

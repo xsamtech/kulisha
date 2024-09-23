@@ -10,34 +10,29 @@
                             <h1 class="mb-4 kls-lime-green-text">@lang('miscellaneous.login_title2')</h1>
 
                             <!-- Form START -->
-                            <form method="POST" action="{{ route('login') }}">
-    @csrf
+                            <form>
                                 <!-- Email, Phone or Username -->
                                 <div class="mt-4 mb-3 input-group-lg">
-                                    <input type="text" name="identifier" class="form-control" placeholder="@lang('miscellaneous.login_username')" autofocus>
+                                    <input type="text" wire:model="identifier" class="form-control" placeholder="@lang('miscellaneous.login_username')" autofocus>
+                                    @error('identifier') <span class="error">{{ $message }}</span> @enderror
                                 </div>
-    @error('identifier')
-                                <div class="text-red-500">{{ $message }}</div>
-    @enderror
 
                                 <!-- Password -->
                                 <div class="mb-3 position-relative">
                                     <!-- Password -->
                                     <div class="input-group input-group-lg">
-                                        <input type="password" name="password" id="psw-input" class="form-control fakepassword" placeholder="@lang('miscellaneous.password.label')">
+                                        <input type="password" wire:model="password" id="psw-input" class="form-control fakepassword" placeholder="@lang('miscellaneous.password.label')">
                                         <span class="input-group-text p-0">
                                             <i class="fakepasswordicon fa-solid fa-eye-slash cursor-pointer p-2 w-40px"></i>
                                         </span>
                                     </div>
-    @error('password')
-                                    <div class="text-red-500">{{ $message }}</div>
-    @enderror
+                                    @error('password') <span class="error">{{ $message }}</span> @enderror
                                 </div>
 
                                 <!-- Remember me -->
                                 <div class="mb-4 d-sm-flex justify-content-between">
                                     <div>
-                                        <input type="checkbox" class="form-check-input" id="rememberCheck">
+                                        <input type="checkbox" wire:model="remember" class="form-check-input" id="rememberCheck">
                                         <label class="form-check-label" for="rememberCheck">@lang('miscellaneous.remember_me')</label>
                                     </div>
                                     <a href="" role="button">@lang('miscellaneous.forgotten_password')</a>
@@ -45,7 +40,7 @@
 
                                 <!-- Button -->
                                 <div class="d-grid">
-                                    <button type="submit" class="btn btn-lg btn-primary rounded-pill">@lang('auth.login')</button>
+                                    <button wire:click="login" class="btn btn-lg btn-primary rounded-pill">@lang('auth.login')</button>
                                     {{-- <a href="{{ route('start_demo', ['role' => 'member']) }}" class="btn btn-lg btn-primary rounded-pill">@lang('auth.login')</a> --}}
                                 </div>
                                 <!-- Register -->

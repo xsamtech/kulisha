@@ -10,6 +10,7 @@ use App\Actions\Jetstream\InviteTeamMember;
 use App\Actions\Jetstream\RemoveTeamMember;
 use App\Actions\Jetstream\UpdateTeamName;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Fortify\Fortify;
 use Laravel\Jetstream\Jetstream;
@@ -40,22 +41,37 @@ class JetstreamServiceProvider extends ServiceProvider
         Jetstream::deleteUsersUsing(DeleteUser::class);
 
         Fortify::loginView(function () {
-            if (session()->has('user_demo')) {
-                return view('demo.welcome');
-
-            } else {
-                return view('auth.login');
-            }
+            return view('auth.login');
         });
 
         Fortify::authenticateUsing(function (Request $request) {
-            // $user = User::where('email', $request->email)->first();
-    
-            // if ($user &&
-            //     Hash::check($request->password, $user->password)) {
-            //     return $user;
-            // }
+            $request->validate([
+                'identifier' => 'required',
+                'password' => 'required',
+            ]);
 
+            $credentials = $request->only('password');
+
+            // Check if the identifier is an email, a phone or a username
+            if (filter_var($request->identifier, FILTER_VALIDATE_EMAIL)) {
+                $credentials['email'] = $request->identifier;
+
+            } elseif (is_numeric($request->identifier)) { // Adjust the regex according to the phone format
+                $credentials['phone'] = $request->identifier;
+
+            } else {
+                $credentials['username'] = $request->identifier;
+            }
+
+            if (Auth::attempt($credentials)) {
+                return Auth::user();
+            }
+
+            throw new \Illuminate\Validation\ValidationException(__('auth.failed'));
+
+            return back()->withErrors([
+                'identifier' => __('auth.username'),
+            ]);
         });
     }
 
